@@ -7,7 +7,7 @@
 **Project:** CivKit *(working name — see D-1)*
 **Current phase:** 0 — Planning
 **Code written so far:** none (intentional)
-**Last updated:** 2026-11-24
+**Last updated:** 2026-11-25
 
 ---
 
@@ -27,7 +27,9 @@
 
 - The original concept proposal is preserved in `docs/00-original-proposal.md`.
 - `README.md` contains the core plan, built from the proposal, with a few changes marked
-  **[Change from proposal]**. These changes are *proposed*, not accepted — see D-3, D-4, D-12.
+  **[Change from proposal]**. D-12 (drawing model) and D-15 (repository layout) are accepted; the rest are
+  still *proposed* — see D-3, D-4.
+- Development toolchain is being installed (see session log).
 - Git is set up for this folder (`.gitignore`, `.gitattributes`); the repository itself is created by
   running the one-time commands in §5. The first commit is tagged `plan-v0.1`.
 - Nothing has been published anywhere. No GitHub remote yet.
@@ -59,12 +61,13 @@ Priority **P0** = must be decided to leave Phase 0. **P1** = before the relevant
 | D-6 | P0 | FFI contract? | JSON over a minimal C ABI (`call`, `list`, `free`). Typed fast paths only if profiling demands. | Proposed |
 | D-7 | P0 | Which calculations in 0.1? | First-principles set in README §5 (traverse/Bowditch, levelling, soil phase relations, SS beam, Manning, earthwork volumes). Adjust to what you can verify from your textbooks. | Proposed |
 | D-8 | P1 | Which design code first (after 0.1)? | Whichever your first users work with — e.g. IS codes (IS 456 / IS 800) if they are in India. One code at a time. | Proposed |
-| D-9 | P1 | Supported AutoCAD versions? | 2025+ only (.NET 8; 2027 is .NET 10). Skip the .NET Framework 4.8 era (2024 and older). | Proposed |
+| D-9 | P1 | Supported AutoCAD versions? | **Start with AutoCAD 2027 only** (.NET 10, the version installed). Add 2025/2026 (.NET 8) later only if users need it. | Proposed |
 | D-10 | P1 | Rust edition / minimum Rust version? | 2024 edition, latest stable at Phase 1 start; MSRV policy "latest stable − 2". | Proposed |
 | D-11 | P1 | Contribution sign-off? | DCO (`git commit -s`), no CLA. | Proposed |
-| D-12 | P0 | Add a neutral drawing model + DXF reader in Rust? | **Yes** — testable in CI, reusable by every interface, useful without AutoCAD. | Proposed |
+| D-12 | P0 | Add a neutral drawing model + DXF reader in Rust? | **Yes** — testable in CI, reusable by every interface, useful without AutoCAD. | **Accepted** 2026-11-25 · ADR 0002 |
 | D-13 | P1 | MCP SDK? | Official `rmcp` crate, stdio transport only; pin version at Phase 3 start. | Proposed |
 | D-14 | P1 | When does SQLite enter? | Phase 6 (desktop history). Not needed earlier. | Proposed |
+| D-15 | P0 | Repository layout? | Monorepo: `crates/` (engine) · `bindings/` · `integrations/` · `apps/` · `tests/` · `docs/`. Engine never depends outside `crates/`. See README §3.5. | **Accepted** 2026-11-25 · ADR 0001 |
 
 ---
 
@@ -72,7 +75,8 @@ Priority **P0** = must be decided to leave Phase 0. **P1** = before the relevant
 
 - [ ] Review README.md end to end; accept, change or reject each item in §3 "Open".
 - [ ] Choose the name (D-1) and licence (D-2). Add `LICENSE` file(s).
-- [ ] Write ADRs for accepted decisions in `docs/decisions/`.
+- [ ] Write ADRs for accepted decisions in `docs/decisions/` (0001 and 0002 done).
+- [ ] Finish toolchain install and verify (Rust, Visual Studio C++/.NET, SQLite CLI, `.venv` with maturin + JupyterLab, VS Code extensions).
 - [ ] Write `docs/spec/calculation-contract.md`: request/response schema, error format, trace format,
       ID and versioning rules, warning levels.
 - [ ] Write `docs/spec/units.md`: the full list of supported units, symbols, and rejected/ambiguous ones.
@@ -128,6 +132,18 @@ Avoid `git reset --hard` and `git push --force` unless you are certain — they 
 ## 6. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 — Repository layout and toolchain
+- **Accepted D-15** (monorepo layout, ADR 0001) with four refinements: MCP moved from `crates/` to
+  `integrations/mcp`; `crates/civkit-ffi` added; `crates/civkit-drawing` added; `integrations/jupyter` holds
+  notebooks/widgets only and `civil3d/` references `autocad/`'s shared project.
+- **Accepted D-12** (neutral drawing model + DXF in Rust, ADR 0002).
+- Crate names now `civkit-core` (was `civkit-api`) and `civkit-geometry` (was `civkit-geom`).
+- D-9 recommendation changed to "AutoCAD 2027 only to start" — AutoCAD 2027 (.NET 10) is installed.
+- Environment check: Git 2.55, Python 3.14.10, Node.js 26 LTS, VS Code, WebView2, AutoCAD 2027 present;
+  654 GB free on C:. Missing: Rust, Visual Studio C++/.NET (no .NET SDK), maturin, JupyterLab, SQLite CLI,
+  VS Code extensions. Installation started (Visual Studio 2026 Community + rustup); finishing overnight.
+- **Next:** verify the install report; decide D-1 (name), D-2 (licence), D-3, D-4.
 
 ### 2026-11-24 — Planning kick-off
 - Created repository: `README.md` (core plan), `HANDOFF.md`, `docs/00-original-proposal.md`, `.gitignore`, `.gitattributes`.
