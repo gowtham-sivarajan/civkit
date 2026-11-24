@@ -2,9 +2,8 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 00:40 IST
 >
-> **Working name.** "CivKit" is tentative — see D-1 in [planning/DECISIONS.md](planning/DECISIONS.md).
 > **Status:** Phase 0 — Planning. No code is written until the Phase 0 exit criteria are met
 > ([planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
 
@@ -73,7 +72,8 @@ Details and the dependency rule: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Licence
 
-Not yet chosen (D-2). An OSI-approved licence will be selected before the first outside contribution.
+Copyright 2026 Gowtham and CivKit contributors.
+Licensed under the [Apache License, Version 2.0](LICENSE) (D-2).
 
 ## Disclaimer
 

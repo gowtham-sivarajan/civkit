@@ -1,9 +1,10 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 00:40 IST
 
-> **Status:** Phase 0 — Planning. Code contributions are not open yet, and no outside contributions can be
-> accepted until a licence is chosen (D-2). Feedback on the planning documents is welcome.
+> **Status:** Phase 0 — Planning. Code contributions are not open yet; feedback on the planning documents is
+> welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that
+> your contribution is licensed under the same terms (Apache-2.0, section 5).
 
 ---
 
@@ -102,5 +103,6 @@ AI assistants are welcome as tools; humans remain responsible for what is merged
   ```
 
   In files that cannot hold Markdown (e.g. `.gitignore`), use a comment line. On every edit, update "last edited".
+  Exception: verbatim third-party texts such as `LICENSE` are never modified.
 - Commits containing AI-written content add a trailer, e.g. `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - AI-written engineering content (formulas, limits, references) always needs human engineering review.

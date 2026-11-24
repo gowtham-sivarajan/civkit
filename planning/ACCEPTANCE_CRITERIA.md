@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:40 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -14,7 +14,8 @@
       (source, edition, page, inputs, expected outputs).
 - [ ] 3–5 licence-safe sample DXF drawings collected for fixtures.
 - [ ] Toolchain installed and verified (Rust builds and links a test program; Python `.venv` works).
-- [ ] Licence chosen and `LICENSE` file(s) added.
+- [x] Licence chosen and `LICENSE` added (Apache-2.0, 2026-11-25).
+- [ ] Public GitHub repository created and pushed; private vulnerability reporting enabled.
 - [ ] Tag `plan-v1.0`.
 
 ### Phase 1 — Architecture and Rust core

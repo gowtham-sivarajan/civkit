@@ -1,14 +1,13 @@
 # Security
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:40 IST
 
 > **Status:** Draft. No released versions yet.
 
 ## 1. Reporting a vulnerability
 
-Once the GitHub repository is public, report vulnerabilities through GitHub's private vulnerability reporting
-on the repository, not in public issues. Until then, contact the maintainer directly. Expect an acknowledgement
-within 7 days.
+Report vulnerabilities through GitHub's **private vulnerability reporting** on this repository
+(Security tab → "Report a vulnerability"), not in public issues. Expect an acknowledgement within 7 days.
 
 ## 2. Supported versions
 

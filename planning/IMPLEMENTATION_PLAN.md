@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 00:40 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -12,15 +12,16 @@
 | 0.2 | Decide repository layout (D-15) and drawing model (D-12) | ✅ 2026-11-25 |
 | 0.3 | Restructure documentation (D-16) | ✅ 2026-11-25 |
 | 0.4 | Install and verify toolchain (Rust, VS 2026 C++/.NET, `.venv`, SQLite CLI, VS Code extensions) | 🔄 in progress |
-| 0.5 | Decide name (D-1) and licence (D-2); add `LICENSE` | ⬜ |
+| 0.5 | Decide name (D-1) and licence (D-2); add `LICENSE` | ✅ 2026-11-25 |
 | 0.6 | Decide D-3, D-4, D-5, D-6, D-7 | ⬜ |
 | 0.7 | Finish [API_DESIGN.md](../docs/API_DESIGN.md) TBDs (contract, units) | ⬜ |
 | 0.8 | Collect ≥1 published worked example per 0.1 calculation (book, edition, page, inputs, outputs) | ⬜ |
 | 0.9 | Collect 3–5 licence-safe sample DXF drawings | ⬜ |
-| 0.10 | Decide when to create the GitHub repository (private now vs after licence) | ⬜ |
+| 0.10 | Decide when to create the GitHub repository → public from day one (D-17) | ✅ 2026-11-25 |
+| 0.12 | Create public GitHub repository, push history and tags, enable private vulnerability reporting | ⬜ |
 | 0.11 | Tag `plan-v1.0` | ⬜ |
 
-Dependencies: 0.7 needs 0.6 (D-5, D-6). 0.8 needs D-7. Phase 1 needs 0.5–0.11.
+Dependencies: 0.7 needs 0.6 (D-5, D-6). 0.8 needs D-7. Phase 1 needs 0.5–0.12.
 
 ## Phase 1 — Architecture and Rust core
 
