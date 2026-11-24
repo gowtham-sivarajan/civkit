@@ -1,0 +1,41 @@
+# Rust
+/target/
+**/target/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+dist/
+build/
+
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+
+# Node / Tauri
+node_modules/
+
+# AutoCAD temporary files
+*.bak
+*.dwl
+*.dwl2
+*.sv$
+*.ac$
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Local environment
+.env
+*.local
