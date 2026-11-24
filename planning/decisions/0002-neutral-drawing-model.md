@@ -1,5 +1,7 @@
 # ADR 0002 — Neutral drawing model and DXF reader in the Rust engine
 
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:14 IST · last edited 2026-11-25 00:29 IST
+
 - **Status:** Accepted
 - **Date:** 2026-11-25
 - **Decision ID:** D-12

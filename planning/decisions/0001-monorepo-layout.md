@@ -1,5 +1,7 @@
 # ADR 0001 — Monorepo with an interface-independent engine
 
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:14 IST · last edited 2026-11-25 00:29 IST
+
 - **Status:** Accepted
 - **Date:** 2026-11-25
 - **Decision ID:** D-15
@@ -18,7 +20,8 @@ bindings/      language bindings: python/ (PyO3 + maturin)
 integrations/  mcp/, autocad/, civil3d/, matlab/, jupyter/
 apps/          desktop/ (Tauri 2)
 tests/         cross-cutting tests: reference worked examples, parity tests, DXF fixtures
-docs/
+docs/          stable design documents
+planning/      plans, decisions, handover
 ```
 
 Rules:
