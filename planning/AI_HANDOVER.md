@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 19:15 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 21:35 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -57,8 +57,8 @@
     check; it is committed together with 2C part 1.
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). **Blocked on D-23**: traverse,
-    levelling and earthwork need list inputs and a method choice, which the contract does not have
-    ([proposal](CONTRACT_LISTS_PROPOSAL.md)). Beam maximum shear and moment: still no qualifying example.
+    levelling and earthwork need list inputs and a method choice. Direction decided (option A, required
+    choices, §8 wording); full design in [the proposal](CONTRACT_LISTS_PROPOSAL.md) §3 awaits confirmation. Beam maximum shear and moment: still no qualifying example.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
@@ -102,9 +102,10 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Maintainer:** decide D-23 ([CONTRACT_LISTS_PROPOSAL.md](CONTRACT_LISTS_PROPOSAL.md)): list inputs (option A
-   recommended), choice inputs for the method, and the reading of "array inputs are out of scope".
-2. **Maintainer:** review the two implemented descriptors (Manning, beam): inputs, sign conventions, assumptions.
+1. **Maintainer:** confirm D-23 design §3 ([CONTRACT_LISTS_PROPOSAL.md](CONTRACT_LISTS_PROPOSAL.md)): groups,
+   list-output lengths (offset −1/0/+1), item numbering, `index` in errors, `choice` trace steps, 10 000-element limit.
+2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
+   (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
 4. After D-23: ADR 0011 and the API_DESIGN change, then the contract extension (tests first), then traverse,
    levelling and earthwork one at a time, each with its descriptor proposed for review first (D-20 condition 4).
@@ -124,6 +125,24 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 21:35 IST — D-23 direction decided; full design written *(Claude Opus 5.5)*
+- Maintainer reviewed the Manning and beam descriptors: no scope or formula mismatch with D-20. Asked that the
+  beam's conditional `point_load_position` stay prominent in generated forms and docs (Phase 3 task recorded).
+- D-23 direction decided by the maintainer:
+  - option A (parallel lists, one unit per list);
+  - required choice inputs, recorded in the trace;
+  - "array (vectorised) inputs" means Python batching.
+- The maintainer asked that list-output lengths be settled before implementation. The proposal §3 now has the
+  full design:
+  - groups with item labels;
+  - list outputs with length = group + offset (−1/0/+1);
+  - 1-based item numbering in messages and traces, plus a 0-based `index` field in errors;
+  - `choice` trace steps;
+  - `null` elements in reference cases;
+  - a 10 000-element limit.
+- Correction: the "array inputs" sentence is in API_DESIGN §8, not §7 as the first proposal said.
+- No code changed. Waiting for confirmation of §3.
 
 ### 2026-11-25 19:15 IST — 2C part 1: Manning and beam; contract gap for list inputs *(Claude Opus 5.5)*
 - Maintainer confirmed the 2B follow-up locally (127 tests) and said go for 2C.

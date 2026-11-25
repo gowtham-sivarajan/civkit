@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 19:15 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 21:35 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -43,7 +43,7 @@ Order agreed 2026-11-25. The units parser is infrastructure: it is finished and 
 |---|---|---|---|
 | 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | 🔄 2026-11-25: implemented and reviewed; CI green on `b4f37e2`. Follow-up enforces internal units in trace and messages (61 tests locally). Done when the maintainer's Windows check and CI on the follow-up pass |
 | 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ✅ 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green; implementation items confirmed. Follow-up (overflow rule for derived tolerances) pending the maintainer's check and CI |
-| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | 🔄 2026-11-25: Manning (C5) and beam reactions, deflection and end slope (C6–C8) done. Traverse, levelling and earthwork wait for D-23 (list and choice inputs, [proposal](CONTRACT_LISTS_PROPOSAL.md)). Beam maximum shear/moment: still no qualifying example |
+| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | 🔄 2026-11-25: Manning (C5) and beam reactions, deflection and end slope (C6–C8) done. Traverse, levelling and earthwork wait for D-23 (list and choice inputs): direction decided, design §3 of the [proposal](CONTRACT_LISTS_PROPOSAL.md) awaiting confirmation. Beam maximum shear/moment: still no qualifying example |
 | 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | ⬜ |
 
 Before beam maximum shear and moment: collect one more openly licensed worked example that numerically verifies them (D-20). Searched 2026-11-25 (S4 ch. 7, an openly licensed statics text): none fits a full-span UDL with one point load.
@@ -54,6 +54,8 @@ Before beam maximum shear and moment: collect one more openly licensed worked ex
 2. `integrations/mcp`: `rmcp` server, stdio, tools generated from descriptors, read-only annotations.
 3. Parity tests across Rust, Python and MCP.
 4. Example notebooks in `integrations/jupyter`.
+5. Generated forms, typed functions and API docs show conditional requirements prominently, e.g. the beam's
+   `point_load_position`, required only when `point_load > 0`. Such conditions stay in prose in 0.1 (D-23 §3.9).
 
 ## Phase 4 — Drawing model and DXF → 0.1
 
