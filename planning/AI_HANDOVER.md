@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 10:03 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 10:52 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -58,8 +58,9 @@
 
 ## 4. Next actions
 
-1. Collect 3–5 licence-safe DXF fixtures (task 0.9).
-2. Tag `plan-v1.0` (task 0.11), then Phase 1.
+1. Phase 1 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)): Cargo workspace, CI (files go to `_move_to_dot_github/workflows/`,
+   the maintainer moves them), dependency-rule check, DCO check, `civkit-core` skeleton, one dummy calculation.
+2. Later (maintainer has no AutoCAD 2027 licence yet): add an AutoCAD-written fixture once a licence that allows publishing exists.
 
 Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
 general prismoidal and soil phase relationships (later release).
@@ -71,6 +72,29 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 10:52 IST — Phase 0 complete; D-10, D-11 accepted *(Claude Opus 5.5)*
+- D-10 (2024 edition, MSRV 1.98) and D-11 (DCO, no CLA) accepted → ADR 0008; CONTRIBUTING updated.
+- Commit messages: pasted multi-part `git commit -m … -m …` lines were cut off twice in the maintainer's terminal.
+  New method: the AI writes a git-ignored `_commit_msg.txt`; the maintainer runs `git commit -s -F _commit_msg.txt`.
+- `plan-v1.0` was first pushed on a commit that lacked task 0.9 and the community files (the commit had failed);
+  it is re-created on the Phase 0 completion commit.
+
+### 2026-11-25 10:50 IST — GitHub community files *(Claude Opus 5.5)*
+- `CODE_OF_CONDUCT.md`: Contributor Covenant 3.0 (CC BY-SA 4.0) copied from source; reporting contact = maintainer's
+  commit email (already public in commits; maintainer agreed to a public email).
+- `.github/ISSUE_TEMPLATE/`: wrong-result form (treated as the most serious bug), bug report, calculation/feature request
+  (asks for an openly licensed worked example, D-18), config (blank issues off; private security link).
+- `.github/PULL_REQUEST_TEMPLATE.md` (dependency rule, offline, reference-case and AI-provenance checks); `ACCESSIBILITY.md`.
+- Remote AI file tools cannot write inside `.github/` (protected, like `.git/`). Files were written to `_move_to_dot_github/`
+  and the maintainer moves them into `.github/`.
+
+### 2026-11-25 10:40 IST — Task 0.9: DXF fixtures *(Claude Opus 5.5)*
+- `tests/fixtures/dxf/`: F1 metric site plan, F2 same in mm, F3 planted unit problems, F4 R12 legacy, F5 blocks
+  (rotated, stretched, mirrored, MINSERT, nested). F1–F3/F5 drawn in CADCraft; F4 written with ezdxf.
+- Two MIT samples from ezdxf (`insert_bricscad_level_1.dxf` from BricsCAD; `Minimal_DXF_AC1009.dxf`), licence file kept with them.
+- Expected values fixed by construction and re-checked with ezdxf + shapely (0 failures); script kept outside the repo.
+- University folders offered by the maintainer were not opened: not needed, and they may hold personal or coursework data.
 
 ### 2026-11-25 10:03 IST — D-19 accepted *(Claude Opus 5.5)*
 - Maintainer accepted all nine API resolutions → D-19, ADR 0007; API_DESIGN.md has no open TBDs; task 0.7 ✅.

@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 00:29 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 10:52 IST
 
 # Rust
 /target/
@@ -41,3 +41,6 @@ desktop.ini
 # Local environment
 .env
 *.local
+
+# Commit message prepared by an AI assistant (used with git commit -F); never committed
+/_commit_msg.txt

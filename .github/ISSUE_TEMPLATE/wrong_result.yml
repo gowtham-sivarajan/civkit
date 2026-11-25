@@ -1,0 +1,48 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:46 IST · last edited 2026-11-25 10:46 IST
+name: Wrong calculation result
+description: A CivKit calculation gives a number you believe is wrong. These are treated as the most serious bugs.
+title: "[Wrong result] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. A wrong engineering result is the most serious kind of bug in CivKit.
+        Please give enough detail for someone else to reproduce the number by hand.
+  - type: input
+    id: calculation
+    attributes:
+      label: Calculation ID and version
+      description: As shown in the result, e.g. `fluids.open_channel.manning` version 1.
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Inputs (with units)
+      description: The request JSON, or the call you made from Python / MCP / another interface.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: got
+    attributes:
+      label: Result CivKit gave
+      description: Paste the full response if you can (outputs, trace and warnings).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Result you expected, and how you got it
+      description: Show your working, or cite a source (book, edition, page; or code clause). An openly licensed source is best, as it lets everyone check.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: CivKit version and interface
+      description: e.g. 0.1.0 via Python on Windows 11.
+    validations:
+      required: true

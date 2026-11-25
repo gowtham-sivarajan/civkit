@@ -1,0 +1,44 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:46 IST · last edited 2026-11-25 10:46 IST
+name: Calculation or feature request
+description: Propose a new calculation, unit, drawing feature or interface improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A new calculation can only be added once there is a **worked example from an openly licensed or public-domain source**
+        (decision D-18; see planning/REFERENCE_SOURCES.md). Pointing to one makes a request much more likely to be accepted.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should CivKit do?
+      description: The calculation or feature, and the problem it solves for you.
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Method and source
+      description: Formula or standard method, and where it is published (book, edition, page or URL). Say what the source's licence is if you know it.
+  - type: textarea
+    id: example
+    attributes:
+      label: Worked example
+      description: Inputs, expected outputs and the source page, if you have one.
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Area
+      options:
+        - Surveying
+        - Structural
+        - Geotechnical
+        - Fluids / hydraulics
+        - Quantities / estimation
+        - Units
+        - Drawings (DXF / AutoCAD)
+        - Python / Jupyter
+        - MCP / AI clients
+        - Other
+    validations:
+      required: true

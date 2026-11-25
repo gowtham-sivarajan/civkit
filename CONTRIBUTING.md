@@ -1,6 +1,6 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 08:58 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 10:52 IST
 
 > **Status:** Phase 0 — Planning. Code contributions are not open yet; feedback on the planning documents is
 > welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that
@@ -77,7 +77,8 @@ git config --global user.email "you@example.com"
 |---|---|
 | See history | `git log --oneline --decorate` |
 | See what changed | `git status` then `git diff` |
-| Save my work | `git add -A` then `git commit -m "docs: describe the change"` |
+| Save my work | `git add -A` then `git commit -s -m "docs: describe the change"` |
+| Commit with a message an AI prepared | `git add -A` then `git commit -s -F _commit_msg.txt` (the file is git-ignored; avoids long messages being cut off when pasted) |
 | See an old version of a file | `git show plan-v0.1:README.md` |
 | Restore one file to an old version | `git restore --source=plan-v0.1 README.md` (then commit) |
 | Undo a commit safely (keeps history) | `git revert <commit-id>` |
@@ -88,7 +89,12 @@ Avoid `git reset --hard` and `git push --force` unless you are certain — they 
 
 ## 6. Sign-off
 
-Proposed: Developer Certificate of Origin (`git commit -s`), no CLA (D-11).
+Every commit must be signed off: use `git commit -s`. This adds a `Signed-off-by: Your Name <email>` line.
+It certifies the [Developer Certificate of Origin 1.1](https://developercertificate.org/): you wrote the change, or
+otherwise have the right to submit it under the project's licence. There is no CLA; you keep your copyright
+(D-11, [ADR 0008](planning/decisions/0008-rust-edition-and-sign-off.md)). CI rejects commits without a sign-off from Phase 1.
+
+Rust: all crates use the **2024 edition**; the minimum supported Rust version is **1.98** (latest stable − 2; D-10).
 
 ## 7. AI-assisted work
 

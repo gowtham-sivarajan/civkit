@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 09:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 10:50 IST
 >
 > **Status:** Phase 0 — Planning. No code is written until the Phase 0 exit criteria are met
 > ([planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
@@ -32,6 +32,8 @@ available in every interface with the same inputs, the same results and the same
 | Root | `README.md` | What is this project and where is everything? |
 | | [`ROADMAP.md`](ROADMAP.md) | What gets built, in what order? |
 | | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How do I set up, work with git, and contribute? |
+| | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | How we treat each other; how to report a problem privately. |
+| | [`ACCESSIBILITY.md`](ACCESSIBILITY.md) | Accessibility commitments, known limits, reporting barriers. |
 | `docs/` — *how the software works and the rules it follows (changes slowly)* | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How is the system structured? |
 | | [`API_DESIGN.md`](docs/API_DESIGN.md) | Calculation contract, units format, FFI, Python and MCP surfaces. |
 | | [`ENGINEERING_STANDARDS.md`](docs/ENGINEERING_STANDARDS.md) | What must every calculation meet to be trusted? |
@@ -45,6 +47,7 @@ available in every interface with the same inputs, the same results and the same
 | | [`REFERENCE_CASES.md`](planning/REFERENCE_CASES.md) | Collected worked examples, re-derivations, source errata, 0.1 coverage. |
 | | [`AI_HANDOVER.md`](planning/AI_HANDOVER.md) | Current state and next actions — **read first when resuming work** (human or AI). |
 | | [`ORIGINAL_PROPOSAL.md`](planning/ORIGINAL_PROPOSAL.md) | The original concept proposal, unchanged. |
+| `tests/` | [`fixtures/dxf/README.md`](tests/fixtures/dxf/README.md) | Sample drawings and their exact expected values. |
 
 **New to the project?** README → ARCHITECTURE → ROADMAP.
 **Resuming work?** Start with [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
@@ -55,9 +58,11 @@ available in every interface with the same inputs, the same results and the same
 
 ```
 CivKit/
-├── README.md  ROADMAP.md  CONTRIBUTING.md
+├── README.md  ROADMAP.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md  ACCESSIBILITY.md
+├── .github/         issue forms and pull request template
 ├── docs/            stable design documents
 ├── planning/        plans, decisions, handover (decision records in planning/decisions/)
+├── tests/fixtures/  DXF sample drawings (Phase 0)
 │
 │   created from Phase 1 onward:
 ├── Cargo.toml       Rust workspace
@@ -65,7 +70,7 @@ CivKit/
 ├── bindings/        python/
 ├── integrations/    mcp/  autocad/  civil3d/  matlab/  jupyter/
 ├── apps/            desktop/
-└── tests/           reference worked examples, parity tests, DXF fixtures
+└── tests/           reference worked examples, parity tests
 ```
 
 Details and the dependency rule: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

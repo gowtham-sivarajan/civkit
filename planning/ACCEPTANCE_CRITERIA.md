@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:03 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:52 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -15,11 +15,11 @@
 - [x] The 0.1 calculation set is fixed (D-7), and **each calculation has ≥1 published worked example** collected
       (source, edition, page, inputs, expected outputs). *[REFERENCE_CASES.md](REFERENCE_CASES.md) C1–C9; prismoidal (general)
       and soil phase relationships deferred; human engineering review deferred until the product is complete.*
-- [ ] 3–5 licence-safe sample DXF drawings collected for fixtures.
+- [x] 3–5 licence-safe sample DXF drawings collected for fixtures. *[tests/fixtures/dxf](../tests/fixtures/dxf/README.md): F1–F5 (Apache-2.0) + 2 ezdxf samples (MIT); expected values independently checked.*
 - [x] Toolchain installed and verified (Rust builds and links a test program; Python `.venv` works) — 2026-11-25.
 - [x] Licence chosen and `LICENSE` added (Apache-2.0, 2026-11-25).
 - [x] Public GitHub repository created and pushed; private vulnerability reporting enabled (2026-11-25).
-- [ ] Tag `plan-v1.0`.
+- [x] Tag `plan-v1.0`. *2026-11-25 — Phase 0 complete.*
 
 ### Phase 1 — Architecture and Rust core
 - [ ] Cargo workspace builds in CI on Windows, macOS and Linux.

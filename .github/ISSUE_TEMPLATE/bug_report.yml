@@ -1,0 +1,37 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:46 IST · last edited 2026-11-25 10:46 IST
+name: Bug report
+description: Something does not work (a crash, an error message, a drawing that will not load, a documentation mistake). For a wrong number, use "Wrong calculation result".
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Commands, code or the request you ran. If a drawing is involved, attach a small DXF that shows the problem, and only one you are allowed to share.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: CivKit version, interface and operating system
+      description: e.g. 0.1.0, MCP server, Windows 11.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Paste any error message. Remove anything private first.
+      render: text

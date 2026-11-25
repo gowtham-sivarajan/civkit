@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 10:03 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 10:52 IST
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -31,8 +31,8 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-7 | P0 | Which calculations in 0.1? | Driven by open sources: candidates in [MVP_SCOPE.md §3](MVP_SCOPE.md#3-in-scope); a calculation enters 0.1 only once an open worked example is collected and re-derived (task 0.8). | **Accepted** 2026-11-25 · [ADR 0006](decisions/0006-open-sources-and-0-1-calculations.md) |
 | D-8 | P1 | First design code after 0.1? | Whichever the first users work with — e.g. IS 456 / IS 800 for users in India. One code at a time. | Proposed |
 | D-9 | P1 | Supported AutoCAD versions? | **AutoCAD 2027 only to start** (.NET 10, the installed version). Add 2025/2026 (.NET 8) only if users need it. | Proposed |
-| D-10 | P1 | Rust edition / minimum Rust version? | 2024 edition; latest stable at Phase 1 start; MSRV "latest stable − 2". | Proposed |
-| D-11 | P1 | Contribution sign-off? | DCO (`git commit -s`), no CLA. | Proposed |
+| D-10 | P1 | Rust edition / minimum Rust version? | 2024 edition; latest stable at Phase 1 start; MSRV "latest stable − 2" → `rust-version = "1.98"` (stable 1.100.0 at Phase 1 start). | **Accepted** 2026-11-25 · [ADR 0008](decisions/0008-rust-edition-and-sign-off.md) |
+| D-11 | P1 | Contribution sign-off? | DCO (`git commit -s`), no CLA. | **Accepted** 2026-11-25 · [ADR 0008](decisions/0008-rust-edition-and-sign-off.md) |
 | D-12 | P0 | Neutral drawing model + DXF reader in Rust? | Yes. | **Accepted** 2026-11-25 · [ADR 0002](decisions/0002-neutral-drawing-model.md) |
 | D-13 | P1 | MCP SDK? | Official `rmcp` crate, stdio only; pin version at Phase 3 start. | Proposed |
 | D-14 | P1 | When does SQLite enter? | Phase 6 (desktop history). | Proposed |
@@ -53,6 +53,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0005](decisions/0005-scope-order-units-ffi.md) | 0.1 scope, build order, units model and FFI contract | D-3, D-4, D-5, D-6 |
 | [0006](decisions/0006-open-sources-and-0-1-calculations.md) | Openly licensed reference sources and the 0.1 calculation set | D-7, D-18 |
 | [0007](decisions/0007-api-contract-details.md) | API contract details for 0.1 | D-19 |
+| [0008](decisions/0008-rust-edition-and-sign-off.md) | Rust edition, MSRV and contribution sign-off | D-10, D-11 |
 
 ## Template for a new decision record
 

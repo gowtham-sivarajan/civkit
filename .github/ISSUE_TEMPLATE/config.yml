@@ -1,0 +1,9 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:46 IST · last edited 2026-11-25 10:46 IST
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/gowtham-sivarajan/civkit/security/advisories/new
+    about: Please do not open a public issue for security problems. See docs/SECURITY.md.
+  - name: Code of Conduct
+    url: https://github.com/gowtham-sivarajan/civkit/blob/main/CODE_OF_CONDUCT.md
+    about: How we work together, and how to report a conduct problem privately.
