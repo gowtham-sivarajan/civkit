@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:10 IST · last edited 2026-11-25 11:10 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
 
 //! Runs every reference case in `tests/reference/` (repository root) against the engine.
 //! Format: `tests/reference/README.md`. A case that fails to parse is a test failure, not a skip.

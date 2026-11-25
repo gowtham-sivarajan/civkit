@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:25 IST · last edited 2026-11-25 11:25 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
 # Weekly dependency update pull requests (docs/SECURITY.md). Each one still has to pass CI, including cargo-deny.
 version: 2
 updates:

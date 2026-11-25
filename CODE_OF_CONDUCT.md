@@ -1,7 +1,7 @@
 # Code of Conduct
 
 > **Provenance:** text is the Contributor Covenant 3.0 (Organization for Ethical Source, CC BY-SA 4.0), copied from
-> its source repository (commit `8d00b9180c88`). Adapted by Claude Opus 5.5 (`claude-opus-5-5`) · 2026-11-25 10:44 IST:
+> its source repository (commit `8d00b9180c88`). Adapted by Claude Opus 5.5 (`claude-opus-5-5`) · 2026-11-25 10:34 IST:
 > reporting contact filled in, editorial placeholder note removed. No other changes.
 
 ## Our Pledge

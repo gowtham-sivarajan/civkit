@@ -1,6 +1,6 @@
 # Architecture
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:32 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:01 IST
 
 > **Status:** Design — accepted parts are marked with their decision ID; the rest is proposed.
 > Contract and API details: [API_DESIGN.md](API_DESIGN.md).

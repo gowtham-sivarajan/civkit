@@ -1,6 +1,6 @@
 # ADR 0008 — Rust edition, minimum Rust version and contribution sign-off
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:52 IST · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:48 IST · last edited 2026-11-25 10:48 IST
 
 - **Status:** Accepted
 - **Date:** 2026-11-25

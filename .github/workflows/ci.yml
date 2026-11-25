@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:25 IST · last edited 2026-11-25 11:25 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
 # Continuous integration (Phase 1, planning/ACCEPTANCE_CRITERIA.md): build and test on Windows, macOS and Linux
 # with the minimum supported Rust (1.98, D-10) and latest stable; formatting; clippy; cargo-deny; the engine
 # dependency rule; DCO sign-off (D-11). Actions are pinned to commit SHAs (docs/SECURITY.md).

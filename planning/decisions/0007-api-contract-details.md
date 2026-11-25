@@ -1,6 +1,6 @@
 # ADR 0007 — API contract details for 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:03 IST · last edited 2026-11-25 10:03 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:02 IST · last edited 2026-11-25 10:02 IST
 
 - **Status:** Accepted
 - **Date:** 2026-11-25

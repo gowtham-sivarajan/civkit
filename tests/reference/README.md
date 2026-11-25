@@ -1,6 +1,6 @@
 # Reference cases
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 11:30 IST · last edited 2026-11-25 11:30 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
 
 A reference case is a published worked example turned into a test. It has a known input, a cited method, and an independently verified expected result ([ENGINEERING_STANDARDS.md](../../docs/ENGINEERING_STANDARDS.md)).
 Every registered calculation must have at least one; CI fails otherwise.

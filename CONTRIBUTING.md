@@ -1,6 +1,6 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 11:32 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 11:01 IST
 
 > **Status:** Phase 0 — Planning. Code contributions are not open yet; feedback on the planning documents is
 > welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that

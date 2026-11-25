@@ -1,6 +1,6 @@
 # Accessibility
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:48 IST · last edited 2026-11-25 10:48 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:35 IST · last edited 2026-11-25 10:35 IST
 
 CivKit should be usable by every engineer and student, including people who use screen readers, keyboard-only navigation,
 magnification or high-contrast settings.

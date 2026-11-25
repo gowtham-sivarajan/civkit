@@ -1,6 +1,6 @@
 # Offline Policy
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:28 IST · last edited 2026-11-25 00:28 IST
 
 > **Status:** Draft. Turns the proposal's local-first principles into rules that can be checked.
 

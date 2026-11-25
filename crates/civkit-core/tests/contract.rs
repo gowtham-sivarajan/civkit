@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:13 IST · last edited 2026-11-25 11:13 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 

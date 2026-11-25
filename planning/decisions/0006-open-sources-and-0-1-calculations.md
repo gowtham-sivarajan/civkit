@@ -1,6 +1,6 @@
 # ADR 0006 — Openly licensed reference sources and the 0.1 calculation set
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 09:05 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:04 IST · last edited 2026-11-25 09:04 IST
 
 - **Status:** Accepted
 - **Date:** 2026-11-25

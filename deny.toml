@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:20 IST · last edited 2026-11-25 11:20 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:59 IST · last edited 2026-11-25 10:59 IST
 # cargo-deny configuration: licences, advisories, sources and banned crates (docs/SECURITY.md, docs/ARCHITECTURE.md).
 # The engine-specific dependency rule (nothing in crates/ may reach Python, MCP, network or AI crates, even
 # transitively) is checked by tools/check_dependency_rule.py; the bans below apply to the whole workspace.

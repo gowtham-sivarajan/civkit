@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:20 IST · last edited 2026-11-25 11:20 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:59 IST · last edited 2026-11-25 10:59 IST
 """Checks the dependency rule of docs/ARCHITECTURE.md §2.
 
 1. No package under crates/ has a path dependency outside crates/.

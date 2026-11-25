@@ -1,6 +1,6 @@
 # Security
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:40 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:36 IST
 
 > **Status:** Draft. No released versions yet.
 

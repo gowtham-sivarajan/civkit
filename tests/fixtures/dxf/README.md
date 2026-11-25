@@ -1,6 +1,6 @@
 # DXF test fixtures
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:38 IST · last edited 2026-11-25 10:38 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 10:33 IST · last edited 2026-11-25 10:33 IST
 
 Sample drawings for the read-only DXF analysis in 0.1 (task 0.9, [ADR 0002](../../../planning/decisions/0002-neutral-drawing-model.md)).
 Each fixture has **exact expected values fixed by construction**: the geometry was chosen so that every length and area has a closed form.

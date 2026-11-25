@@ -1,6 +1,6 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:48 IST
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 

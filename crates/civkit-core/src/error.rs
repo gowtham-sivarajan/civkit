@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
 
 //! Errors: the codes of `docs/API_DESIGN.md` §5 and the JSON error envelope.
 

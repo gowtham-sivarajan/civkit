@@ -1,5 +1,5 @@
 {
-  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:10 IST · last edited 2026-11-25 11:10 IST",
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:57 IST · last edited 2026-11-25 10:57 IST",
   "case": "demo-02-extreme-weight",
   "title": "Weight outside the stated validity range gives a warning, not an error",
   "source": {

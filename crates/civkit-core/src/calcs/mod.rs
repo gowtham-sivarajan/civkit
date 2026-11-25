@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:06 IST · last edited 2026-11-25 11:06 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:56 IST · last edited 2026-11-25 10:56 IST
 
 //! Built-in calculations. Domain modules (geotech, structural, surveying, fluids, quantities, math) live here
 //! until they grow large enough for their own crates (`docs/ARCHITECTURE.md` §2).

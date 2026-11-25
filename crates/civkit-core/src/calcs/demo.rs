@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:06 IST · last edited 2026-11-25 11:06 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
 
 //! **Template calculation.** Copy this file to start a new calculation (see `CONTRIBUTING.md` §2).
 //!

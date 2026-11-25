@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-25 10:55 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-25 11:09 IST
 [workspace]
 resolver = "3"
 members = [
@@ -19,10 +19,8 @@ authors = ["CivKit contributors"]
 publish = false                 # nothing is published to crates.io before 0.1
 
 [workspace.dependencies]
-civkit-core = { path = "crates/civkit-core" }
+# Engine crates are added here as they start depending on each other (cargo warns about unused entries).
 civkit-units = { path = "crates/civkit-units" }
-civkit-geometry = { path = "crates/civkit-geometry" }
-civkit-drawing = { path = "crates/civkit-drawing" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

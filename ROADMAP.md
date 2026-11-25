@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:14 IST
 
 What gets built, in what order. Task breakdown: [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md).
 Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
@@ -10,8 +10,8 @@ Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTA
 | Phase | Objective | Main outputs | Release |
 |---|---|---|---|
 | **0** | Planning *(done — tag `plan-v1.0`)* | Decisions, API design, engineering standards, reference worked examples | — |
-| **1** | Architecture and Rust core *(current)* | Cargo workspace, `civkit-core` registry and contract, CI on Windows/macOS/Linux | — |
-| **2** | Units, geometry, calculations, validation | `civkit-units`, `civkit-geometry`, the 0.1 calculation set with reference tests | — |
+| **1** | Architecture and Rust core *(done — tag `phase-1-done`)* | Cargo workspace, `civkit-core` registry and contract, CI on Windows/macOS/Linux | — |
+| **2** | Units, geometry, calculations, validation *(next)* | `civkit-units`, `civkit-geometry`, the 0.1 calculation set with reference tests | — |
 | **3** | Python bindings + local MCP server | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
 | **4** | Drawing model + DXF analysis | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
 | **5** | AutoCAD / Civil 3D integration | `civkit-ffi`, AutoCAD 2027 plugin (read-only), Civil 3D extension | **0.2** |

@@ -1,6 +1,6 @@
 # ADR 0005 — 0.1 scope, build order, units model and FFI contract
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 09:05 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:04 IST · last edited 2026-11-25 09:04 IST
 
 - **Status:** Accepted
 - **Date:** 2026-11-25

@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 11:32 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 11:15 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -23,18 +23,21 @@
 
 ## 2. Working rules
 
-1. **No code until Phase 0 is complete** ([ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md)). Documents only.
-   In particular, **no calculation is implemented until D-3 … D-7 are resolved** and every Phase 0 criterion is met.
-   The only exception is a throwaway toolchain smoke test outside the repository.
+1. **Phases in order.** Phase 0 (planning) is complete (`plan-v1.0`); Phase 1 is complete. Work only on the current
+   phase's tasks ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)); every calculation needs its reference cases first.
 2. **Work only inside this repository folder.** Do not read or modify anything else on the maintainer's machine.
 3. **Provenance on every write.** Every file an AI creates or edits carries, near the top, a provenance line
    with model name, model ID and timestamp in IST; update "last edited" on every edit. Use a comment line in
    non-Markdown files. Suggested commit messages include a `Co-Authored-By` trailer. (ADR 0003)
+   **Read the clock (`date`, or the time tool) immediately before writing any timestamp. Never estimate a time:**
+   a stamp must never be later than the moment the file is actually written. (Estimated stamps ran ahead of the
+   clock three times on 2026-11-25 and had to be corrected from file modification times.)
 4. **One home per fact.** Decisions → DECISIONS.md; tasks → IMPLEMENTATION_PLAN.md; exit criteria →
    ACCEPTANCE_CRITERIA.md. Link, don't copy.
 5. **Decisions** go Proposed → Accepted only when the maintainer says so; accepted ones get an ADR.
 6. **Git:** the maintainer runs git commands; AI tools cannot write inside `.git`. After changes, give the
-   maintainer the exact `git add` / `git commit` commands. Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
+   maintainer the exact commands. Put the commit message in the git-ignored `_commit_msg.txt` and have the maintainer
+   run `git commit -s -F _commit_msg.txt` (pasted multi-part `-m` lines get cut off; `-s` is the D-11 sign-off). Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
 7. Never present unverified engineering content as fact; flag it for engineering review.
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
@@ -58,9 +61,9 @@
 
 ## 4. Next actions
 
-1. Maintainer: move `_move_to_dot_github/` contents into `.github/`, commit, push; watch the first CI run.
-   Fix anything CI finds on Windows/macOS or Rust 1.98 (only Linux + Rust 1.97 was available to the AI).
-2. When CI is green: tag `phase-1-done`, then Phase 2 (civkit-units, civkit-geometry, the five 0.1 calculations; C1–C9 → tests/reference).
+1. Phase 2: `civkit-units` (named units, compound parser, `MISSING_UNIT`/`AMBIGUOUS_UNIT`, DMS and bearings),
+   `civkit-geometry`, then the five 0.1 calculations with C1–C9 moved into `tests/reference/`.
+2. Review Dependabot pull requests as they arrive (each must pass CI).
 2. Later (maintainer has no AutoCAD 2027 licence yet): add an AutoCAD-written fixture once a licence that allows publishing exists.
 
 Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
@@ -74,7 +77,16 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
 
-### 2026-11-25 11:32 IST — Phase 1 code *(Claude Opus 5.5)*
+### 2026-11-25 11:15 IST — Phase 1 complete *(Claude Opus 5.5)*
+- Maintainer ran `cargo test --workspace` on Windows with Rust 1.100: 23/23 pass.
+- First CI [run 45555065260](https://github.com/gowtham-sivarajan/civkit/actions/runs/45555065260) on 0e07eed: 9/9 jobs green (fmt; tests on Windows/macOS/Linux × 1.98/stable; clippy; dependency rule;
+  cargo-deny; DCO). Dependabot started its first checks.
+- Cargo 1.100 warned about unused workspace dependencies; removed (re-added when crates depend on each other).
+- Correction: the Phase 1 files and the entry below were stamped 11:00–11:32 IST from estimates; the files were
+  actually written 10:54–11:01 IST. Every stamp later than its file's real modification time was reset to that time, across the repository
+  (48 files, plus three test JSON files, the Code of Conduct note and four log headings from 10:02 onward).
+
+### 2026-11-25 11:00 IST — Phase 1 code *(Claude Opus 5.5)*
 - Cargo workspace (2024 edition, MSRV 1.98, workspace lints: unsafe forbidden, missing docs warn), five crates.
 - `civkit-units`: `Dimension` only (angle separate). `civkit-core`: descriptor, registry, request/response, errors and
   envelope, warnings, trace, validity rules (warn/escalate), domain checks, `MISSING_UNIT`, panic → `INTERNAL`, `call_json`.
@@ -87,14 +99,14 @@ Newest first. One short entry per session: what changed, what was decided, what 
 - Verified locally on Linux with Rust 1.97 using `--ignore-rust-version`. Rust 1.98+ and Windows/macOS untested until CI.
 - actionlint could not be run (downloading and running its binary was blocked); workflow YAML parsed and SHA pins checked instead.
 
-### 2026-11-25 10:52 IST — Phase 0 complete; D-10, D-11 accepted *(Claude Opus 5.5)*
+### 2026-11-25 10:48 IST — Phase 0 complete; D-10, D-11 accepted *(Claude Opus 5.5)*
 - D-10 (2024 edition, MSRV 1.98) and D-11 (DCO, no CLA) accepted → ADR 0008; CONTRIBUTING updated.
 - Commit messages: pasted multi-part `git commit -m … -m …` lines were cut off twice in the maintainer's terminal.
   New method: the AI writes a git-ignored `_commit_msg.txt`; the maintainer runs `git commit -s -F _commit_msg.txt`.
 - `plan-v1.0` was first pushed on a commit that lacked task 0.9 and the community files (the commit had failed);
   it is re-created on the Phase 0 completion commit.
 
-### 2026-11-25 10:50 IST — GitHub community files *(Claude Opus 5.5)*
+### 2026-11-25 10:35 IST — GitHub community files *(Claude Opus 5.5)*
 - `CODE_OF_CONDUCT.md`: Contributor Covenant 3.0 (CC BY-SA 4.0) copied from source; reporting contact = maintainer's
   commit email (already public in commits; maintainer agreed to a public email).
 - `.github/ISSUE_TEMPLATE/`: wrong-result form (treated as the most serious bug), bug report, calculation/feature request
@@ -103,14 +115,14 @@ Newest first. One short entry per session: what changed, what was decided, what 
 - Remote AI file tools cannot write inside `.github/` (protected, like `.git/`). Files were written to `_move_to_dot_github/`
   and the maintainer moves them into `.github/`.
 
-### 2026-11-25 10:40 IST — Task 0.9: DXF fixtures *(Claude Opus 5.5)*
+### 2026-11-25 10:34 IST — Task 0.9: DXF fixtures *(Claude Opus 5.5)*
 - `tests/fixtures/dxf/`: F1 metric site plan, F2 same in mm, F3 planted unit problems, F4 R12 legacy, F5 blocks
   (rotated, stretched, mirrored, MINSERT, nested). F1–F3/F5 drawn in CADCraft; F4 written with ezdxf.
 - Two MIT samples from ezdxf (`insert_bricscad_level_1.dxf` from BricsCAD; `Minimal_DXF_AC1009.dxf`), licence file kept with them.
 - Expected values fixed by construction and re-checked with ezdxf + shapely (0 failures); script kept outside the repo.
 - University folders offered by the maintainer were not opened: not needed, and they may hold personal or coursework data.
 
-### 2026-11-25 10:03 IST — D-19 accepted *(Claude Opus 5.5)*
+### 2026-11-25 10:02 IST — D-19 accepted *(Claude Opus 5.5)*
 - Maintainer accepted all nine API resolutions → D-19, ADR 0007; API_DESIGN.md has no open TBDs; task 0.7 ✅.
 - Correction: the two previous log entries were stamped 10:08 and 10:16 IST — times estimated ahead of the real clock.
   Re-stamped to 09:57 and 09:59 IST (checked against the current time). Lesson: read the clock, never estimate.
