@@ -1,6 +1,6 @@
 # Reference Sources
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 09:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 10:08 IST
 
 > **Status:** Living register. The only place where reference sources are listed (ADR 0003 "one home per fact").
 > Policy: D-18 ([ADR 0006](decisions/0006-open-sources-and-0-1-calculations.md)). Use: [ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md).
@@ -47,6 +47,10 @@ be located in task 0.8.
 | Source | Reason |
 |---|---|
 | A. Verruijt, *An Introduction to Soil Mechanics* (Springer, 2018) | Licence unclear: a download site lists it as CC BY, but Springer's own page shows it as subscription content. Not used unless an open licence is confirmed from the publisher. |
+| NPTEL, IIT Guwahati *Soil Mechanics* web course (105103097), ch. 2 worked examples | Licence unclear: NPTEL FAQ says copyright is held jointly by MoE, IITs and faculty, and CC licensing is only "likely … in the future". |
+| N. Sivakugan, *Phase Relations* (1998 notes, hosted on geoengineer.org) | Worked examples, but **no licence stated**. |
+| FHWA NHI-06-088 *Soils and Foundations* Vol. I (public domain), ch. 2 | Checked: phase relationships as formulas only; no worked example. |
+| USACE EM 1110-2-1906 *Laboratory Soils Testing* (public domain), App. II | Checked: forms are blank in the text; no worked example found. |
 | J. Mahun, *Traverse Computations* (jerrymahun.com "open access") | Complete compass-rule example, but **no licence stated** — not openly licensed. |
 | Commercial textbooks (Pearson, Elsevier, McGraw Hill, Indian university texts, etc.) | Not openly licensed (D-18). |
 | Lecture slides and notes found on file-sharing sites | Licence unknown or not open. |

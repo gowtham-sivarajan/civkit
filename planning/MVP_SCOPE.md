@@ -1,9 +1,8 @@
 # MVP Scope — CivKit 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:08 IST
 
-> **Status:** Accepted (D-3, D-7). The calculation list is conditional: a calculation stays in 0.1 only once an
-> open worked example is collected and re-derived ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md), task 0.8).
+> **Status:** Accepted (D-3, D-7). Calculation set fixed 2026-11-25 after task 0.8: five calculations in, two deferred.
 
 ## 1. Goal of 0.1
 
@@ -28,12 +27,12 @@ in 0.1 instead. The plugin then reuses that analysis (ADR 0002).
 | Domain | Calculation | Open sources | Status |
 |---|---|---|---|
 | Quantities | Earthwork volume — average end area (incl. zero-end pyramid) | C1, C2 | ✅ In 0.1 |
-| Quantities | Earthwork volume — prismoidal (general mid-area) | C2 covers only the pyramid case | ⚠️ Decision needed |
+| Quantities | Earthwork volume — prismoidal (general mid-area) | C2 covers only the pyramid case | ❎ Deferred (later release) |
 | Fluids | Manning's equation for uniform open-channel flow | C5 | ✅ In 0.1 |
 | Structural | Simply supported beam: reactions, max shear/moment, deflection (UDL and point loads) | C6, C7, C8 | ✅ In 0.1 |
 | Surveying | Levelling reduction (height of instrument; rise & fall), closure and adjustment | C4, C9 | ✅ In 0.1 |
 | Surveying | Traverse closure and compass-rule (Bowditch) adjustment | C3 | ✅ In 0.1 |
-| Geotechnical | Soil phase relationships | — | ❌ No open worked example — out of 0.1 unless one is found before Phase 0 ends |
+| Geotechnical | Soil phase relationships | — | ❎ Deferred (later release) — no openly licensed worked example |
 
 Case IDs (C1 …) refer to [REFERENCE_CASES.md](REFERENCE_CASES.md); sources to [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md).
 
@@ -47,7 +46,8 @@ Case IDs (C1 …) refer to [REFERENCE_CASES.md](REFERENCE_CASES.md); sources to 
 ## 4. Out of scope for 0.1
 
 AutoCAD / Civil 3D plugin (0.2) · MATLAB · desktop app · SQLite · design-code checks · any drawing writes ·
-temperature units · network features of any kind.
+temperature units · network features of any kind · general prismoidal formula and soil phase relationships
+(deferred until an openly licensed worked example exists — D-18).
 
 ## 5. Later releases (indicative)
 

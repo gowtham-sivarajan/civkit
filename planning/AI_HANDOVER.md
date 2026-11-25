@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 09:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 10:16 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -58,10 +58,12 @@
 
 ## 4. Next actions
 
-1. Maintainer decisions: prismoidal (general case) and soil phase relationships — see [REFERENCE_CASES.md](REFERENCE_CASES.md) coverage table.
-   Human engineering review of cases C1–C9.
-2. Finish the TBDs in API_DESIGN.md.
-3. Collect 3–5 licence-safe DXF fixtures (task 0.9).
+1. Maintainer to accept (or amend) the 9 proposed API resolutions in [API_DESIGN.md §12](../docs/API_DESIGN.md#12-resolved-tbds--summary-task-07-proposed-2026-11-25) (task 0.7).
+2. Collect 3–5 licence-safe DXF fixtures (task 0.9).
+3. Tag `plan-v1.0` (task 0.11), then Phase 1.
+
+Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
+general prismoidal and soil phase relationships (later release).
 
 Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
@@ -70,6 +72,19 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 10:16 IST — Task 0.7: API TBDs resolved (proposed) *(Claude Opus 5.5)*
+- API_DESIGN.md: every TBD replaced by a proposed resolution; summary table §12.
+- Notable choices: no silent default unit (`MISSING_UNIT`); `lb` and `k` rejected as ambiguous; `ft` vs `ft_us`;
+  DMS and quadrant bearings as structured values; validity breaches warn by default, escalation per rule.
+- Unit list checked against every unit used in C1–C9.
+
+### 2026-11-25 10:08 IST — 0.1 calculation set fixed *(Claude Opus 5.5)*
+- Second search for prismoidal and soil phase examples found nothing openly licensed (NPTEL: licence unclear;
+  Sivakugan: no licence; FHWA NHI-06-088 and EM 1110-2-1906: no worked example). Maintainer: ship without them.
+- 0.1 calculations: average end area (+ zero-end pyramid), Manning, simply supported beam, levelling, traverse/compass rule.
+- Maintainer deferred the human engineering review of C1–C9 until the product is complete.
+  ENGINEERING_STANDARDS is unchanged: each calculation still ships with its reference-case tests.
 
 ### 2026-11-25 09:52 IST — Task 0.8: reference cases collected and re-derived *(Claude Opus 5.5)*
 - New `planning/REFERENCE_CASES.md`: 9 cases (C1–C9) from open sources, all re-derived by script.
