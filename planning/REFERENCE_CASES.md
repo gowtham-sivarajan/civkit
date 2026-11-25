@@ -1,6 +1,6 @@
 # Reference Cases (Phase 0 collection)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-25 19:15 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Task 0.8. Worked examples collected from open sources ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)),
 > each **re-derived independently** by script (Claude Opus 5.5, 2026-11-25). **Human engineering review: pending.**
@@ -52,6 +52,11 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
     Consequently the true departure misclosure is 2.26 ft (book 2.24) and linear misclosure 2.29 ft (book 2.26).
 - **Test design:** (a) adjustment test uses the book's lat/dep as inputs — exact match expected; (b) lat/dep-from-bearing
   test excludes CD departure, which is recorded as a known source erratum.
+- **Implemented 2026-11-26:** (a) is a unit test in `crates/civkit-core/src/calcs/surveying.rs` (worst difference
+  0.00515 ft); (b) is `tests/reference/surveying.traverse.compass_rule/navedtra-14070-fig7-12.json` (tolerance 0.01 ft;
+  `null` for CD departure and CD adjusted departure; the book's misclosure figures are not asserted because they inherit
+  the erratum). Exact values from an independent 70-digit re-derivation: M_N 0.3214 ft, M_E 2.2642 ft, E 2.2869 ft,
+  E/P 0.00087456 (1 : 1 143); every other entry within 0.0092 ft of the book.
 
 ## C4 — Differential levelling (HI method), closure and proportional adjustment ✅
 

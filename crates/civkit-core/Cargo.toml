@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-25 10:55 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 [package]
 name = "civkit-core"
 description = "CivKit core: calculation registry, JSON contract, errors and trace"
@@ -12,6 +12,7 @@ publish.workspace = true
 
 [dependencies]
 civkit-units.workspace = true
+civkit-geometry.workspace = true   # traverse: components from azimuth and distance (D-20, GEOMETRY.md §4)
 serde.workspace = true
 serde_json.workspace = true
 
@@ -20,3 +21,4 @@ workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+proptest = { version = "1", default-features = false, features = ["std"] }

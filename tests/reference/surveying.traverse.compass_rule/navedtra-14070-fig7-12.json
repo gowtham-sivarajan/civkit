@@ -1,0 +1,77 @@
+{
+  "provenance": "Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-25 23:56 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)",
+  "case": "navedtra-14070-fig7-12",
+  "title": "Six-leg closed traverse: latitudes, departures and compass-rule adjustment (NAVEDTRA 14070, Figs 7-12 to 7-14; case C3)",
+  "source": {
+    "kind": "published",
+    "register_id": "S12",
+    "citation": "US Navy, Engineering Aid, NAVEDTRA 14070, chapter 7, Figs 7-12 to 7-14",
+    "location": "ch. 7, pp. 7-10 to 7-11",
+    "licence": "Public domain (US government work)",
+    "url": "https://engineeringtraining.tpub.com/14070/css/Linear-Error-Of-Closure-130.htm"
+  },
+  "request": {
+    "id": "surveying.traverse.compass_rule",
+    "version": 1,
+    "inputs": {
+      "bearings": {
+        "value": ["N 3d45m E", "S 86d15m E", "S 10d49m E", "S 32d40m W", "N 43d29m W", "S 57d31m W"],
+        "unit": "bearing"
+      },
+      "distances": {
+        "value": [584.21, 720.26, 212.0, 292.31, 278.53, 527.54],
+        "unit": "ft"
+      }
+    },
+    "output_units": {
+      "latitudes": "ft",
+      "departures": "ft",
+      "latitude_corrections": "ft",
+      "departure_corrections": "ft",
+      "adjusted_latitudes": "ft",
+      "adjusted_departures": "ft",
+      "perimeter": "ft"
+    }
+  },
+  "expected": {
+    "outputs": {
+      "latitudes": {
+        "value": [582.95, -47.10, -208.23, -246.07, 202.09, -283.31],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "departures": {
+        "value": [38.20, 718.72, null, -157.77, -191.67, -445.01],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "latitude_corrections": {
+        "value": [-0.07, -0.09, -0.03, -0.04, -0.03, -0.07],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "departure_corrections": {
+        "value": [-0.50, -0.62, -0.18, -0.25, -0.24, -0.45],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "adjusted_latitudes": {
+        "value": [582.88, -47.19, -208.26, -246.11, 202.06, -283.38],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "adjusted_departures": {
+        "value": [37.70, 718.10, null, -158.02, -191.91, -445.46],
+        "unit": "ft",
+        "tolerance": { "absolute": 0.01 }
+      },
+      "perimeter": {
+        "value": 2614.85,
+        "unit": "ft",
+        "tolerance": { "absolute": 0.005 }
+      }
+    },
+    "warnings": []
+  },
+  "verification": "Recomputed outside the repository in 70-digit decimal arithmetic (Python Decimal with a sin/cos series written for the purpose, no packages) on 2026-11-25. Largest difference between the exact values and the book, over all six lists: 0.0092 ft, except the two entries touched by the book's CD departure erratum, which are NOT checked (null): CD departure (book 39.77; 212.00 x sin 10d49m = 39.7854, the book's own table value 0.18767 gives 39.79) and, because the book's corrections and sums inherit that error, CD adjusted departure (book 39.59, exact 39.6018; difference 0.0118). The tolerance of 0.01 ft is the precision the book prints; no widening was needed. The book's Sigma row and misclosure figures (latitude 0.33, departure 2.24, linear misclosure 2.26 ft, ratio 1:1157) are likewise NOT asserted, because they inherit the same erratum. The exact values are: latitude misclosure 0.3214 ft, departure misclosure 2.2642 ft, linear misclosure 2.2869 ft, relative misclosure 0.00087456 (1 : 1143). They are covered by the exact adjustment test in src/calcs/surveying.rs (the compass rule applied to the book's own printed latitudes and departures matches the book to 0.00515 ft) and by the closed-form and property tests in tests/traverse.rs. The erratum is recorded in planning/REFERENCE_CASES.md (source issues)."
+}

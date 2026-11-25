@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 22:03 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 22:03 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! List and choice inputs (D-23, ADR 0011; planning/CONTRACT_LISTS_PROPOSAL.md §3).
 //!
@@ -516,6 +516,11 @@ fn scalar_calculations_keep_their_exact_json_shape() {
     // Descriptors are checked field by field: a substring search would also match the `length` exponent that
     // every dimension serialises, or the word "kind" inside a description.
     for d in registry.list() {
+        // Calculations that use lists (traverse, and later levelling and earthwork) legitimately carry the new
+        // fields; this test is about the ones that do not.
+        if !d.groups.is_empty() {
+            continue;
+        }
         let v = serde_json::to_value(d).expect("descriptor json");
         assert!(v.get("groups").is_none(), "{}: descriptor has groups", d.id);
         for (list, keys) in [

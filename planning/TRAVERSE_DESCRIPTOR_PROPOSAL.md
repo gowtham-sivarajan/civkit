@@ -1,10 +1,11 @@
 # Proposal: the traverse descriptor (`surveying.traverse.compass_rule`)
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-25 23:52 IST · last edited 2026-11-25 23:52 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-25 23:52 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
-> **Status:** **Proposed, for the maintainer's review.** D-20 condition 4 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)):
-> a descriptor is proposed and reviewed before any code. **No code has been written.** Nothing here is accepted until
-> the maintainer says so; section 9 lists the seven questions that need an answer.
+> **Status:** **Accepted by the maintainer, 2026-11-25: all seven recommended answers (Q-A to Q-G, section 9).**
+> This is the descriptor reviewed under D-20 condition 4 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)).
+> Implementation follows section 10, tests first. The text below is unchanged from the proposal; section 9 records the
+> answers. Once the code exists, the descriptor in `crates/civkit-core/src/calcs/surveying.rs` is the source of truth.
 >
 > Built on: D-20 (scope), D-23 (list inputs, [ADR 0011](decisions/0011-list-and-choice-inputs.md), implemented in
 > `e948bc6`), [GEOMETRY.md](../docs/GEOMETRY.md) §3, §4, §7, reference case C3 ([REFERENCE_CASES.md](REFERENCE_CASES.md)).
@@ -161,7 +162,7 @@ because they inherit the erratum. The computed values above are the independentl
 6. **Mutation check** (as for geometry): plant sign errors (correction without the minus), swap lat and dep, use
    P of the wrong list, and confirm each is caught.
 
-## 9. Questions for the maintainer
+## 9. Questions for the maintainer (all answered: the recommendation was accepted for every one, 2026-11-25)
 
 | # | Question | Recommendation |
 |---|---|---|

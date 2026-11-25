@@ -35,7 +35,9 @@ dependencies = [
 name = "civkit-core"
 version = "0.0.0"
 dependencies = [
+ "civkit-geometry",
  "civkit-units",
+ "proptest",
  "serde",
  "serde_json",
 ]

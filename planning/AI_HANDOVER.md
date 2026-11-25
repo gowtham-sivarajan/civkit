@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:52 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -9,7 +9,7 @@
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
 **Current phase:** 2 — Units, geometry, calculations (stage 2C)
-**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); two engineering calculations (2C, in progress)
+**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); three engineering calculations (2C, in progress)
 
 ---
 
@@ -57,9 +57,9 @@
     check; it is committed together with 2C part 1.
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
-    is accepted ([ADR 0011](decisions/0011-list-and-choice-inputs.md)); its contract extension, list support in the
-    reference-case harness and the API_DESIGN text are **written and green locally but uncommitted** (161 tests; see the
-    23:48 log entry). Next: traverse, levelling and earthwork, one at a time, each descriptor proposed first. Beam
+    is accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)).
+    **`surveying.traverse.compass_rule` (C3) is written and green locally but uncommitted** (191 tests; see the
+    2026-11-26 00:00 log entry). Next: levelling and earthwork, one at a time, each descriptor proposed first. Beam
     maximum shear and moment: still no qualifying example.
 
 **Decisions**
@@ -75,7 +75,8 @@
 - `civkit-geometry`: angles and direction, tolerance, polyline/arc/circle lengths, polygon area, orientation,
   centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
   [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
-- Registered built-ins: `fluids.open_channel.manning_trapezoidal`, `structural.beam.simply_supported`. The template
+- Registered built-ins: `fluids.open_channel.manning_trapezoidal`, `structural.beam.simply_supported`,
+  `surveying.traverse.compass_rule` (first list calculation; `civkit-core` now depends on `civkit-geometry`). The template
   `math.demo.weighted_mean` is registered only in tests.
 
 **Repository**
@@ -104,9 +105,11 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next:** the maintainer reviews [TRAVERSE_DESCRIPTOR_PROPOSAL.md](TRAVERSE_DESCRIPTOR_PROPOSAL.md) (answers to
-   Q-A … Q-G). Then traverse is built tests first; then the levelling and earthwork descriptors are proposed the same
-   way (D-20 condition 4). D-23 is committed (`e948bc6`).
+1. **Next:** Windows check and commit of traverse (see the 00:00 entry; stage exactly the listed files, including
+   `Cargo.lock`, never `planning/ui-concepts/`). Then **propose the levelling descriptor** (height-of-instrument and
+   rise-and-fall methods, closure and adjustment; cases C4 and C9; the method is a visible choice input or two
+   calculations, to be decided) for review before any code; then earthwork (average end area, explicit pyramid
+   method; cases C1, C2), D-20 condition 4.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
@@ -128,6 +131,37 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 00:00 IST — Traverse implemented, tests first; nothing committed *(Claude Sonnet 5.5)*
+- The maintainer accepted all seven answers (Q-A … Q-G) and committed D-23 (`e948bc6`). The proposal's status line
+  records this; its descriptor is now the code.
+- `surveying.traverse.compass_rule` v1 in `crates/civkit-core/src/calcs/surveying.rs`, registered in
+  `Registry::with_builtins`. First calculation with list inputs and outputs; `civkit-core` now depends on
+  `civkit-geometry` (engine-internal; `Cargo.lock` gains only the two edges `civkit-geometry` and the dev-dependency
+  `proptest`, already in the lock).
+- **Tests first** (23 in `tests/traverse.rs`, red before the code): registered descriptor, closed forms (square,
+  one short leg, sign, lat/dep not swapped), units and bearing notation, errors with `index` and "leg k", overflow,
+  the trace (6n + 5 steps, structured items, conversion steps), and four proptest properties (adjusted traverse closes,
+  misclosure parts, cyclic shift of the legs, scaling). Seven unit tests next to the code apply the compass rule to the
+  book's **own printed** latitudes, departures and distances: worst difference 0.00515 ft.
+- **Reference case** `tests/reference/surveying.traverse.compass_rule/navedtra-14070-fig7-12.json` (C3): 0.01 ft
+  tolerance (the book's printed precision, no widening), `null` for CD departure and CD adjusted departure (the source
+  erratum), the book's misclosure figures not asserted; the exact values are in its `verification` text.
+- **Mutation check:** ten planted errors (missing minus, lat/dep swapped, wrong perimeter, |M| sum instead of hypot,
+  equal shares, subtracted correction, halved ratio, wrong share denominator, removed overflow check, wrong sum), each
+  caught.
+  - Slip found and fixed: the first mutation run was not meaningful, because `scalar_calculations_keep_their_exact_json_shape`
+    (D-23) iterated every built-in and failed on traverse's legitimate list fields. It now skips calculations with
+    groups. The rerun, with a green baseline, caught all ten, the lat/dep swap by traverse-specific tests.
+  - `proptest` also saved a regressions file during the mutation runs; deleted (trivial seeds that only a planted bug
+    fails; the correct code passes all properties).
+- **Checks (Windows, Rust 1.100):** fmt, clippy `-D warnings`, 191 tests, `cargo doc`, dependency rule: pass.
+  `cargo-deny` is not installed locally; CI runs it.
+- **Uncommitted:** `Cargo.toml`, `Cargo.lock`, `crates/civkit-core/Cargo.toml`, `crates/civkit-core/src/calcs/{mod,surveying}.rs`,
+  `crates/civkit-core/tests/{traverse,contract_lists}.rs`, `tests/reference/surveying.traverse.compass_rule/`,
+  `planning/{TRAVERSE_DESCRIPTOR_PROPOSAL,AI_HANDOVER,IMPLEMENTATION_PLAN,REFERENCE_CASES}.md`.
+- Not done: levelling and earthwork; Python or MCP exposure (Phase 3); human engineering review of C1–C9 (deferred by
+  the maintainer).
 
 ### 2026-11-25 23:52 IST — Traverse descriptor proposed; no code *(Claude Sonnet 5.5)*
 - The maintainer committed D-23 as `e948bc6` (Windows run passed).
