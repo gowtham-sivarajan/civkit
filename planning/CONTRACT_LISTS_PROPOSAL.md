@@ -1,6 +1,6 @@
 # Proposal: list and choice inputs in the calculation contract (D-23)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 21:35 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 21:50 IST
 
 > **Status:** Direction decided by the maintainer (2026-11-25 21:32 IST):
 > 1. option A, parallel lists with one unit per list;
@@ -8,10 +8,15 @@
 > 3. "Array (vectorised) inputs are out of scope for 0.1" means Python batching and is to be clarified. The sentence
 >    is in API_DESIGN §8 (Python API); the earlier proposal wrongly cited §7.
 >
-> §3 below is the full design, settled as the maintainer asked before any implementation. It includes how list
-> outputs relate in length to the inputs, and the item numbering used in descriptors, errors and traces.
-> **Awaiting the maintainer's confirmation of §3.** Then: ADR 0011, the API_DESIGN text (§5 of this document), and
-> the contract extension, tests first. Nothing in the contract or code depends on it yet.
+> §3 is the full design. The maintainer **confirmed** it on 2026-11-25 (21:49 IST) and asked for four edge rules
+> to be written down before the contract changes. They are marked **Clarified** below:
+> - list presence (§3.1);
+> - limits on outputs too, and descriptor checks for list outputs (§3.3, §3.8);
+> - exactly one choice step per choice input (§3.6);
+> - structured item indices in the trace (§3.6).
+>
+> Next: ADR 0011, the API_DESIGN text (§5 of this document), then the contract extension, tests first. Nothing in
+> the contract or code depends on it yet.
 
 ## 1. The gap
 
@@ -56,7 +61,9 @@ error itself cannot be detected.
 - **Choice inputs.** In 0.1 a choice input must be **required with no default**, so the caller always states the
   method; `check_descriptor` enforces this. Choice values are stable identifiers: renaming or removing one is a
   breaking change (version bump, API_DESIGN §4), and adding one is not.
-- **Defaults.** A list input may not have a default.
+- **Presence (Clarified).** In 0.1 every list input is **required**, with no default, and `check_descriptor`
+  enforces this. A group's length is therefore always the common length of all its lists; no rule is needed for
+  omitted lists. Optional lists would be a later decision.
 
 ### 3.2 Groups: the index relationship, declared once
 
@@ -90,8 +97,14 @@ group**:
   - −1: one value between consecutive items, e.g. one volume per segment between stations.
   - +1: one value per item plus one, e.g. reduced levels for the starting point and each foresight point.
 - **`item` names the output's entries** ("segment 2"). When it differs from the group's item, the `description`
-  must say how they pair, as in the example. `check_descriptor` requires `item` and a non-empty description for
-  every list output.
+  must say how they pair, as in the example.
+- **Descriptor checks for list outputs (Clarified).** `check_descriptor` rejects a list output whose:
+  - `length.group` does not name a declared group;
+  - `offset` is not −1, 0 or +1;
+  - smallest possible length, `min_len` of its group + `offset`, is below 1 (no list output may be empty);
+  - `item` or `description` is empty;
+  - `item` label is already used for a different index set. Item labels must be unique across groups and list
+    outputs; the one exception is a list output with `offset` 0, which may reuse its group's label.
 - **The registry checks the actual length after `compute`.** A mismatch is an `INTERNAL` error: it is a defect in
   the calculation, not in the input.
 
@@ -130,12 +143,39 @@ No new error codes. Each case below is listed with its contract code:
 
 ### 3.6 Trace
 
-- **Per-item steps** start with their item label: `"leg 3: Lat = d·cos α"`, `"segment 2: V = L·(A₁ + A₂)/2"`.
-- **The selected method is recorded.** A trace step gains an optional **`choice`** form: a step with a string value
-  and no unit, e.g. `{ "step": "method", "choice": "pyramid_at_zero_end" }`.
-  - Every calculation with a choice input records each choice as one of the first trace steps.
-  - The registry checks that a choice step names a declared choice input and carries its actual value.
-  - Numeric steps are unchanged and still checked for finiteness and internal units.
+A trace step is one of two forms; a step never has both `value` and `choice`.
+
+| Form | Fields |
+|---|---|
+| numeric (as today) | `step`, `value`, `unit` (omitted when dimensionless), optional `reference`, optional **`item`** |
+| choice (new) | `step` (the choice input's name), **`choice`** (its value) |
+
+**Item indices are structured (Clarified).** A per-item step carries `"item": { "label": "leg", "index": 2 }`.
+- `index` is 0-based, like the error `index` (§3.5).
+- The step text starts with the 1-based label for people, e.g. `"leg 3: Lat = d·cos α"`.
+- Clients read `item` and never need to parse the text.
+- In `civkit-core`, per-item steps go through one helper that writes the text prefix from `item`, so the two cannot
+  disagree.
+- After `compute`, the registry returns `INTERNAL` when:
+  - an `item` label is not a declared group or list-output item;
+  - its `index` is not below that list's length;
+  - the step text does not start with `"<label> <index + 1>: "`.
+
+**Choice steps: exactly one per choice input (Clarified).** `compute` records every choice input exactly once, as
+a choice step, before its first numeric step and in the order the inputs are declared. Example:
+
+```json
+{ "step": "method", "choice": "pyramid_at_zero_end" }
+```
+
+After `compute`, the registry returns `INTERNAL` for a choice step that is:
+- missing;
+- duplicated;
+- naming an undeclared input or a non-choice input;
+- carrying a value different from the request;
+- placed after a numeric step, or out of declaration order.
+
+Numeric steps keep today's checks: finite value, internal unit.
 
 ### 3.7 Reference-case files
 
@@ -151,8 +191,13 @@ No new error codes. Each case below is listed with its contract code:
   dimension. List outputs come back as lists of `Q`.
 - **MCP (Phase 5):** list inputs become JSON arrays in the tool schema, with `minItems`, and choices become `enum`.
 - **FFI:** unchanged; JSON in, JSON out.
-- **Limit:** at most 10 000 elements per list (`INVALID_VALUE` beyond). This bounds trace size; 0.1 cases use
-  at most 7.
+- **Limits (Clarified).** Every list, input **or output**, has at most 10 000 elements. This bounds response and
+  trace size; 0.1 cases use at most 7.
+  - **The group's limit.** A group's maximum length is 10 000 minus the largest positive `offset` among its list
+    outputs, e.g. 9 999 when a +1 output exists. Request validation enforces it: a longer list is `INVALID_VALUE`,
+    and the message gives the maximum. A correct calculation therefore never produces an output over the cap.
+  - **After `compute`.** A list output that is longer than 10 000 elements, or whose length breaks its rule
+    (§3.3), is `INTERNAL`.
 
 ### 3.9 Not in D-23
 
@@ -161,7 +206,7 @@ No new error codes. Each case below is listed with its contract code:
   prominently.
   - Recorded as a Phase 3 task in IMPLEMENTATION_PLAN.
   - A machine-readable rule (e.g. `required_when`) would be a separate, later decision.
-- Lists of DMS values, nested lists, records (option B), and lists of choices.
+- Optional lists and list defaults; lists of DMS values; nested lists; records (option B); lists of choices.
 
 ## 4. Work after confirmation
 
@@ -184,7 +229,7 @@ No new error codes. Each case below is listed with its contract code:
 | §2 Descriptor | `InputSpec.kind`, `group`, `choices`; `OutputSpec.kind`, `length`; `Descriptor.groups` — as §3.1–§3.3 |
 | §3 Request and response | list and choice values; list outputs — as §3.4 |
 | §5 Errors | the optional `index` field; the list and choice cases of §3.5 (no new codes) |
-| §6 Trace | item-labelled steps; `choice` steps — as §3.6 |
+| §6 Trace | numeric and choice step forms; structured `item`; choice-step rules — as §3.6 |
 | §7 Units | one unit per list; `output_units` applies to every element |
 | §8 Python API | Replace "Array (vectorised) inputs are out of scope for 0.1" with: "Batch (vectorised) calls — one calculation applied to many independent input sets, e.g. from Python — are out of scope for 0.1. This is different from a list that is part of one calculation's input (§2, `kind: list`), which Python passes as a list." |
 | §11 Compatibility | note that list and choice kinds are additive |

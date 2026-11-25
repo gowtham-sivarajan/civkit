@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 21:35 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 21:50 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -57,8 +57,9 @@
     check; it is committed together with 2C part 1.
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). **Blocked on D-23**: traverse,
-    levelling and earthwork need list inputs and a method choice. Direction decided (option A, required
-    choices, §8 wording); full design in [the proposal](CONTRACT_LISTS_PROPOSAL.md) §3 awaits confirmation. Beam maximum shear and moment: still no qualifying example.
+    levelling and earthwork need list inputs and a method choice. Design confirmed (option A, required
+    choices, §8 wording) with four clarified edge rules ([proposal](CONTRACT_LISTS_PROPOSAL.md) §3); next: ADR 0011,
+    API_DESIGN text, contract extension (tests first). Beam maximum shear and moment: still no qualifying example.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
@@ -102,8 +103,8 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Maintainer:** confirm D-23 design §3 ([CONTRACT_LISTS_PROPOSAL.md](CONTRACT_LISTS_PROPOSAL.md)): groups,
-   list-output lengths (offset −1/0/+1), item numbering, `index` in errors, `choice` trace steps, 10 000-element limit.
+1. **Next:** D-23 is confirmed with clarified edge rules. Write ADR 0011 and the API_DESIGN text, then extend the
+   contract (tests first), then traverse, levelling and earthwork with descriptors proposed first.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
@@ -125,6 +126,19 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 21:50 IST — D-23 design confirmed; four edge rules clarified *(Claude Opus 5.5)*
+- Maintainer's Windows run passed. Pushed as `e842edc`. That commit holds only the four D-23 documents; its message
+  also re-describes the 2B follow-up and 2C part 1, which were already committed in `a49b5e8`. History left as is.
+- The maintainer confirmed design §3 and asked for four edge rules before any contract change. Now written:
+  - every list input is required in 0.1, so a group's length is the common length of its lists;
+  - the 10 000 cap covers outputs: a group's maximum is 10 000 minus its largest positive output offset, and an
+    over-long or wrongly sized output is `INTERNAL`;
+  - `check_descriptor` validates list outputs (known group, offset, never empty, unique item labels);
+  - exactly one choice step per choice input, before numeric steps and in declaration order; any violation is
+    `INTERNAL`;
+  - structured trace `item` (label, 0-based index), with the text prefix generated from it and checked.
+- No code changed yet.
 
 ### 2026-11-25 21:35 IST — D-23 direction decided; full design written *(Claude Opus 5.5)*
 - Maintainer reviewed the Manning and beam descriptors: no scope or formula mismatch with D-20. Asked that the
