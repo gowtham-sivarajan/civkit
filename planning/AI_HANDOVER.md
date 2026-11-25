@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 16:11 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 18:37 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,8 +8,8 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 0 — Planning
-**Code written so far:** none (intentional)
+**Current phase:** 2 — Units, geometry, calculations (stage 2B)
+**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); no engineering calculation yet
 
 ---
 
@@ -43,20 +43,21 @@
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
-## 3. Where things stand (snapshot 2026-11-25 16:11 IST)
+## 3. Where things stand (snapshot 2026-11-25 18:37 IST)
 
 **Phases**
 - Phase 0 (planning): ✅, tag `plan-v1.0`.
 - Phase 1 (workspace, `civkit-core` contract, CI): ✅, tag `phase-1-done`.
 - Phase 2 runs in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)).
-  - **2A (units)** is complete pending the maintainer's Windows check and CI on the follow-up commit:
-    - CI was green on `b4f37e2` ([run 45596341445](https://github.com/gowtham-sivarajan/civkit/actions/runs/45596341445)).
-    - The follow-up adds unit-naming in messages and the trace-unit check.
-  - **2B (geometry)**: specification [docs/GEOMETRY.md](../docs/GEOMETRY.md) is **proposed, awaiting review**.
-    **No geometry code until it is accepted.**
+  - **2A (units)**: complete. The maintainer's Windows check of `6d3d16a` passed and it is pushed. CI on `6d3d16a`
+    was not yet visible to the AI session (the Actions page could not be read).
+  - **2B (geometry)**: specification **accepted** (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after the
+    [review](GEOMETRY_SPEC_REVIEW.md). `civkit-geometry` implemented and tested locally (64 tests).
+    **Open:** the maintainer confirms the eight items "settled during implementation" in ADR 0010
+    (marked **(impl.)** in GEOMETRY.md), and CI passes.
 
 **Decisions**
-- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20.
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
 - Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
   See [DECISIONS.md](DECISIONS.md).
 
@@ -65,6 +66,9 @@
   [API_DESIGN.md §7.1](../docs/API_DESIGN.md).
 - `civkit-core`: contract with three unit roles (internal SI, default presentation, requested). Internal units are
   enforced in values, trace and messages.
+- `civkit-geometry`: angles and direction, tolerance, polyline/arc/circle lengths, polygon area, orientation,
+  centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
+  [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
 - Only the template calculation `math.demo.weighted_mean` is registered in tests. No engineering calculation exists yet (2C).
 
 **Repository**
@@ -72,6 +76,7 @@
 - CI: fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable; clippy; dependency rule; cargo-deny; DCO.
   Dependabot is weekly. Actions are pinned by SHA.
 - `planning/ui-concepts/` exists on the maintainer's machine, untracked. It was not created by an AI session; leave it alone.
+- `.venv/` and `.vs/` (Jupyter environment, Visual Studio state) exist on the maintainer's machine; both are git-ignored.
 
 **Machine:** Windows 11, PowerShell 5.1, Rust 1.100.0 (MSRV 1.98), .NET SDK 11.0.100, `.venv` (maturin,
 JupyterLab). Details: [CONTRIBUTING.md §4](../CONTRIBUTING.md#4-development-setup-windows-all-free). Note for Phase 5:
@@ -92,14 +97,17 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Maintainer:** Windows check of the 2A follow-up (commands above), commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
-2. **Maintainer:** review [docs/GEOMETRY.md](../docs/GEOMETRY.md), especially the six open questions in §13.
-   - If question 3 (the `DEGENERATE_GEOMETRY` warning code) is accepted, API_DESIGN §5 is amended.
-   - If question 6 is accepted, ARCHITECTURE §3.3 is amended.
-3. After acceptance: implement 2B, tests first (GEOMETRY.md §12). Then 2C (exactly D-20), then 2D.
+1. **Maintainer:** confirm or change the eight items "settled during implementation" in
+   [ADR 0010](decisions/0010-geometry-conventions.md). The most important one is 8.6: a degenerate ring is now
+   defined geometrically, so a figure-8 whose lobes cancel is refused instead of reported as "zero area".
+2. **Maintainer:** Windows check of 2B (commands above), commit with `git commit -s -F _commit_msg.txt`, push,
+   confirm CI (including CI for `6d3d16a`).
+3. Then 2C, exactly as D-20 defines. Traverse decides for itself when a misclosure counts as zero before asking
+   for its direction (GEOMETRY.md §7). Then 2D.
 4. Before 2C: collect one more openly licensed worked example for beam maximum shear and moment (D-20).
 5. Review Dependabot pull requests as they arrive (each must pass CI).
-6. Later: an AutoCAD-written DXF fixture once a licence that allows publishing exists.
+6. Later: an AutoCAD-written DXF fixture once a licence that allows publishing exists. Phase 4 inherits the
+   geometry tasks listed in IMPLEMENTATION_PLAN (transformations, OCS, contract representation of geometry notes).
 
 Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
 general prismoidal and soil phase relationships (later release).
@@ -107,6 +115,26 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 18:37 IST — 2B geometry: review, acceptance, implementation *(Claude Opus 5.5)*
+- Review-only task: [GEOMETRY_SPEC_REVIEW.md](GEOMETRY_SPEC_REVIEW.md). Every formula was re-derived in separate
+  Python code against 60-digit arithmetic and shapely. Result: 0 Critical, 9 Major, 13 Minor findings, and D7–D9.
+  The same model wrote the spec and the review; independence came from the numerical checks, not a second reviewer.
+- Maintainer accepted everything (18:10 IST). GEOMETRY.md revised and marked Accepted; D-22 /
+  [ADR 0010](decisions/0010-geometry-conventions.md); ARCHITECTURE §3.3 amended; IMPLEMENTATION_PLAN updated
+  (2B status; Phase 4 inherits transformations, OCS and the contract side of geometry notes).
+- Found while implementing (not caught by the review): with "|A| ≤ ε_A" as the degeneracy rule, a collinear ring
+  could never reach 8.6 and a figure-8 with cancelling lobes would have passed as "zero area". 8.6 is now
+  geometric and evaluated before 8.7. This and seven smaller points await confirmation (ADR 0010).
+- `civkit-geometry` implemented, tests first. Expected values come from closed forms, exact rationals or 60-digit
+  values computed outside the repository.
+  - 64 tests: 6 unit tests, 11 on angles, 15 on lengths, 11 on areas, 15 on degeneracy, 6 property tests.
+  - Mutation check: 11 planted errors (bulge sign, |A| in the centroid, no translation, old g(x), TAU wrap,
+    −0, disabled self-intersection, wrong arc wedge, old length formula, area-based 8.6, D without arc
+    extremes). All were caught.
+- Full local checks: fmt, clippy -D warnings, 125 tests, dependency rule, cargo-deny. All clean (Linux, Rust 1.97
+  with `--ignore-rust-version`; the Windows run and CI on 1.98 are the authority).
+- Cargo.lock changes only by `proptest` as a dev-dependency of `civkit-geometry` (already used by `civkit-units`).
 
 ### 2026-11-25 16:11 IST — 2A verification; 2B geometry specification proposed *(Claude Opus 5.5)*
 - Maintainer approved whole-number DMS minutes (fractional seconds) and the three unit roles.

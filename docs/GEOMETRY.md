@@ -1,13 +1,23 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-25 16:10 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-25 18:37 IST
 
-> **Status: Proposed. Awaiting maintainer review.** No geometry code is written until this document is accepted
-> (maintainer, 2026-11-25). Open questions for the review are collected in §13.
+> **Status: Accepted** (maintainer, 2026-11-25), after the review in
+> [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
+> [ADR 0010](../planning/decisions/0010-geometry-conventions.md).
+> A few details were settled while implementing. They are marked **(impl.)** below and listed in ADR 0010 for
+> confirmation.
 
-This document defines, before any implementation, every convention `civkit-geometry` follows: coordinate systems,
-axes, angles, tolerances, point equality, degeneracy, distance, length, area, orientation and centroid. Like
-[API_DESIGN.md §7.1](API_DESIGN.md), it is meant to be complete: behaviour not described here is not implemented.
+This document defines, before any implementation, every convention `civkit-geometry` follows:
+
+- coordinate systems, axes and angles;
+- tolerances and point equality;
+- degeneracy;
+- distance and length;
+- area, orientation and centroid.
+
+Like [API_DESIGN.md §7.1](API_DESIGN.md), it is meant to be complete: behaviour not described here is not
+implemented.
 
 ## 1. Scope
 
@@ -18,36 +28,55 @@ axes, angles, tolerances, point equality, degeneracy, distance, length, area, or
 | Distance and azimuth between two points; components (Δx, Δy) | Traverse (2C), drawing analysis (Phase 4) |
 | Components from azimuth and distance (latitude, departure) | Traverse (2C) |
 | Polyline length, with straight and circular-arc (bulge) segments | Drawing analysis: F1, F2, F4 road centreline |
-| Arc length; circle circumference | Drawing analysis: ARC and CIRCLE entities |
+| Arc length; circle circumference and area | Drawing analysis: ARC and CIRCLE entities |
 | Polygon area (straight and bulged edges) and orientation | Drawing analysis: F1–F5 areas |
-| Polygon centroid (straight-edged polygons only; see §13 Q5) | MVP scope ("polygon area and centroid") |
+| Polygon centroid (straight-edged polygons only, D5) | MVP scope ("polygon area and centroid") |
 
 **Not in 2B:**
-- 3D geometry; elevations (z) are not used.
-- Intersections, offsets and clipping (except the self-intersection *check* in §8.4).
-- Splines and ellipses.
-- Coordinate transformations: block inserts with scale, rotation and mirroring are needed by drawing analysis.
-  §11 fixes their conventions now so they match, but they are implemented with `civkit-drawing` in Phase 4.
-- Map projections, grid scale factors, earth curvature, geodesy.
 
-[ARCHITECTURE.md §3.3](ARCHITECTURE.md) describes the crate's long-term role as "2D/3D … transformations". This
-specification narrows 0.1 to the list above, in line with D-20.
+- 3D geometry. Elevations (z) are not used.
+- Intersections, offsets and clipping, except the internal self-intersection *check* in §8.7. There is no public
+  intersection API.
+- Splines and ellipses.
+- Coordinate transformations. Drawing analysis needs block inserts with scale, rotation and mirroring. §11 fixes
+  their conventions now. They are implemented in Phase 4, which is still part of release 0.1, in
+  `civkit-geometry` (D6b), when `civkit-drawing` first needs them.
+- Map projections, grid scale factors, earth curvature and geodesy.
+- Any registry calculation (`geometry.*` IDs) or other change to the calculation contract.
+
+This specification limits Phase 2B to the list above, in line with D-20. 3D remains out of 0.1.
 
 ## 2. Numbers and units
 
-- All coordinates and lengths are IEEE 754 `f64`. Every input must be finite; a NaN or infinity is rejected
-  (§8.1), never propagated.
-- **The geometry crate is unit-agnostic.** All lengths in one call must be in the same length unit; results come
+- **Floating point.** All coordinates and lengths are IEEE 754 `f64`.
+  - Every input must be finite. A NaN or infinity is rejected (§8.1), never propagated.
+  - A result too large for `f64` is an error, not ±∞ (§8.1).
+- **The geometry crate is unit-agnostic.** All lengths in one call must be in the same length unit. Results come
   back in that unit (lengths) or its square (areas).
   - Calculations call it with internal SI units (metres), per API_DESIGN §7.1.5.
   - Drawing analysis calls it in drawing units and converts afterwards (Phase 4).
-- The crate does not depend on `civkit-units`; units are the caller's responsibility, which keeps the crate small.
-- **Angles are always radians** inside the crate. Degrees, DMS and bearings are converted at the contract boundary (`civkit-units`).
+- **No units dependency.** The crate does not depend on `civkit-units`. Units are the caller's responsibility,
+  which keeps the crate small.
+- **Angles are always radians** inside the crate. Degrees, DMS and bearings are converted at the contract boundary
+  (`civkit-units`).
+- **Errors through the contract** (D3). The crate's errors and notes are Rust types. A calculation that passes them
+  on uses existing codes:
+
+  | Crate outcome | Contract code |
+  |---|---|
+  | non-finite input | `INVALID_VALUE` |
+  | any other geometry error (undefined result) | `OUT_OF_DOMAIN` |
+  | precision-limited input (§8.9) | warning `ROUNDING_SENSITIVE` (`caution`) |
+
+  "Not supported in 0.1" (centroid of a curved polygon) has no matching code. It is not reachable through the
+  contract in 0.1 (see ADR 0010).
 
 ## 3. Coordinate systems and axes
 
-There is one mathematical frame: a **right-handed plane Cartesian frame**. The +y axis is +x rotated 90° counter-clockwise.
-CivKit uses it under two names. The arithmetic is identical; only the vocabulary differs.
+There is one mathematical frame: a **right-handed plane Cartesian frame**. The +y axis is +x rotated +90° about +z,
+where +z points towards the viewer looking down on the plan. "Counter-clockwise" always means as seen from +z.
+
+CivKit uses this frame under two names. The arithmetic is identical; only the vocabulary differs.
 
 | Frame | x axis | y axis | Used by |
 |---|---|---|---|
@@ -55,17 +84,18 @@ CivKit uses it under two names. The arithmetic is identical; only the vocabulary
 | Survey (plane grid) | **Easting (E)** | **Northing (N)** | traverse, levelling plan positions |
 
 Rules:
+
 - **Order is always (x, y) = (E, N).** Many survey texts write coordinates as (N, E); CivKit never does in its API.
-  Survey calculations name their inputs `northing` and `easting` explicitly, never `x`/`y` or position 0/1, so
+  Survey calculations name their inputs `northing` and `easting` explicitly, never `x`/`y` or position 0/1, so the
   order cannot be confused.
-- **Latitude = ΔN = Δy; departure = ΔE = Δx** (the traverse convention of reference case C3).
-- **Both frames are right-handed with the same orientation**, so "counter-clockwise" means the same thing in
-  both: turning from East towards North, or from right towards up.
+- **Latitude = ΔN = Δy; departure = ΔE = Δx.** This is the traverse convention of reference case C3.
+- **Both frames are right-handed with the same orientation**, so "counter-clockwise" means the same thing in both:
+  turning from East towards North, or from right towards up.
 - **z is ignored.** Drawing entities are projected onto z = 0. Entities with non-zero z, or with a non-default
-  extrusion direction (DXF OCS), are the drawing layer's concern (Phase 4, warnings).
-  `civkit-geometry` only sees 2D points.
-- No geodesy: distances and areas are plane values on the grid. This is stated as an assumption by every
-  calculation that uses survey coordinates.
+  extrusion direction (DXF OCS), are the drawing layer's concern (Phase 4; see §11). `civkit-geometry` only sees
+  2D points.
+- **No geodesy.** Distances and areas are plane values on the grid. Every calculation that uses survey coordinates
+  states this as an assumption.
 
 ## 4. Angle conventions
 
@@ -77,102 +107,213 @@ Three angles occur. Each has one name, one zero direction and one positive sense
 | **Azimuth α** | +y (North / up) | **clockwise** | [0, 2π) | surveying; bearings convert to it |
 | **Sweep Δ** (arcs and bulges) | the start direction | counter-clockwise positive, clockwise negative | (−2π, 2π) | arcs, bulged segments |
 
-- **Conversion:** α = (π/2 − θ) mod 2π, and θ = (π/2 − α) mod 2π. The result is normalised into [0, 2π); values
-  within 1e-15 rad below 2π become 0 so that "north" is never reported as 2π.
-- **Direction from components:** α = atan2(Δx, Δy) (note the order: East component first) and θ = atan2(Δy, Δx),
-  each then normalised to [0, 2π).
-- **Components from azimuth:** Δx = d · sin α (departure), Δy = d · cos α (latitude).
-- **Quadrant bearings** are converted to azimuths by `civkit-units` ([API_DESIGN.md §7.1.4](API_DESIGN.md)); the
-  geometry crate only sees azimuths.
-- **Arcs** are defined by centre, radius r > 0, start direction θ₀ and signed sweep Δ. The arc runs from θ₀ to
-  θ₀ + Δ: Δ > 0 counter-clockwise, Δ < 0 clockwise. (The DXF ARC entity is always counter-clockwise from start to
-  end angle; that mapping belongs to Phase 4.)
-- **Bulge** (DXF polyline arcs): b = tan(Δ/4) for the segment from vertex i to vertex i+1.
-  - b = 0 is a straight segment.
-  - b > 0 is a counter-clockwise arc (bulging to the right when travelling along the segment), b < 0 clockwise.
-  - |b| = 1 is a semicircle; |b| > 1 is an arc larger than a semicircle.
-  - Δ = 4·atan(b), so |Δ| < 2π always.
+**Normalisation** of any finite angle a:
+
+1. r = a.rem_euclid(TAU), with TAU the `f64` constant for 2π.
+2. If r ≥ TAU, r becomes 0. `rem_euclid` can return exactly TAU when a is a tiny negative number.
+3. Negative zero becomes +0. `atan2` returns −0 for directions along the zero axis approached from the negative
+   side.
+
+No other value is changed: angles are never compared with a tolerance (§5).
+
+**Conversion:** α = normalise(π/2 − θ), and θ = normalise(π/2 − α).
+
+**Direction from components:**
+
+- α = atan2(Δx, Δy). Note the order: East component first.
+- θ = atan2(Δy, Δx).
+- Each is then normalised.
+- α is computed directly with atan2, never by converting θ.
+
+**Components from azimuth:** Δx = d · sin α (departure), Δy = d · cos α (latitude). A component of −0 is returned as +0.
+
+**Quadrant bearings** are converted to azimuths by `civkit-units` ([API_DESIGN.md §7.1.4](API_DESIGN.md)). The
+geometry crate only sees azimuths.
+
+**Arcs** are defined by centre, radius r and start direction θ₀, plus a signed sweep Δ.
+
+- The arc runs from θ₀ to θ₀ + Δ: Δ > 0 is counter-clockwise, Δ < 0 clockwise.
+- Valid input: r > 0 and 0 ≤ |Δ| < 2π. Anything else follows §8.8.
+- The DXF ARC entity is always counter-clockwise from start to end angle. That mapping belongs to Phase 4 (§11).
+
+**Bulge** (DXF polyline arcs): b = tan(Δ/4) for the segment from vertex i to vertex i+1.
+
+- b = 0 is a straight segment.
+- b > 0 is a counter-clockwise arc, bulging to the right when travelling along the segment. b < 0 is clockwise.
+- |b| = 1 is a semicircle; |b| > 1 is an arc larger than a semicircle.
+- Δ = 4·atan(b), so |Δ| < 2π always.
+- Quantities derived from a bulge are computed from b, never from sin(Δ/2), which loses accuracy as |Δ| → 2π.
+  With chord length c and half-chord a = c/2:
+  - radius r = (a/2)·(|b| + 1/|b|), which equals c(1 + b²)/(4|b|);
+  - signed offset of the centre from the chord midpoint, along the chord's left normal:
+    k = (a/2)·(1/b − b), which equals c(1 − b²)/(4b);
+  - sagitta h = |b|·a;
+  - sin(Δ/2) = 2b/(1 + b²).
 
 ## 5. Tolerances
 
-- **No hidden epsilon.** Every operation that compares lengths takes a tolerance explicitly or uses the default
-  below, and the value used is recorded in its result (and, for calculations, in the trace).
-- **Linear tolerance ε (length units of the input).** Default:
+**No hidden epsilon.** Every operation that compares lengths either takes a tolerance explicitly or uses the
+default below. The value used is returned in its result. A calculation records it in its trace only when a
+tolerance decision affected the result (D2).
+
+**Linear tolerance ε** (in the input's length unit). Default:
 
   ε = max( 10⁻⁹ × D , 1024 × ulp(M) )
 
-  where D is the diagonal of the input's bounding box (its size), M the largest absolute coordinate, and
-  ulp(M) the spacing of `f64` values near M (the representation limit of the input itself).
-  - **Size term** (10⁻⁹ × D): relative to the size of the object. It is about 4.5 × 10⁶ times machine
-    precision, which leaves room for rounding in sums of many terms.
-  - **Precision floor** (1024 × ulp(M)): coordinates far from the origin are themselves only known to ulp(M).
-    Areas and centroids are computed after translating to a local origin (§10), so this floor, not M itself, is
-    the real limit.
-  - Examples:
-    - a 60 m site plan near the origin: D ≈ 100 m → ε ≈ 1 × 10⁻⁷ m (0.1 µm)
-    - the same plan at state-plane coordinates near (500 000, 4 000 000) m: ulp(4 × 10⁶) ≈ 4.7 × 10⁻¹⁰ m, so
-      ε ≈ 4.8 × 10⁻⁷ m (about 0.5 µm). Scaling by M instead would have given about 4 mm, needlessly coarse.
-- **Area tolerance:** ε_A = ε × D.
-- **Angles** are not compared with a tolerance in 2B. Every angular decision is made through lengths, e.g.
-  collinearity via perpendicular distance (§8.3).
-- Reference-case tolerances (in `tests/reference/`) are a separate thing: they reflect a source's printed
-  precision and are not geometry tolerances.
+where:
 
-## 6. Point equality
+- **D** is the diagonal of the bounding box of the geometry passed in one call. The box includes the extreme points
+  of each arc, not only the vertices.
+- **M** is the largest absolute vertex coordinate. For an arc or circle, the points used are its centre and the
+  points that define its bounding box.
+- **ulp(x)** is the distance from |x| to the next larger `f64`. ulp(0) is the smallest positive subnormal.
+
+The two terms:
+
+- **Size term** (10⁻⁹ × D): relative to the size of the object. It is about 4.5 × 10⁶ times machine epsilon (2⁻⁵²),
+  which leaves room for rounding in sums of many terms.
+- **Precision floor** (1024 × ulp(M)): coordinates far from the origin are themselves only known to ulp(M). Areas
+  and centroids are computed after translating to a local origin (§10), so this floor, not M itself, is the real
+  limit.
+
+Examples:
+
+- Fixture F1 (60 m × 45 m) near the origin: D = 75 m → ε = 7.5 × 10⁻⁸ m.
+- The same plan at state-plane coordinates near (500 000, 4 000 000) m: ulp(4 × 10⁶) ≈ 4.66 × 10⁻¹⁰ m, so
+  ε ≈ 4.77 × 10⁻⁷ m (about 0.5 µm).
+
+**ε is computed per call.** It depends on the extent of the whole input, so the same short segment can be
+zero-length in a large polyline and not in a small one. This is intended.
+
+**Explicit tolerance.** A caller may pass ε explicitly, for example an engineering tolerance in known units.
+
+- It must be finite and ≥ 0, otherwise it is an error.
+- D and M are still computed. ε_A uses the explicit ε.
+- The precision-limited check (§8.9) does not depend on ε.
+
+**Area tolerance:** ε_A = ε × D.
+
+**Angles** are not compared with a tolerance. Every angular decision is made through lengths.
+
+**Reference-case tolerances** (in `tests/reference/`) are a separate thing. They reflect a source's printed
+precision and are not geometry tolerances.
+
+## 6. Point equality and the uses of ε
 
 - **Two points are equal when their distance is ≤ ε** (Euclidean, §7). Exact `==` is never used on computed
   coordinates.
-- This relation is **not transitive** (p ≈ q and q ≈ r do not imply p ≈ r). No algorithm relies on transitivity:
-  points are compared only with their neighbours in sequence, and there is no global clustering or snapping.
-- Equality is used for three things only:
-  - detecting zero-length segments (§8.2)
-  - detecting an explicitly closed ring, where the last vertex equals the first (§8.4)
-  - refusing a direction between coincident points (§7)
+- This relation is **not transitive**: p ≈ q and q ≈ r do not imply p ≈ r. No algorithm relies on transitivity.
+  Points are compared only with their neighbours in sequence, and there is no global clustering or snapping.
+- ε and ε_A are used only for:
+  - zero-length segments (§8.2);
+  - explicit closure (§8.4);
+  - degenerate rings (§8.6);
+  - coincident points for direction (§7);
+  - self-intersection (§8.7);
+  - orientation (§10).
 
 ## 7. Distance and direction between two points
 
-- **Distance:** d = hypot(Δx, Δy). Uses `hypot` to avoid overflow and underflow; always ≥ 0.
+- **Distance:** d = hypot(Δx, Δy). `hypot` avoids overflow and underflow; the result is always ≥ 0.
 - **Direction:** azimuth α (and θ) as in §4.
-  - If d ≤ ε the direction is undefined (ε from §5, computed over the two points). Asking for it is an error, never 0 or NaN.
-  - The distance itself is still returned (it is ≈ 0).
-- **Components from azimuth and distance** (§4): defined for every finite α and d ≥ 0. A negative distance is an error.
+  - If d ≤ ε the direction is undefined. Asking for it is an error, never 0 or NaN.
+  - **The two-point rule.** For two points D = d, so only the precision floor can decide. The test is
+    d ≤ 1024·ulp(M), with M the largest absolute coordinate of the two points.
+  - A caller may pass ε explicitly (§5).
+- **Direction from components** (Δx, Δy) alone is undefined only when both are exactly 0. Whether a computed
+  difference is zero in engineering terms (for example a traverse misclosure) is decided by the calling
+  calculation, not by this crate.
+- **Components from azimuth and distance** (§4): defined for every finite α and d ≥ 0. A negative distance is an
+  error.
 
 ## 8. Degeneracy and invalid input
 
-Every degenerate or invalid case has one defined behaviour. None is handled silently.
+Every degenerate or invalid case has one defined behaviour. None is handled silently. "Reported" means a note in the
+result (Rust only in 0.1, D3).
 
 | # | Case | Definition | Behaviour |
 |---|---|---|---|
-| 8.1 | Non-finite input | any coordinate, radius, bulge or angle is NaN or ±∞ | **error** (invalid value) |
-| 8.2 | Zero-length segment | consecutive vertices equal within ε (§6) | contributes 0 length and 0 area; **reported** as a degeneracy note (§13 Q3) |
-| 8.3 | Collinear vertices | perpendicular distance of the middle vertex from the line through its neighbours ≤ ε | **allowed**; no special handling (it changes nothing in length or area) |
-| 8.4 | Explicit closure | a ring whose last vertex equals its first within ε | treated as closed; the duplicate closing vertex is dropped, so the closing edge is not counted twice |
-| 8.5 | Too few vertices | polyline: < 2 vertices; polygon: < 3 vertices remaining after 8.2 and 8.4 | **error** |
-| 8.6 | Zero-area polygon | \|signed area\| ≤ ε_A (e.g. all vertices collinear) | area returned as 0, orientation **undefined**, centroid **error**; reported (§13 Q3) |
-| 8.7 | Self-intersecting polygon | any two non-adjacent edges intersect or touch, or adjacent edges overlap | area and centroid: **error** (the shoelace sum of a figure-8 is a net value, not an area); length is unaffected (§13 Q4) |
-| 8.8 | Degenerate arc | radius ≤ ε, or sweep = 0 | zero sweep: length 0, reported; radius ≤ ε with non-zero sweep: **error** |
-| 8.9 | Precision-limited input | the precision floor dominates badly: 1024 × ulp(M) > 10⁻⁶ × D (coordinates so large, relative to the object's size, that a millionth of its size is below what `f64` can represent there) | allowed but **reported**; results are still computed in the translated frame (§10) |
+| 8.1 | Non-finite input or result | any coordinate, radius, bulge, angle, distance or explicit tolerance is NaN or ±∞; or a result overflows `f64` | **error** |
+| 8.2 | Zero-length segment | straight segment with chord c ≤ ε; bulged segment with c ≤ ε and arc length s ≤ ε (§9). c = 0 exactly with b ≠ 0 has r = 0 and belongs here | contributes its computed length (≤ ε) and area (no rounding); **reported**, except the explicit closing duplicate (8.4) |
+| 8.2a | Ill-conditioned bulge | c ≤ ε < s: the radius would be set by a chord below tolerance | **error** |
+| 8.3 | Collinear vertices | perpendicular distance of the middle vertex from the line through its neighbours ≤ ε, **and** the middle vertex lies between them | **allowed**; no special handling (it changes nothing in length or area). A collinear vertex outside its neighbours folds the ring back (a spike) and is handled by 8.7 |
+| 8.4 | Explicit closure | a ring whose last vertex equals its first within ε | treated as closed. For validity checks the duplicate is dropped; its bulge describes the zero-length closing segment and is checked as in 8.2/8.2a. Not reported |
+| 8.5 | Too few vertices | polyline: fewer than 2 vertices. Polygon, on the cleaned ring (§10): fewer than 3 vertices if every edge is straight, or fewer than 2 if any edge is bulged. A closed two-vertex polyline with bulged edges is valid; AutoCAD's DONUT draws one | **error** |
+| 8.6 | Degenerate ring **(impl.)** | every edge of the cleaned ring is straight or has sagitta ≤ ε, and every vertex lies within ε of the line through the first vertex and the vertex farthest from it (so the whole ring lies within 2ε of one line) | area returned **as computed** (D8), orientation **undefined**, centroid **error**; reported. 8.7 is not applied: a degenerate ring always folds back on itself |
+| 8.7 | Self-intersecting ring | on the cleaned ring: two **non-adjacent** edges come within ε of each other anywhere; or two **adjacent** edges conflict **(impl.)** | area and centroid: **error**; length is unaffected. This refuses some rings whose net area would be right (a pinch, a keyhole; D4) |
+| 8.8 | Invalid or degenerate arc or circle | r < 0; arc with \|Δ\| ≥ 2π; r ≤ ε; sweep 0 | zero sweep (with r ≥ 0): length 0, **reported**. \|Δ\| ≥ 2π: **error** (use a circle). r < 0, or r ≤ ε with non-zero sweep: **error**. Circle with r ≤ ε: **error** |
+| 8.9 | Precision-limited input | D > 0 and 1024 × ulp(M) > 10⁻⁶ × D: the coordinates are so large, relative to the object's size, that a millionth of its size is below what `f64` can represent there | allowed but **reported**; results are still computed in the translated frame (§10) |
+
+**What "conflict" means for adjacent edges in 8.7 (impl.).** Two adjacent edges share a vertex v (in a two-vertex
+ring they share both). They conflict when either:
+
+- the far endpoint of one lies within ε of the other edge; or
+- they cross, or reach a local minimum of their distance that is ≤ ε, at a point more than ε from every shared
+  vertex.
+
+Tangential contact that exists only at v is not a conflict.
+
+**Bulged edges in 8.7** (D7) are tested with exact closed-form point–arc, segment–arc and arc–arc relations. These
+are computed in each arc's own frame (chord midpoint, chord direction), so a nearly straight arc of huge radius loses
+no accuracy.
+
+- A bulged edge whose sagitta is at most ulp(M) is checked as its chord **(impl.)**. Below the representation
+  limit, the arc and its chord cannot be told apart.
+- Every ring edge is still tested; the O(n²) cost is adequate for 0.1 sizes.
+
+**Order of evaluation for a polygon:**
+
+1. 8.1, non-finite input.
+2. 8.2a, ill-conditioned bulges.
+3. Cleaning: 8.2 and 8.4.
+4. 8.5, too few vertices.
+5. 8.6, degenerate ring.
+6. 8.7, self-intersection.
+7. Orientation (§10).
+
+The first error found is returned.
 
 ## 9. Length
 
 - **Straight segment:** chord c = distance between its vertices.
-- **Bulged segment:** with Δ = 4·atan(b), the arc length is s = c · (Δ/2) / sin(Δ/2), using the absolute value of Δ.
-  - This form is used instead of r·|Δ| because it stays accurate as b → 0, where s → c and r → ∞.
-  - For |Δ| < 1 × 10⁻⁴ it uses the series s = c · (1 + Δ²/24 + 7Δ⁴/5760), so it never divides by a tiny sine.
-- **Polyline length:** the sum of its segment lengths. A closed polyline includes the closing segment, with the
-  closing vertex's bulge.
-- **Arc:** s = r · |Δ|. **Circle:** 2πr.
-- Summation uses compensated (Kahan–Babuška/Neumaier) addition, so long polylines do not accumulate rounding.
+- **Bulged segment:** s = c·(1 + b²)·atan|b| / |b| (b ≠ 0).
+  - This equals r·|Δ|, has no cancellation for any finite b, and needs no series.
+  - In code: c·(1 + b²)·(atan|b|/|b|) for |b| ≤ 1, and c·atan|b|·(|b| + 1/|b|) for |b| > 1. Neither form
+    overflows before the result itself does.
+  - The form c·(Δ/2)/sin(Δ/2) is not used. Its relative error grows to 2 × 10⁻¹¹ at b = 10⁶ and 7 × 10⁻⁵ at
+    b = 10¹².
+- **Polyline length:** the sum of its segment lengths.
+  - A closed polyline includes the closing segment, with the last vertex's bulge.
+  - An open polyline does not use the last vertex's bulge, but it must still be finite.
+- **Arc:** s = r · |Δ|. **Circle:** circumference 2πr.
+- **Summation** uses compensated (Neumaier) addition. It removes accumulation across many segments. It does not
+  remove cancellation inside a term; §10's translation does that.
 
 ## 10. Area, orientation and centroid
 
+**Cleaned ring.** For validity checks (8.5–8.7) a ring is cleaned:
+
+- The start vertex of each zero-length segment (8.2), including the explicit closing duplicate (8.4), is removed.
+- The segment before it then ends at the next kept vertex and keeps its own bulge.
+- Cleaning repeats until no zero-length segment remains.
+
+Area and centroid are computed on the vertices **as given**. A zero-length segment contributes its tiny exact share,
+so nothing is rounded away (D8).
+
 **Signed area** of a closed ring:
+
 - **Precision step:** all vertices are first translated so the first vertex is the origin. Area is
   translation-invariant, and this removes the cancellation that would otherwise cost about half the significant
-  digits at state-plane coordinates.
+  digits at state-plane coordinates. The translated coordinates are exact whenever a vertex and the first vertex
+  are within a factor of 2 of each other (Sterbenz lemma), as at state-plane magnitudes. The only remaining error
+  is the input's own representation.
 - **Straight edges:** shoelace sum, A = ½ Σ (xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ).
-- **Bulged edges:** each adds the signed area of its circular segment, ± (r²/2)·(|Δ| − sin |Δ|) with
-  r = c / (2 sin(|Δ|/2)), taking the sign of Δ.
+- **Bulged edges:** each adds the signed area of its circular segment, sign(b)·(r²/2)·g(|Δ|), where
+  g(x) = x − sin x.
+  - For x ≥ 0.5, it is computed as (r²/2)·(x − sin x), with r from §4.
+  - For x < 0.5, it is computed as (c²(1 + b²)²/32)·(x/|b|)²·x·T(x), with
+    T(x) = 1/3! − x²/5! + x⁴/7! − …, summed until a term falls below 2⁻⁵³ of the sum. This is the same quantity,
+    with no cancellation and no overflow for tiny b. Direct subtraction loses all significant digits for x ≲ 10⁻⁵.
   - A positive bulge lies to the right of its chord. For a counter-clockwise ring that is outward, so it adds area;
     a negative bulge cuts area away.
   - Check: a 2 × 2 counter-clockwise square whose bottom edge is a semicircle (b = +1) has area 4 + π/2.
@@ -181,7 +322,8 @@ Every degenerate or invalid case has one defined behaviour. None is handled sile
 **Area:** the reported area is |A|.
 
 **Orientation:**
-- A > ε_A means **counter-clockwise**; A < −ε_A means **clockwise**; otherwise undefined (8.6).
+
+- A > ε_A means **counter-clockwise**; A < −ε_A means **clockwise**. Otherwise it is undefined and reported.
 - Because both frames are right-handed (§3), counter-clockwise means East → North in survey coordinates and
   right → up in a drawing.
 - Survey texts often describe traverses as clockwise. The reported area is the same either way; only the
@@ -189,53 +331,76 @@ Every degenerate or invalid case has one defined behaviour. None is handled sile
 
 **Circle area:** πr².
 
-**Centroid** (straight-edged polygons only in 0.1; see §13 Q5):
-- Cx = (1/6A) Σ (xᵢ + xᵢ₊₁)(xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ), and likewise for Cy, computed in the translated frame and translated back.
-- Defined only when the area is not degenerate (8.6) and the polygon is simple (8.7). Otherwise it is an error.
+**Centroid** (straight-edged polygons only in 0.1; D5):
+
+- Cx = (1/6A) Σ (xᵢ + xᵢ₊₁)(xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ), and likewise for Cy. It is computed in the translated frame
+  and translated back.
+- Here A is the **signed** area from the same translated sum, not the reported |A|. Using |A| would reflect the
+  centroid of a clockwise ring through the first vertex.
+- **Any non-zero bulge** on an edge of the ring gives a "not supported in 0.1" error. This is checked right after
+  8.1, before the other checks.
+- It is also an error when the ring is degenerate (8.6), not simple (8.7), or has undefined orientation.
 
 ## 11. Conventions fixed now for Phase 4 (not implemented in 2B)
 
-These are recorded so the drawing layer cannot drift from the geometry conventions:
+These are recorded so the drawing layer cannot drift from the geometry conventions.
+
 - **Block inserts:** each insert applies a 2D affine transform: scale (sx, sy), rotation θ (counter-clockwise),
   translation, plus `MINSERT` arrays.
-  - A transform whose linear part has a negative determinant (a mirror, e.g. sx < 0 as in fixture F5) reverses
-    orientation. Bulge signs are negated, and signed areas change sign.
+  - A transform whose linear part has a negative determinant reverses orientation. That is a mirror, for example
+    sx < 0 as in fixture F5. Bulge signs are negated, and signed areas change sign.
   - Lengths scale with the transform. A non-uniform scale turns a circular arc into an elliptical one, so arcs
     under non-uniform scale are reported as not supported in 0.1, never approximated silently.
-- **DXF ARC** (always counter-clockwise from start to end angle): Δ = (end − start) mod 2π, with start = end treated as defined in Phase 4.
+- **Extrusion (OCS):** a planar entity with extrusion (0, 0, −1), common after mirroring, maps to world
+  coordinates by negating x (Autodesk arbitrary axis algorithm). Like a mirror, it reverses orientation and bulge
+  signs. Other extrusions are not plan entities and are reported.
+- **DXF ARC** (always counter-clockwise from start to end angle): Δ = (end − start) mod 2π. The case start = end
+  is defined in Phase 4.
 
-## 12. How 2B will be verified
+## 12. How 2B is verified
 
-Tests are designed so the code does not grade its own homework:
+Expected values never come from the code under test. Each one is a closed form, a 60-digit value computed outside
+the repository, or a result from another program. Each records where it came from.
 
 1. **Closed forms:**
-   - rectangles, right triangles, circles, semicircles (|b| = 1), quarter arcs
-   - the hand-derived values of fixtures F1–F5 (boundary area 2550, road length 100 + 10π, …), already
-     independently checked with ezdxf and shapely ([tests/fixtures/dxf/README.md](../tests/fixtures/dxf/README.md))
-2. **Invariants (property tests):**
-   - translation and rotation leave length and area unchanged
-   - scaling by k multiplies length by k and area by k²
-   - reversing vertex order keeps length, negates signed area and swaps orientation
-   - splitting a segment at an interior point keeps length and area
-   - α ↔ θ ↔ components round-trip
-3. **Precision far from the origin:** the F1 site plan translated to (500 000, 4 000 000) gives the same area and
-   length within the documented tolerance.
-4. **Every row of §8:** each degenerate case has a test that it produces exactly the stated behaviour.
-5. **Bulge edge cases:** b → 0 (the series branch), |b| = 1, |b| ≫ 1 and negative bulges, each against closed forms.
+   - rectangles and right triangles (exact on integer coordinates);
+   - F1 boundary: area 2550, perimeter 200, centroid (1460/51, 365/17);
+   - F1 road centreline 100 + 10π, drain 5π + 25, circle R = 3 (9π and 6π), quarter arc R = 20 (10π);
+   - square with a semicircular edge: 4 ± π/2;
+   - two-vertex rings: bulges (1, 1) give π, bulges (1, 0) give π/2.
+2. **High-precision oracle for bulges** (chord 10; b from 10⁻¹⁵ to 10¹², both signs), for length and segment
+   area, at 10⁻¹³ relative.
+3. **Angles:**
+   - normalisation of −10⁻¹⁷, −4 × 10⁻¹⁶, −0.0 (check the sign bit), TAU, 7·TAU + 1 and −π;
+   - all `atan2` sign cases, including ±0;
+   - cardinal azimuths;
+   - the α ↔ θ ↔ components round trip.
+4. **Large magnitudes:**
+   - F1 translated by (5 × 10⁵, 4 × 10⁶) gives area exactly 2550;
+   - F1 × 1000 at (5 × 10⁸, 4 × 10⁹) gives exactly 2.55 × 10⁹;
+   - a guard at 4 × 10¹² that fails without translation.
+5. **Every row of §8**, including:
+   - two-vertex rings;
+   - the tiny chord with a huge bulge;
+   - spike, pinch, keyhole, figure-8;
+   - a bulged edge crossing another edge;
+   - near misses just outside and inside ε.
+6. **Property tests:**
+   - exact invariance under dyadic translations;
+   - reversal negates the signed area;
+   - scaling by powers of 2 multiplies length and area exactly and keeps every decision;
+   - rotation within 10⁻¹²;
+   - the arc distance routines against dense sampling.
+7. **No bit-exact expectations** for anything through `sin`, `cos`, `atan2` or `hypot`, whose precision Rust
+   documents as platform-dependent.
+8. **Mutation check:** planted errors must make a test fail:
+   - a flipped bulge sign;
+   - |A| in the centroid;
+   - a skipped translation;
+   - the old g(x);
+   - a missing TAU wrap.
 
-## 13. Open questions for the review
+## 13. Decisions
 
-1. **Default tolerance.** Is ε = max(10⁻⁹ × D, 1024 × ulp(M)) (§5) acceptable? It is 0.1 µm on a 100 m plan near
-   the origin and about 0.5 µm at state-plane magnitudes.
-2. **Explicit tolerance in the contract.** Should calculations that use geometry expose the tolerance as an
-   optional input, or keep it internal and record it in the trace only? The proposal is internal plus trace
-   (no new inputs in 0.1).
-3. **How degeneracy reaches users.** 8.2, 8.6, 8.8 and 8.9 "report" a degeneracy. The proposal is one new warning code,
-   `DEGENERATE_GEOMETRY` (level `info` or `caution`), added to API_DESIGN §5. This is a contract change and needs your approval.
-4. **Self-intersecting polygons (8.7).** The proposal is an error for area and centroid (refuse, rather than return a
-   net shoelace value). The check is O(n²) segment tests, adequate for 0.1 sizes. The alternative is a caution
-   warning that still returns the net value.
-5. **Centroid scope.** The proposal is centroids for straight-edged polygons only in 0.1. Bulged polygons get an
-   "not supported in 0.1" error, because no fixture or reference case verifies a bulged centroid.
-6. **ARCHITECTURE.md §3.3** says "2D/3D … transformations". The proposal is to amend it to "2D in 0.1;
-   transformations specified here (§11) and implemented with civkit-drawing in Phase 4".
+The open questions of the proposed version (Q1–Q6), and D7–D9 raised in the review, are decided in
+[ADR 0010](../planning/decisions/0010-geometry-conventions.md) (D-22).

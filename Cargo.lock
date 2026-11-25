@@ -51,6 +51,9 @@ version = "0.0.0"
 [[package]]
 name = "civkit-geometry"
 version = "0.0.0"
+dependencies = [
+ "proptest",
+]
 
 [[package]]
 name = "civkit-units"

@@ -1,6 +1,6 @@
 # Architecture
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:01 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 18:37 IST
 
 > **Status:** Design — accepted parts are marked with their decision ID; the rest is proposed.
 > Contract and API details: [API_DESIGN.md](API_DESIGN.md).
@@ -31,7 +31,7 @@ CivKit/
 ├── crates/                    # the engine
 │   ├── civkit-core/           # calculation contract, registry, trace, errors (+ domain modules at first)
 │   ├── civkit-units/          # Quantity, dimensions, unit registry, parsing
-│   ├── civkit-geometry/       # 2D/3D geometry primitives and algorithms
+│   ├── civkit-geometry/       # 2D geometry primitives and algorithms (GEOMETRY.md)
 │   ├── civkit-drawing/        # neutral drawing model + DXF import
 │   └── civkit-ffi/            # C ABI for C# (AutoCAD / Civil 3D) and MATLAB fallback
 ├── bindings/
@@ -85,9 +85,11 @@ Runtime dimensional analysis: values stored in SI with dimension exponents; angl
 ambiguous units rejected. Runtime (not only compile-time) checking is required because inputs arrive as JSON
 from Python, MCP and C#. Details: [API_DESIGN.md §7](API_DESIGN.md#7-units).
 
-### 3.3 `civkit-geometry`
-2D/3D primitives and algorithms used by calculations and drawing analysis: polyline length, polygon
-area/centroid, arcs, bearings and distances, transformations.
+### 3.3 `civkit-geometry` — *accepted (D-22, ADR 0010)*
+2D primitives and algorithms used by calculations and drawing analysis: distance and azimuth, polyline length
+(straight and bulged segments), arc length, polygon area and orientation, and centroid of straight-edged polygons
+([GEOMETRY.md](GEOMETRY.md)). The 2D transformations needed for block inserts are specified in GEOMETRY.md §11 and
+added here in Phase 4 (release 0.1). 3D is not in 0.1.
 
 ### 3.4 `civkit-drawing` — *accepted (D-12, ADR 0002)*
 A CAD-neutral drawing model (lines, polylines, arcs, circles, blocks, layers, dimensions, drawing units) plus a

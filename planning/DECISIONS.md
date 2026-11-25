@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 15:59 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 18:37 IST
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -42,6 +42,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-18 | P0 | Where may reference cases come from? | **Only openly licensed or public-domain sources.** Register: [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md). | **Accepted** 2026-11-25 · [ADR 0006](decisions/0006-open-sources-and-0-1-calculations.md) |
 | D-19 | P0 | API contract details (version omission, output units, validity breaches, bare numbers, angle formats, unit list, Python quantities, ABI version, MCP tool surface)? | The nine resolutions in [API_DESIGN.md §12](../docs/API_DESIGN.md#12-resolved-tbds--summary-task-07-accepted-2026-11-25). | **Accepted** 2026-11-25 · [ADR 0007](decisions/0007-api-contract-details.md) |
 | D-20 | P1 | Exactly what does each 0.1 calculation implement? | Only what a worked example verifies; beam max shear/moment need one more open numerical example; rise and fall tested for consistency against C4; Manning trapezoid with known depth; traverse to adjusted latitudes/departures; pyramid only when explicitly requested. Narrows implementation within D-7; MVP_SCOPE unchanged. | **Accepted** 2026-11-25 · [ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md) |
+| D-22 | P0 | Geometry conventions for 0.1 (tolerance, degeneracy, self-intersection, centroid scope, error mapping)? | [GEOMETRY.md](../docs/GEOMETRY.md) as revised after [GEOMETRY_SPEC_REVIEW.md](GEOMETRY_SPEC_REVIEW.md): relative tolerance with a precision floor, internal and returned; no new warning code; self-intersection refused (arcs checked exactly); straight-edged centroids only; computed area kept. Items settled during implementation await confirmation. | **Accepted** 2026-11-25 · [ADR 0010](decisions/0010-geometry-conventions.md) |
 | D-21 | P2 | Accept SI prefixes generally (`mN`, `µm`) and common Unicode notation (`m²`, `s⁻¹`) in unit strings? | Maintainer would eventually support both. **Not in 0.1**: [API_DESIGN.md §7.1](../docs/API_DESIGN.md) lists exactly what 0.1 accepts. Needs a grammar extension that stays unambiguous (e.g. `mm` vs milli-metre, `m` vs milli). | Proposed (after 0.1) |
 
 ## Decision record index
@@ -57,6 +58,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0007](decisions/0007-api-contract-details.md) | API contract details for 0.1 | D-19 |
 | [0008](decisions/0008-rust-edition-and-sign-off.md) | Rust edition, MSRV and contribution sign-off | D-10, D-11 |
 | [0009](decisions/0009-implementation-scope-0-1-calculations.md) | Implementation scope of the 0.1 calculations | D-20 |
+| [0010](decisions/0010-geometry-conventions.md) | Geometry conventions for 0.1 | D-22 |
 
 ## Template for a new decision record
 

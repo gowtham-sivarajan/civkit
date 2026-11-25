@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 10:54 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 18:37 IST
 [package]
 name = "civkit-geometry"
 description = "CivKit geometry: 2D/3D primitives and algorithms"
@@ -14,3 +14,6 @@ publish.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }
