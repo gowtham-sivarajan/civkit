@@ -1,0 +1,33 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 19:15 IST",
+  "case": "hds4-ex4-1",
+  "title": "Trapezoidal channel, velocity at a given depth (FHWA HDS-4 Example 4.1)",
+  "source": {
+    "kind": "published",
+    "register_id": "S2",
+    "citation": "FHWA, Introduction to Highway Hydraulics, HDS-4 (June 1997, metric), Example 4.1",
+    "location": "§4.3, PDF pp. 50–52",
+    "licence": "Public domain (US federal government work)",
+    "url": "https://www.fhwa.dot.gov/engineering/hydraulics/pubs/hds4intr.pdf"
+  },
+  "request": {
+    "id": "fluids.open_channel.manning_trapezoidal",
+    "version": 1,
+    "inputs": {
+      "bottom_width": { "value": 2, "unit": "m" },
+      "side_slope": { "value": 2 },
+      "depth": { "value": 0.5, "unit": "m" },
+      "manning_n": { "value": 0.02 },
+      "bed_slope": { "value": 0.003 }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "wetted_perimeter": { "value": 4.24, "unit": "m", "tolerance": { "absolute": 0.005 } },
+      "hydraulic_radius": { "value": 0.35, "unit": "m", "tolerance": { "absolute": 0.005 } },
+      "velocity": { "value": 1.36, "unit": "m/s", "tolerance": { "relative": 0.01 } }
+    },
+    "warnings": []
+  },
+  "verification": "Re-derived by script (Python, outside the repository): A = 1.5 m², P = 2 + 2 × 0.5 × √5 = 4.2361 m, R = 0.35410 m, V = 1.3707 m/s, Q = 2.0561 m³/s. The book rounds R to 0.35 m before computing V, giving 1.36 m/s; the velocity tolerance is widened to 1 % to cover that intermediate rounding (ENGINEERING_STANDARDS §3). The book's Q ≈ 2.0 m³/s is not checked: it follows from the rounded V (1.36 × 1.5 = 2.04) and Example 4.2 already checks the discharge. Source erratum, recorded and not used: the book prints the discharge unit as m²/s."
+}

@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 19:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 19:15 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,8 +8,8 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 2 — Units, geometry, calculations (stage 2B)
-**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); no engineering calculation yet
+**Current phase:** 2 — Units, geometry, calculations (stage 2C)
+**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); two engineering calculations (2C, in progress)
 
 ---
 
@@ -53,12 +53,16 @@
   - **2B (geometry)**: ✅. Specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after the
     [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green
     ([run #5](https://github.com/gowtham-sivarajan/civkit/actions/runs/45622288253)); the eight implementation items
-    confirmed by the maintainer. One follow-up (derived tolerances must be finite) is pending the maintainer's
-    check and CI.
+    confirmed by the maintainer. The follow-up (derived tolerances must be finite) passed the maintainer's Windows
+    check; it is committed together with 2C part 1.
+  - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
+    `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). **Blocked on D-23**: traverse,
+    levelling and earthwork need list inputs and a method choice, which the contract does not have
+    ([proposal](CONTRACT_LISTS_PROPOSAL.md)). Beam maximum shear and moment: still no qualifying example.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
-- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
+- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1); **D-23 (list and choice inputs, blocks 2C)**.
   See [DECISIONS.md](DECISIONS.md).
 
 **Engine state**
@@ -69,7 +73,8 @@
 - `civkit-geometry`: angles and direction, tolerance, polyline/arc/circle lengths, polygon area, orientation,
   centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
   [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
-- Only the template calculation `math.demo.weighted_mean` is registered in tests. No engineering calculation exists yet (2C).
+- Registered built-ins: `fluids.open_channel.manning_trapezoidal`, `structural.beam.simply_supported`. The template
+  `math.demo.weighted_mean` is registered only in tests.
 
 **Repository**
 - Public at github.com/gowtham-sivarajan/civkit; private vulnerability reporting on.
@@ -97,12 +102,18 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Maintainer:** Windows check of the 2B follow-up (commands above), commit with `git commit -s -F _commit_msg.txt`,
-   push, confirm CI.
-2. Start 2C only on the maintainer's go-ahead.
-3. Then 2C, exactly as D-20 defines. Traverse decides for itself when a misclosure counts as zero before asking
-   for its direction (GEOMETRY.md §7). Then 2D.
-4. Before 2C: collect one more openly licensed worked example for beam maximum shear and moment (D-20).
+1. **Maintainer:** decide D-23 ([CONTRACT_LISTS_PROPOSAL.md](CONTRACT_LISTS_PROPOSAL.md)): list inputs (option A
+   recommended), choice inputs for the method, and the reading of "array inputs are out of scope".
+2. **Maintainer:** review the two implemented descriptors (Manning, beam): inputs, sign conventions, assumptions.
+3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
+4. After D-23: ADR 0011 and the API_DESIGN change, then the contract extension (tests first), then traverse,
+   levelling and earthwork one at a time, each with its descriptor proposed for review first (D-20 condition 4).
+   Traverse decides for itself when a misclosure counts as zero before asking for its direction (GEOMETRY.md §7).
+   Then 2D.
+5. Beam maximum shear and moment: still need an openly licensed example with a full-span UDL and one point load
+   (S4 ch. 7 and one statics text checked; none fits).
+6. **AI sessions:** the output mirror is a network mount that does not update file times on in-place edits, so
+   cargo can reuse stale builds. Build from a content-synced local copy.
 5. Review Dependabot pull requests as they arrive (each must pass CI).
 6. Later: an AutoCAD-written DXF fixture once a licence that allows publishing exists. Phase 4 inherits the
    geometry tasks listed in IMPLEMENTATION_PLAN (transformations, OCS, contract representation of geometry notes).
@@ -113,6 +124,25 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 19:15 IST — 2C part 1: Manning and beam; contract gap for list inputs *(Claude Opus 5.5)*
+- Maintainer confirmed the 2B follow-up locally (127 tests) and said go for 2C.
+- `fluids.open_channel.manning_trapezoidal`:
+  - area, wetted perimeter, hydraulic radius, velocity and discharge at a known depth (D-20 scope);
+  - reference cases HDS-4 Examples 4.2 and 4.1 (C5);
+  - five unit tests.
+- `structural.beam.simply_supported`:
+  - full-span UDL plus one point load; reactions, deflection at x and end slope θ_A;
+  - sign conventions as in the sources: downward deflection and clockwise slope are negative;
+  - reference cases Udoeyo 7.2 (C6) and Lord 11.1 and 11.5 (C7, C8);
+  - nine unit tests.
+  - Maximum shear and moment are not included: no qualifying example yet. S4 ch. 7 has none that fits, and its
+    Example 7.2 has a moment erratum (50.4 vs 52.02 kip·ft), now recorded.
+- **Gap found:** the contract has only scalar inputs. Traverse, levelling and earthwork need lists, and earthwork
+  needs a visible method input (ADR 0009 condition 3). Proposed as D-23 with options; not decided, no code.
+- Found: the output mirror's network mount does not update file times, so a cargo build there was stale once.
+  A clean rebuild confirmed every result. Builds now run from a content-synced copy.
+- Local checks (from the synced copy): fmt, clippy -D warnings, 141 tests, dependency rule, docs. All clean.
 
 ### 2026-11-25 19:00 IST — 2B confirmed; derived tolerances must be finite *(Claude Opus 5.5)*
 - Maintainer confirmed all eight implementation items of ADR 0010. Item 6 (explicit tolerance) was confirmed with

@@ -1,0 +1,42 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 19:15 IST",
+  "case": "udoeyo-ex7-2",
+  "title": "UDL plus midspan point load: reactions, slope at A, midspan deflection (Udoeyo Example 7.2)",
+  "source": {
+    "kind": "published",
+    "register_id": "S5",
+    "citation": "F. Udoeyo, Structural Analysis (Temple University, 2020), Example 7.2",
+    "location": "§1.7, Example 7.2",
+    "licence": "CC BY-NC-ND 4.0 (numbers only are used)",
+    "url": "https://temple.manifoldapp.org/projects/structural-analysis"
+  },
+  "request": {
+    "id": "structural.beam.simply_supported",
+    "version": 1,
+    "inputs": {
+      "span": { "value": 8, "unit": "ft" },
+      "udl": { "value": 2, "unit": "kip/ft" },
+      "point_load": { "value": 10, "unit": "kip" },
+      "point_load_position": { "value": 4, "unit": "ft" },
+      "elastic_modulus": { "value": 10000, "unit": "ksi" },
+      "second_moment": { "value": 1000, "unit": "in^4" },
+      "position": { "value": 4, "unit": "ft" }
+    },
+    "output_units": {
+      "reaction_a": "kip",
+      "reaction_b": "kip",
+      "deflection": "ft",
+      "end_slope_a": "rad"
+    }
+  },
+  "expected": {
+    "outputs": {
+      "reaction_a": { "value": 13, "unit": "kip", "tolerance": { "absolute": 0.005 } },
+      "reaction_b": { "value": 13, "unit": "kip", "tolerance": { "absolute": 0.005 } },
+      "end_slope_a": { "value": -0.0012, "unit": "rad", "tolerance": { "absolute": 0.00005 } },
+      "deflection": { "value": -0.0031, "unit": "ft", "tolerance": { "absolute": 0.00005 } }
+    },
+    "warnings": []
+  },
+  "verification": "Re-derived by script (Python, outside the repository) in kip and ft: R_A = R_B = 2 × 8/2 + 10/2 = 13 kip; EI = 10 000 ksi × 1000 in⁴ = 69 444.4 kip·ft²; EI·θ_A = −2 × 8³/24 − 10 × 4 × (8² − 4²)/(6 × 8) = −82.667 kip·ft², θ_A = −0.0011904 rad (book −0.0012); EI·y_C = −106.667 − 106.667 = −213.333 kip·ft³, y_C = −0.003072 ft = −0.0369 in (book −0.0031 ft ≈ −0.04 in; its −213.35 comes from a rounded intermediate). Tolerances are half a unit in the last printed digit."
+}

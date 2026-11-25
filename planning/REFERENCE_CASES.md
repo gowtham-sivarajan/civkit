@@ -1,6 +1,6 @@
 # Reference Cases (Phase 0 collection)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-25 09:57 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-25 19:15 IST
 
 > **Status:** Task 0.8. Worked examples collected from open sources ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)),
 > each **re-derived independently** by script (Claude Opus 5.5, 2026-11-25). **Human engineering review: pending.**
@@ -132,3 +132,4 @@ Second search (2026-11-25 09:56 IST) checked FHWA NHI-06-088 ch. 2 (formulas onl
 | FHWA HDS-4 (1997) Ex 4.1 | R rounded to 0.35 before use (V 1.36 vs 1.37); discharge unit printed m²/s |
 | Wikibooks Earthwork Problem page | Station range 2+50 vs 1+50 on Solution page |
 | Kouretzis, Appendix A | ρw "≈ 10 Mg/m³" — should be ≈ 1 Mg/m³ |
+| Lord et al. (S4) Example 7.2 | Maximum moment printed as 50.4 kip·ft at C (x = 6 ft); zero shear is at x = 5.1 ft, where M = 52.02 kip·ft |

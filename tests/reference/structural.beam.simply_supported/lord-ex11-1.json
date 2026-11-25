@@ -1,0 +1,31 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 19:15 IST",
+  "case": "lord-ex11-1",
+  "title": "UDL only: midspan deflection (Lord et al. Example 11.1)",
+  "source": {
+    "kind": "published",
+    "register_id": "S4",
+    "citation": "J. Lord et al., Strength of Materials (Virginia Tech), Example 11.1",
+    "location": "Chapter 11 (beam deflection), Example 11.1",
+    "licence": "CC BY-NC-SA 4.0",
+    "url": "https://engineeringmechanicsoer.github.io/StrengthBook"
+  },
+  "request": {
+    "id": "structural.beam.simply_supported",
+    "version": 1,
+    "inputs": {
+      "span": { "value": 10, "unit": "m" },
+      "udl": { "value": 20, "unit": "kN/m" },
+      "elastic_modulus": { "value": 200, "unit": "GPa" },
+      "second_moment": { "value": 350e6, "unit": "mm^4" },
+      "position": { "value": 5, "unit": "m" }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "deflection": { "value": -37.2, "unit": "mm", "tolerance": { "absolute": 0.05 } }
+    },
+    "warnings": []
+  },
+  "verification": "Re-derived by script (Python, outside the repository): y(5 m) = −5wL⁴/(384EI) = −5 × 20 000 × 10⁴/(384 × 200 × 10⁹ × 350 × 10⁻⁶) = −0.037202 m = −37.202 mm (book −37.2 mm). Tolerance is half a unit in the last printed digit."
+}
