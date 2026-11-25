@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:48 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:52 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -104,10 +104,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next:** Windows check and commit of the D-23 implementation (see the 23:48 entry; `git add` the listed files only,
-   never `planning/ui-concepts/`). Then **propose the traverse descriptor** (groups, list inputs, outputs and offsets,
-   choice inputs, reference case C3) for the maintainer's review before any traverse code; then levelling and
-   earthwork the same way (D-20 condition 4).
+1. **Next:** the maintainer reviews [TRAVERSE_DESCRIPTOR_PROPOSAL.md](TRAVERSE_DESCRIPTOR_PROPOSAL.md) (answers to
+   Q-A … Q-G). Then traverse is built tests first; then the levelling and earthwork descriptors are proposed the same
+   way (D-20 condition 4). D-23 is committed (`e948bc6`).
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
@@ -129,6 +128,19 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 23:52 IST — Traverse descriptor proposed; no code *(Claude Sonnet 5.5)*
+- The maintainer committed D-23 as `e948bc6` (Windows run passed).
+- [TRAVERSE_DESCRIPTOR_PROPOSAL.md](TRAVERSE_DESCRIPTOR_PROPOSAL.md) written for review (D-20 condition 4): ID
+  `surveying.traverse.compass_rule`; group `legs` (min 3); list inputs `bearings` and `distances`; 6 list and 5 scalar
+  outputs; no choice input; no validity rules; trace plan; test plan; seven questions (Q-A … Q-G, section 9).
+- **C3 re-derived independently** (70-digit decimal arithmetic, own sin/cos series, no packages): every entry is within
+  0.0092 ft of the book except the two touched by the CD departure erratum (0.0154 and 0.0118 ft). The book's
+  misclosures inherit that erratum: exact E = 2.2869 ft, 1 : 1 143 (book 2.26 ft, 1 : 1 157). The compass rule applied to
+  the book's own latitudes and departures matches the book to 0.00515 ft. Proposed reference case: tolerance 0.01 ft,
+  `null` for the two erratum entries, the book's misclosure figures not asserted.
+- Found: `civkit-core` does not depend on `civkit-geometry` yet; traverse would add that engine-internal edge (Q-D).
+- Open: the maintainer's answers to Q-A … Q-G. No traverse code until then.
 
 ### 2026-11-25 23:48 IST — D-23 implementation finished and green; nothing committed *(Claude Sonnet 5.5)*
 - The working tree held a half-done D-23 extension (the previous Opus session wrote ADR 0011, the new descriptor and
