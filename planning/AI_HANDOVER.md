@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 21:50 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:07 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -126,6 +126,31 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 23:07 IST — Competitive research; two reports, no decisions *(Claude Sonnet 5.5)*
+- Research-only task from the maintainer. New files: [COMPETITIVE_LANDSCAPE.md](COMPETITIVE_LANDSCAPE.md) (11 sections) and
+  [FEATURE_PROPOSALS.md](FEATURE_PROPOSALS.md) (28 proposals FP-01 … FP-28; 12 rejected or deferred, R-1 … R-12).
+  No code, accepted decision or MVP_SCOPE changed; 0.1 stays as planned.
+- Headline: "Rust + offline + MCP" is now common among new competitors. The open lane is a verifiable calculation layer:
+  a replayable calculation record (FP-01), a verification ledger (FP-02), cross-checks (FP-03), a local hand-calculation
+  checker (FP-04), and a conformance suite and CLI (FP-21, FP-10).
+- **Risk found:** CivilKit (civilkit.io; Calcs, plus a CAD kernel under Apache-2.0) is two letters from CivKit, same
+  language and pitch, active in Nov 2026. D-1 only recorded the Bitcoin and npm overlaps. Trademark registers and search
+  results could not be checked. Landscape §10 lists risks and optional actions; D-1 is not reopened.
+- **Proposals needing a decision record (none written):** record schema and MCP surface are cheapest to decide *before*
+  Phase 3 parity tests; MCP spec has a 2026-07-28 revision, so re-read D-13 at Phase 3 start. `compute` is `f64`-only,
+  so sensitivity outputs (FP-05) would be the most expensive change; prototype first, do not change the trait now.
+  Full list: FEATURE_PROPOSALS §4.5.
+- Licence rules reinforced: never port from GPL/AGPL/LGPL/OpenSees/Symbolica; use them only as test oracles.
+  `deny.toml` already blocks `rug` (LGPL) and `acadrust` (MPL-2.0); LandXML schema licence is **unverified**.
+- Limits: ~25 projects, no commercial tools studied; some pages only partly read; vendor test counts are self-reported.
+  Human review needed for the licence and naming sections.
+- **Timestamp trap:** on this machine `TZ=Asia/Kolkata date` in Git Bash prints UTC labelled "IST" (5 h 30 min behind;
+  16:36 when the real time was 22:16). Stamp from PowerShell:
+  `[TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTime]::UtcNow,'UTC','India Standard Time')`.
+  The §2 rule 3 example command is wrong for Git Bash on Windows.
+- Maintainer: the two reports are untracked; commit with `git commit -s -F _commit_msg.txt` when ready
+  (`planning/ui-concepts/` stays unstaged).
 
 ### 2026-11-25 21:50 IST — D-23 design confirmed; four edge rules clarified *(Claude Opus 5.5)*
 - Maintainer's Windows run passed. Pushed as `e842edc`. That commit holds only the four D-23 documents; its message
