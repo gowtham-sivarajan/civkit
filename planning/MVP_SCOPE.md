@@ -1,8 +1,9 @@
 # MVP Scope — CivKit 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:08 IST
 
-> **Status:** Proposed. Depends on D-3 (AutoCAD in 0.2) and D-7 (calculation set) in [DECISIONS.md](DECISIONS.md).
+> **Status:** Accepted (D-3, D-7). The calculation list is conditional: a calculation stays in 0.1 only once an
+> open worked example is collected and re-derived ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md), task 0.8).
 
 ## 1. Goal of 0.1
 
@@ -22,16 +23,19 @@ in 0.1 instead. The plugin then reuses that analysis (ADR 0002).
 - Geometry: polyline length, polygon area and centroid, arc length, bearing/distance between points.
 - Contract: registry, JSON request/response, trace, warnings, versioned IDs.
 
-**Calculations** (first-principles, each verifiable against a textbook worked example — candidates for D-7):
+**Calculations** (first-principles; reference cases only from open sources — D-18). Status as of 2026-11-25:
 
-| Domain | Calculation |
-|---|---|
-| Surveying | Traverse closure error and Bowditch adjustment |
-| Surveying | Levelling reduction (rise & fall; height of instrument) |
-| Geotechnical | Soil phase relationships (void ratio, porosity, degree of saturation, unit weights) |
-| Structural | Simply supported beam: reactions, max shear/moment, deflection (UDL and point load) |
-| Fluids | Manning's equation for open channels |
-| Quantities | Earthwork volume: average-end-area and prismoidal methods |
+| Domain | Calculation | Open sources | Status |
+|---|---|---|---|
+| Quantities | Earthwork volume — average end area | S1 | ✅ Example confirmed and re-derived |
+| Quantities | Earthwork volume — prismoidal | S1 (formula only) | ⚠️ Needs an open worked example |
+| Fluids | Manning's equation for uniform open-channel flow | S2, S11 | 🔎 Example to locate |
+| Structural | Simply supported beam: reactions, max shear/moment, deflection (UDL and point load) | S3, S4, S5 | 🔎 Examples to locate |
+| Geotechnical | Soil phase relationships (void ratio, porosity, degree of saturation, unit weights) | S6, S7 | 🔎 Example to locate |
+| Surveying | Levelling reduction (rise & fall; height of instrument) | S8, S9, S10 | 🔎 Example to locate |
+| Surveying | Traverse closure and compass-rule (Bowditch) adjustment | S9 (partial), S10 | ⚠️ No complete open example yet — moves to a later release if none is found |
+
+Source IDs (S1 …) refer to [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md).
 
 **Drawing analysis (DXF, read-only)**
 - Entity listing by layer; lengths and areas; drawing-unit consistency check; quantity schedule export (CSV/JSON).

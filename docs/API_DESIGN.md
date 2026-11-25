@@ -1,9 +1,9 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 09:08 IST
 
 > **Status:** Draft — a Phase 0 deliverable. Sections marked **TBD** must be settled before Phase 0 can exit.
-> Related decisions: D-5 (units), D-6 (FFI), D-13 (MCP SDK).
+> Related decisions: D-5 (units) and D-6 (FFI) — both accepted, ADR 0005; D-13 (MCP SDK, proposed).
 
 ## 1. Design goals
 

@@ -1,6 +1,6 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 01:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:08 IST
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 
@@ -38,7 +38,11 @@ Full checklist: [planning/ACCEPTANCE_CRITERIA.md](../planning/ACCEPTANCE_CRITERI
 - Iterative methods state their convergence criterion and maximum iterations, and report non-convergence as an error.
 - Angles in surveying use exact DMS handling; no floating-point drift in angle sums that should close exactly.
 
-## 4. Design codes and copyright
+## 4. Sources, design codes and copyright
+
+- **Reference cases come only from openly licensed or public-domain sources** (D-18). Approved sources and
+  the licence policy are in [planning/REFERENCE_SOURCES.md](../planning/REFERENCE_SOURCES.md). Only numbers,
+  method names and citations are taken from a source — never text, figures or tables.
 
 - Design-code modules (IS, Eurocode, ACI, AASHTO …) come **after 0.1**, one code at a time (D-8).
 - Code texts and many tables are copyrighted. Implement equations and cite clause numbers; **do not paste code

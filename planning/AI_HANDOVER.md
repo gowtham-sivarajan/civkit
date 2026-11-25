@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 08:58 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 09:08 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -42,9 +42,10 @@
 ## 3. Where things stand
 
 - Planning documents restructured into root / `docs/` / `planning/` (D-16, ADR 0003).
-- Accepted: D-1 name (CivKit), D-2 licence (Apache-2.0), D-12 drawing model, D-15 repository layout,
+- Accepted: D-1 name (CivKit), D-2 licence (Apache-2.0), D-3 … D-6 (scope, order, units, FFI — ADR 0005),
+  D-7 + D-18 (open sources only; 0.1 set driven by them — ADR 0006), D-12 drawing model, D-15 repository layout,
   D-16 documentation structure, D-17 public repository from day one.
-- Open P0 decisions: D-3, D-4, D-5, D-6, D-7.
+- All P0 decisions accepted (D-1 … D-7, D-12, D-15 … D-18).
 - Maintainer's development machine: Windows 11, PowerShell 5.1. **Toolchain verified 2026-11-25:** Rust 1.100.0
   (`stable-x86_64-pc-windows-msvc`, rustfmt 1.11.0, clippy), MSVC linker works (smoke test built and ran),
   .NET SDK 11.0.100, SQLite 3.54.1, `.venv` with maturin 1.16.0 and JupyterLab 4.6.6, VS Code extensions.
@@ -57,9 +58,10 @@
 
 ## 4. Next actions
 
-1. Decide D-3 … D-7 (see [DECISIONS.md](DECISIONS.md)).
+1. Task 0.8: locate open worked examples per [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md) §4; re-derive each.
+   Priority gaps: traverse/Bowditch and prismoidal (no complete open example yet).
 2. Finish the TBDs in API_DESIGN.md.
-3. Collect and independently verify worked examples for each 0.1 calculation.
+3. Collect 3–5 licence-safe DXF fixtures (task 0.9).
 
 Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
@@ -68,6 +70,15 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 09:08 IST — D-3 … D-7 decided; open-source reference policy *(Claude Opus 5.5)*
+- **Accepted D-3 … D-6** (ADR 0005) as recommended.
+- **Accepted D-18:** reference cases only from openly licensed or public-domain sources; and **D-7:** the 0.1
+  calculation set is driven by those sources, with an entry rule (ADR 0006).
+- Source search done: register in `planning/REFERENCE_SOURCES.md` (11 approved sources, 1 rejected for unclear
+  licence). Confirmed and re-derived: average-end-area example (Wikibooks, 4,900 m³). Gaps: traverse/Bowditch,
+  prismoidal.
+- **Next:** task 0.8 — locate the remaining worked examples.
 
 ### 2026-11-25 08:58 IST — Toolchain verified *(Claude Opus 5.5)*
 - Task 0.4 done: Rust 1.100.0 stable-msvc with rustfmt and clippy; smoke test compiled, linked and ran
