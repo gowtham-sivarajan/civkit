@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Runs every reference case in `tests/reference/` (repository root) against the engine.
 //! Format: `tests/reference/README.md`. A case that fails to parse is a test failure, not a skip.
@@ -411,6 +411,147 @@ fn a_list_output_unit_is_checked_once() {
     );
     assert_eq!(p.len(), 1, "{p:?}");
     assert!(p[0].contains("unit"), "{p:?}");
+}
+
+/// Phase 2D integrity: a descriptor's `examples` and the case files on disk must be the same set.
+///
+/// A missing file would send a reader (or a generated doc page) to nothing; an unlisted file would be a case the
+/// descriptor does not admit to. Both are documentation lies that no other test catches.
+#[test]
+fn every_descriptor_example_exists_and_every_case_file_is_listed() {
+    let registry = registry();
+    let repo_root = reference_dir().join("../..");
+    let mut problems = Vec::new();
+    for d in registry.list() {
+        for example in &d.examples {
+            if !repo_root.join(example).is_file() {
+                problems.push(format!("{}: example '{example}' does not exist", d.id));
+            }
+            let expected_folder = format!("tests/reference/{}/", d.id);
+            if !example.starts_with(&expected_folder) {
+                problems.push(format!(
+                    "{}: example '{example}' is not in {expected_folder}",
+                    d.id
+                ));
+            }
+        }
+        let dir = reference_dir().join(&d.id);
+        for file in case_files(&dir) {
+            let name = file
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default();
+            let listed = format!("tests/reference/{}/{name}", d.id);
+            if !d.examples.contains(&listed) {
+                problems.push(format!(
+                    "{}: case file '{name}' is not listed in the descriptor's examples",
+                    d.id
+                ));
+            }
+        }
+    }
+    // And no case folder belongs to a calculation that is not registered.
+    let ids: Vec<&str> = registry.list().iter().map(|d| d.id.as_str()).collect();
+    for entry in std::fs::read_dir(reference_dir()).expect("tests/reference exists") {
+        let path = entry.expect("readable entry").path();
+        if path.is_dir() {
+            let name = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or_default();
+            if !ids.contains(&name) {
+                problems.push(format!(
+                    "tests/reference/{name}/ belongs to no registered calculation"
+                ));
+            }
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "{} problem(s):\n{}",
+        problems.len(),
+        problems.join("\n")
+    );
+}
+
+/// Phase 2D: ACCEPTANCE_CRITERIA §3 "descriptor complete". `check_descriptor` enforces the structure; this checks that
+/// the human-facing text exists, because interfaces, forms and generated documentation are built from it.
+#[test]
+fn every_descriptor_has_its_text() {
+    let registry = registry();
+    let mut problems = Vec::new();
+    for d in registry.list() {
+        let blank = |s: &str| s.trim().is_empty();
+        if blank(&d.title) || blank(&d.summary) {
+            problems.push(format!("{}: title or summary is empty", d.id));
+        }
+        if d.references.iter().any(|r| blank(r)) || d.references.is_empty() {
+            problems.push(format!("{}: references are missing or blank", d.id));
+        }
+        if d.assumptions.is_empty() || d.assumptions.iter().any(|a| blank(a)) {
+            problems.push(format!("{}: assumptions are missing or blank", d.id));
+        }
+        if d.examples.is_empty() {
+            problems.push(format!("{}: no examples", d.id));
+        }
+        for i in &d.inputs {
+            if blank(&i.description) {
+                problems.push(format!("{}: input '{}' has no description", d.id, i.name));
+            }
+        }
+        for o in &d.outputs {
+            if blank(&o.description) {
+                problems.push(format!("{}: output '{}' has no description", d.id, o.name));
+            }
+        }
+        for rule in &d.validity {
+            if blank(&rule.reason) {
+                problems.push(format!(
+                    "{}: validity rule on '{}' has no reason",
+                    d.id, rule.input
+                ));
+            }
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "{} problem(s):\n{}",
+        problems.len(),
+        problems.join("\n")
+    );
+}
+
+#[test]
+fn every_reference_case_records_how_it_was_verified() {
+    // ENGINEERING_STANDARDS §2 item 5: the expected result is independently verified, and the case says how.
+    let mut problems = Vec::new();
+    for file in case_files(&reference_dir()) {
+        let text = std::fs::read_to_string(&file).expect("readable file");
+        let value: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
+        for field in ["provenance", "verification", "title"] {
+            let ok = value[field].as_str().is_some_and(|s| s.trim().len() >= 20);
+            if !ok {
+                problems.push(format!(
+                    "{}: '{field}' is missing or too short",
+                    file.display()
+                ));
+            }
+        }
+        // Cases written by an AI model must say so in the provenance line (ADR 0003).
+        if !value["provenance"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("claude")
+        {
+            problems.push(format!("{}: provenance names no model", file.display()));
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "{} problem(s):\n{}",
+        problems.len(),
+        problems.join("\n")
+    );
 }
 
 #[test]

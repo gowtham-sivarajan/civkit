@@ -1,0 +1,40 @@
+{
+  "provenance": "Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:09 IST · last edited 2026-11-26 00:09 IST",
+  "case": "navedtra-14069-fig14-14",
+  "title": "Five-setup levelling run, height-of-instrument reduction (NAVEDTRA 14069, Fig. 14-14; case C4)",
+  "source": {
+    "kind": "published",
+    "register_id": "S13",
+    "citation": "US Navy, Engineering Aid, NAVEDTRA 14069, chapter 14, Fig. 14-14",
+    "location": "ch. 14, Fig. 14-14, pp. 14-13 to 14-15",
+    "licence": "Public domain (US government work)",
+    "url": "https://engineeringtraining.tpub.com/14069/css/Level-Computations-480.htm"
+  },
+  "request": {
+    "id": "surveying.levelling.height_of_instrument",
+    "version": 1,
+    "inputs": {
+      "start_elevation": { "value": 133.163, "unit": "ft" },
+      "backsights": { "value": [6.659, 4.968, 4.508, 1.412, 7.073], "unit": "ft" },
+      "foresights": { "value": [4.971, 7.452, 5.857, 1.261, 1.785], "unit": "ft" }
+    },
+    "output_units": {
+      "heights_of_instrument": "ft",
+      "elevations": "ft",
+      "sum_backsights": "ft",
+      "sum_foresights": "ft",
+      "net_rise": "ft"
+    }
+  },
+  "expected": {
+    "outputs": {
+      "heights_of_instrument": { "value": [139.822, 139.819, 136.875, 132.430, 138.242], "unit": "ft", "tolerance": { "absolute": 0.0005 } },
+      "elevations": { "value": [134.851, 132.367, 131.018, 131.169, 136.457], "unit": "ft", "tolerance": { "absolute": 0.0005 } },
+      "sum_backsights": { "value": 24.620, "unit": "ft", "tolerance": { "absolute": 0.0005 } },
+      "sum_foresights": { "value": 21.326, "unit": "ft", "tolerance": { "absolute": 0.0005 } },
+      "net_rise": { "value": 3.294, "unit": "ft", "tolerance": { "absolute": 0.0005 } }
+    },
+    "warnings": []
+  },
+  "verification": "Exact rational arithmetic (Python fractions, outside the repository, 2026-11-26) reproduces every printed number: heights of instrument 139.822, 139.819, 136.875, 132.430, 138.242; elevations 134.851, 132.367, 131.018, 131.169, 136.457; sum of backsights 24.620, sum of foresights 21.326, difference 3.294 (= last elevation - start). The book prints three decimals; the tolerance 0.0005 ft is half the last printed digit and needs no widening."
+}

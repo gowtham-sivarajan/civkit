@@ -1,6 +1,6 @@
 # Reference Cases (Phase 0 collection)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-26 00:23 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Task 0.8. Worked examples collected from open sources ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)),
 > each **re-derived independently** by script (Claude Opus 5.5, 2026-11-25). **Human engineering review: pending.**
@@ -12,12 +12,21 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
 
 ## C1 — Earthwork volume, average end area ✅
 
+> **Implemented 2026-11-26** as `tests/reference/quantities.earthwork.average_end_area/wikibooks-ex1.json` (method
+> `average_end_area`; the source does not say cut or fill, so the areas are entered as cut; segments 2 050, 1 525,
+> 1 325 and total 4 900 m³, tolerance 0.5).
+
 - **Source:** S1 — *Fundamentals of Transportation*, "Earthwork", Example 1 (Wikibooks, CC BY-SA).
 - **Input:** level-terrain road 150 m; end areas 40, 42, 19, 34 m² at 0, 50, 100, 150 m.
 - **Expected:** 2,050 + 1,525 + 1,325 = **4,900 m³**.
 - **Re-derived:** 4,900.0 m³. Tolerance 0.5 m³.
 
 ## C2 — Earthwork volume, average end area + pyramid (zero end area) ✅
+
+> **Implemented 2026-11-26** as `…/wikibooks-solution.json` with the method `pyramid_at_zero_end` requested explicitly
+> (totals fill 4 087.5, cut 1 058.3, net fill 3 029.2, tolerance 0.05; the two printed pyramids 83.3 and 25, every other
+> per-segment entry `null`). The exact re-derivation shows why the method must be explicit: the same data under average
+> end area gives fill 4 100, cut 1 100, net 3 000 (a unit test).
 
 - **Source:** S1 — *Fundamentals of Transportation/Earthwork/Solution* (Wikibooks, CC BY-SA).
 - **Input:** stations 0+00 fill 60; 0+50 fill 50; 0+75 cut 0 / fill 25; 1+00 cut 10 / fill 5; 1+15 cut 15 / fill 0; 1+50 cut 30 (m²).
@@ -59,6 +68,12 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
   E/P 0.00087456 (1 : 1 143); every other entry within 0.0092 ft of the book.
 
 ## C4 — Differential levelling (HI method), closure and proportional adjustment ✅
+
+> **Implemented 2026-11-26** as `tests/reference/surveying.levelling.height_of_instrument/navedtra-14069-fig14-14.json`
+> (HIs, elevations, ΣBS, ΣFS, difference; tolerance 0.0005 ft), `…closure_adjustment/…` (closure error, total length,
+> adjusted TBM 16; the four unprinted adjusted values are `null`) and, as a **consistency check only** (D-20 condition 2),
+> `…rise_and_fall/…`. Exact rational re-derivation: the book is reproduced to its last digit; adjusted values
+> 134.84792, 132.36041, 131.00707, 131.15666, 136.44200 (the last equals the known BM 19).
 
 - **Source:** S13 — US Navy, *Engineering Aid* (NAVEDTRA 14069), ch. 14, Fig. 14-14 and text pp. 14-13 – 14-15. Public domain.
 - **Input:** BM 35 = 133.163 ft. BS / FS (ft): 6.659 / 4.971 (to 16), 4.968 / 7.452 (to 17), 4.508 / 5.857 (to 18),
@@ -102,6 +117,10 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
 - **Expected:** UDL −18.47 mm, point load −6.35 mm, total −24.8 mm. **Re-derived:** 18.470, 6.349, 24.820 mm. ✅
 
 ## C9 — Single-setup levelling (HI) ⚠️
+
+> **Implemented 2026-11-26** as `…height_of_instrument/navedtra-14069-p14-10.json` (backsight 11.56, erratum recorded in
+> its `verification`) and, as a consistency check only, `…rise_and_fall/navedtra-14069-p14-10.json`. With the printed
+> 11.65 the result would be 376.66 and 375.24, not the book's 376.57 and 375.15.
 
 - **Source:** S13 — NAVEDTRA 14069, p. 14-10.
 - **Input/Expected:** BM 365.01 ft; HI 376.57; FS 1.42 → elevation B **375.15 ft**.

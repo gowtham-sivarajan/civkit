@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-25 23:56 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-25 23:56 IST · last edited 2026-11-26 00:23 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! `surveying.traverse.compass_rule` through the public contract (D-20, planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md §8).
 //!
@@ -416,6 +416,12 @@ fn the_trace_has_one_item_step_per_leg_for_each_per_leg_expression() {
         r.trace.iter().all(|s| s.choice.is_none()),
         "no choice steps"
     );
+    // Every step is a length in metres, except the dimensionless ratio E/P (the registry accepts any valid
+    // internal unit, so a wrong one would otherwise pass).
+    for step in &r.trace {
+        let expected = if step.step == "E/P" { None } else { Some("m") };
+        assert_eq!(step.unit.as_deref(), expected, "{}", step.step);
+    }
 }
 
 #[test]

@@ -1,0 +1,31 @@
+{
+  "provenance": "Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:18 IST · last edited 2026-11-26 00:18 IST",
+  "case": "wikibooks-ex1",
+  "title": "Level-terrain road, average end area (Fundamentals of Transportation, Earthwork, Example 1; case C1)",
+  "source": {
+    "kind": "published",
+    "register_id": "S1",
+    "citation": "Fundamentals of Transportation, Earthwork, Example 1 (Wikibooks)",
+    "location": "Earthwork, Example 1",
+    "licence": "CC BY-SA (Wikibooks site licence; numbers only are used)",
+    "url": "https://en.wikibooks.org/wiki/Fundamentals_of_Transportation/Earthwork"
+  },
+  "request": {
+    "id": "quantities.earthwork.average_end_area",
+    "version": 1,
+    "inputs": {
+      "method": { "value": "average_end_area" },
+      "chainages": { "value": [0, 50, 100, 150], "unit": "m" },
+      "cut_areas": { "value": [40, 42, 19, 34], "unit": "m^2" },
+      "fill_areas": { "value": [0, 0, 0, 0], "unit": "m^2" }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "cut_volumes": { "value": [2050, 1525, 1325], "unit": "m^3", "tolerance": { "absolute": 0.5 } },
+      "total_cut": { "value": 4900, "unit": "m^3", "tolerance": { "absolute": 0.5 } }
+    },
+    "warnings": []
+  },
+  "verification": "Exact rational arithmetic (Python fractions, outside the repository, 2026-11-26): (40 + 42)/2 x 50 = 2 050; (42 + 19)/2 x 50 = 1 525; (19 + 34)/2 x 50 = 1 325; total 4 900 m3, as printed. The source calls these end areas of an earthwork volume without saying cut or fill, so they are entered as cut areas (fill areas zero); the volume is the same. The method is average_end_area because the source applies it to every segment. Tolerance 0.5 m3 as recorded for C1 in planning/REFERENCE_CASES.md."
+}

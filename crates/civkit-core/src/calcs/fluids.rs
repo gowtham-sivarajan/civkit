@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Fluids calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -226,6 +226,50 @@ mod tests {
         close(out(&r, "velocity"), v);
         close(out(&r, "discharge"), 2.0 * v);
         assert_eq!(r.trace.len(), 5);
+    }
+
+    #[test]
+    fn area_and_perimeter_follow_the_geometry_when_the_depth_is_not_one() {
+        // The special-case test above uses y = 1, where (B + z·y)·y and (B + z)·y coincide. Here B = 2 m, z = 2, y = 0.5 m.
+        // Independent geometry: top width T = B + 2zy; A = (B + T)/2 · y; each side slopes over √(y² + (zy)²).
+        let (b, z, y): (f64, f64, f64) = (2.0, 2.0, 0.5);
+        let top_width = b + 2.0 * z * y;
+        let area = (b + top_width) / 2.0 * y;
+        let perimeter = b + 2.0 * (y * y + (z * y).powi(2)).sqrt();
+        let r = call(&channel(b, z, y)).expect("trapezoid");
+        close(out(&r, "area"), area);
+        close(out(&r, "wetted_perimeter"), perimeter);
+        close(out(&r, "hydraulic_radius"), area / perimeter);
+        let v = (area / perimeter).powf(2.0 / 3.0) * 0.002_f64.sqrt() / 0.013;
+        close(out(&r, "velocity"), v);
+        close(out(&r, "discharge"), v * area);
+    }
+
+    #[test]
+    fn every_trace_step_has_the_right_unit_and_is_an_output() {
+        // A, P, R, V, Q: the registry accepts any valid internal unit, so the unit of each step is asserted here.
+        let r = call(&channel(2.0, 0.0, 1.0)).expect("rectangle");
+        let units: Vec<_> = r.trace.iter().map(|s| s.unit.as_deref()).collect();
+        assert_eq!(
+            units,
+            [
+                Some("m^2"),
+                Some("m"),
+                Some("m"),
+                Some("m/s"),
+                Some("m^3/s")
+            ]
+        );
+        let names = [
+            "area",
+            "wetted_perimeter",
+            "hydraulic_radius",
+            "velocity",
+            "discharge",
+        ];
+        for (step, name) in r.trace.iter().zip(names) {
+            close(step.value.expect("numeric step"), out(&r, name));
+        }
     }
 
     #[test]

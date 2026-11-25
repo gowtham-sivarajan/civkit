@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 00:55 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,8 +8,8 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 2 — Units, geometry, calculations (stage 2C)
-**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); three engineering calculations (2C, in progress)
+**Current phase:** 2 — Units, geometry, calculations (stage 2D: reviewed locally, closes when CI is green; see [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md))
+**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C, complete except the beam's maximum shear and moment)
 
 ---
 
@@ -39,6 +39,9 @@
 6. **Git:** the maintainer runs git commands; AI tools cannot write inside `.git`. After changes, give the
    maintainer the exact commands. Put the commit message in the git-ignored `_commit_msg.txt` and have the maintainer
    run `git commit -s -F _commit_msg.txt` (pasted multi-part `-m` lines get cut off; `-s` is the D-11 sign-off). Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
+   **GitHub pushes:** the maintainer paused them on 2026-11-26 and lifted the pause the same day by asking for push
+   steps. The AI never runs `git push` itself; it gives the exact commands. CI runs only on pushed commits, so say
+   "local evidence only" for anything newer than the last push until the maintainer reports the CI result.
 7. Never present unverified engineering content as fact; flag it for engineering review.
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
@@ -58,9 +61,11 @@
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
     is accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)).
-    **`surveying.traverse.compass_rule` (C3) is written and green locally but uncommitted** (191 tests; see the
-    2026-11-26 00:00 log entry). Next: levelling and earthwork, one at a time, each descriptor proposed first. Beam
-    maximum shear and moment: still no qualifying example.
+    **`surveying.traverse.compass_rule` (C3) is implemented and committed** (`ddecbfb`). **The three levelling
+    calculations (C4, C9) and `quantities.earthwork.average_end_area` (C1, C2) are implemented and green locally but
+    uncommitted** (256 tests; see the 2026-11-26 00:40 log entry). **With earthwork, the five D-20 calculation
+    families are all implemented.** Remaining in 2C: the beam's maximum shear and moment, still without a qualifying
+    open example. Next: 2D (integration and regression).
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
@@ -76,7 +81,9 @@
   centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
   [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
 - Registered built-ins: `fluids.open_channel.manning_trapezoidal`, `structural.beam.simply_supported`,
-  `surveying.traverse.compass_rule` (first list calculation; `civkit-core` now depends on `civkit-geometry`). The template
+  `surveying.traverse.compass_rule` (first list calculation; `civkit-core` now depends on `civkit-geometry`),
+  `surveying.levelling.height_of_instrument`, `surveying.levelling.rise_and_fall`,
+  `surveying.levelling.closure_adjustment`, `quantities.earthwork.average_end_area` (first choice input). The template
   `math.demo.weighted_mean` is registered only in tests.
 
 **Repository**
@@ -105,18 +112,18 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next:** Windows check and commit of traverse (see the 00:00 entry; stage exactly the listed files, including
-   `Cargo.lock`, never `planning/ui-concepts/`). Then **propose the levelling descriptor** (height-of-instrument and
-   rise-and-fall methods, closure and adjustment; cases C4 and C9; the method is a visible choice input or two
-   calculations, to be decided) for review before any code; then earthwork (average end area, explicit pyramid
-   method; cases C1, C2), D-20 condition 4.
+1. **Next:** Windows check and commit of levelling, earthwork and the 2D changes (see the 00:25, 00:40 and 00:55
+   entries; stage exactly the listed files, never `planning/ui-concepts/`). Then the maintainer answers **D1 … D6 in
+   [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)**. Phase 2 closes (tag `phase-2-done`) when CI is green on the pushed
+   commits, which waits for the push pause to end. Meanwhile the next buildable work is Phase 3 design (Python and MCP
+   over `Registry::call_json`), or the search for an open example for the beam's maximum shear and moment.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
-3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
-4. After D-23: ADR 0011 and the API_DESIGN change, then the contract extension (tests first), then traverse,
-   levelling and earthwork one at a time, each with its descriptor proposed for review first (D-20 condition 4).
-   Traverse decides for itself when a misclosure counts as zero before asking for its direction (GEOMETRY.md §7).
-   Then 2D.
+3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push to `origin/main`, then report
+   the CI result (nothing after `47a5f25` has run in CI yet). The step-by-step push was given on 2026-11-26.
+4. Done: D-23 (ADR 0011, API_DESIGN text, contract extension) and traverse, levelling and earthwork, each with its
+   descriptor proposed and accepted first (D-20 condition 4). The traverse omits the misclosure direction (Q-B of its
+   proposal), so the GEOMETRY.md §7 question of when a misclosure counts as zero did not arise.
 5. Beam maximum shear and moment: still need an openly licensed example with a full-span UDL and one point load
    (S4 ch. 7 and one statics text checked; none fits).
 6. **AI sessions:** the output mirror is a network mount that does not update file times on in-place edits, so
@@ -131,6 +138,120 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 00:55 IST — Phase 2D review done locally; new rule: no GitHub push *(Claude Sonnet 5.5)*
+- **New maintainer rule: no push to GitHub for a while.** Saved as a memory and written into working rule 6 above. CI
+  has therefore not run on anything after `47a5f25` (GitHub read-only query: six green runs, the last for `47a5f25`);
+  `main` is four commits ahead of `origin/main`, and levelling, earthwork and these 2D changes are uncommitted.
+- Review record: [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md): the checks (all local, 269 tests), a per-calculation matrix
+  against ACCEPTANCE_CRITERIA §3, eleven findings and six decisions for the maintainer (D1 … D6). **It does not close
+  Phase 2** (cross-platform CI cannot be shown; code and engineering reviews are outstanding), so `phase-2-done` is not created.
+- **Fixed in the working tree:**
+  - the trace unit blind spot (a wrong but valid unit on a trace step passed; the beam test only counted steps) is closed
+    in all seven calculations;
+  - Manning's unit tests used y = 1, where the area formula's slope term is invisible (new test with y = 0.5);
+  - the demo template's descriptor listed one of its three cases (new integrity test: every descriptor's `examples` and
+    the case files on disk must be the same set);
+  - descriptor text and `verification` records are now machine-checked;
+  - `tests/json_surface.rs` (8 tests) pins the JSON shapes of the list and choice calculations, the path Python, MCP and the C ABI will use;
+  - stale status text in README, ROADMAP, the plan and the Phase 1 tag box.
+- **Mutation check for the two older calculations** (Manning 7, beam 10 planted errors): all caught.
+- Licence audit of the lockfile by script: 27 third-party packages, none outside `deny.toml`'s allow list, no banned
+  crate. `cargo-deny` itself is not installed here, so advisories were not checked.
+- Left for the maintainer: `CONTRIBUTING.md` still says "Phase 0 — Planning. Code contributions are not open yet" (policy,
+  D2); wording of "validity limits" (D3); the beam's maximum shear and moment (D4); optional local `cargo-deny` (D5); a human code review (D6).
+- **Uncommitted:** everything in the 00:40 entry plus `crates/civkit-core/src/calcs/{demo,fluids,structural}.rs`,
+  `crates/civkit-core/tests/{reference_cases,json_surface}.rs`, `planning/PHASE_2D_REVIEW.md`, `planning/ACCEPTANCE_CRITERIA.md`,
+  `ROADMAP.md`, `README.md`.
+
+### 2026-11-26 00:40 IST — Earthwork implemented, tests first; the five D-20 families are complete; nothing committed *(Claude Sonnet 5.5)*
+- The maintainer accepted all seven answers (Q-A … Q-G). `quantities.earthwork.average_end_area` v1 is in
+  `crates/civkit-core/src/calcs/quantities.rs`, registered in `Registry::with_builtins`. It is the first calculation with a
+  **choice input**: `method` is required, has no default and is the first trace step (D-23, ADR 0009 condition 3).
+- **Tests first** (25 in `tests/earthwork.rs`, red before the code; plus 5 unit tests next to the code): registered
+  descriptor, closed forms (constant section, zero end under both methods, cut and fill independent, net sign), C1 and
+  C2 through the contract, the choice visible and never silent (the methods differ exactly on the zero-end segments;
+  the trace names the formula used per segment), errors naming "station k", units including m³ to yd³, the trace
+  (1 + 2(n−1) + 3 steps, all in m³), and five proptest properties.
+- **Two reference cases** in `tests/reference/quantities.earthwork.average_end_area/`: C1 (`wikibooks-ex1`) and C2
+  (`wikibooks-solution`; `null` for every per-segment value the source does not print; the only two printed are the
+  pyramids 83.3 and 25). C1 areas are entered as cut because the source does not say.
+- **Exact re-derivation confirms why the method is explicit:** C2 under the pyramid method gives the book's 4 087.5 /
+  1 058.3 / 3 029.2; the same data under average end area gives 4 100 / 1 100 / 3 000.
+- **Mutation check:** thirteen planted errors. **One survived the first time**: a wrong unit label (`m^2`) on a total
+  step. The registry only checks that a trace step's unit is a valid internal unit, not that it is the *right* one,
+  and my trace test checked units only on per-item steps. Fixed by asserting every numeric step's unit, and the same
+  hardening added to the traverse and levelling trace tests. All thirteen now caught against a verified green baseline.
+  (The script also had a PowerShell 5.1 pitfall: a `Σ` in a script file is read through the ANSI codepage, so the string
+  was "not found"; the character is now built from its code point.)
+- Lints: `!(a > b)` on floats (now `<=`, equivalent because the registry guarantees finite values), and an identity
+  `prop_map` in a test strategy. `proptest` regressions files from the mutation runs were deleted (trivial seeds).
+- **Checks (Windows, Rust 1.100):** fmt, clippy `-D warnings`, 256 tests, `cargo doc`, dependency rule: pass.
+  `cargo-deny` is not installed locally; CI runs it. No new crate and no `Cargo.lock` change.
+- **Uncommitted** (together with levelling): `crates/civkit-core/src/calcs/{mod,levelling,quantities}.rs`,
+  `crates/civkit-core/tests/{levelling,earthwork,traverse}.rs`, `tests/reference/surveying.levelling.*/`,
+  `tests/reference/quantities.earthwork.average_end_area/`,
+  `planning/{LEVELLING,EARTHWORK}_DESCRIPTOR_PROPOSAL.md`, `planning/{AI_HANDOVER,IMPLEMENTATION_PLAN,REFERENCE_CASES}.md`, `README.md`.
+- Not done: 2D; the beam's maximum shear and moment; Python or MCP exposure (Phase 3).
+
+### 2026-11-26 00:25 IST — Earthwork descriptor proposed; no code *(Claude Sonnet 5.5)*
+- [EARTHWORK_DESCRIPTOR_PROPOSAL.md](EARTHWORK_DESCRIPTOR_PROPOSAL.md) written for review (D-20 condition 4); seven
+  questions, Q-A … Q-G. It is the last 2C calculation and the first with a **choice input** (`method`: `average_end_area`
+  or `pyramid_at_zero_end`, required, recorded as the first trace step per D-23). ID `quantities.earthwork.average_end_area`.
+- **Found by exact rational re-derivation of C1 and C2:** C1 gives 2 050, 1 525, 1 325 = 4 900 m³; C2 under the pyramid
+  method gives fill 4 087.5, cut 1 058.333, net fill 3 029.167 (the book's numbers). **C2's data under plain average end
+  area gives fill 4 100, cut 1 100, net 3 000**: wrong by 12.5 and 41.7 m³ with nothing in the result to say so. That is
+  why ADR 0009 condition 3 demands an explicit method, and it becomes a unit test.
+- The pyramid rule is per kind (cut and fill separately) and per segment, and applies only where **exactly one** end area
+  is zero. Chainage ordering is checked by the calculation (the contract has no cross-element rule). `net_fill` = fill −
+  cut follows the source's sign (Q-D).
+- Levelling is implemented but still uncommitted (see the 00:20 entry); one commit is intended to carry the levelling
+  work and this proposal.
+- Open: the maintainer's answers. No earthwork code until then.
+
+### 2026-11-26 00:20 IST — Levelling implemented, tests first; nothing committed *(Claude Sonnet 5.5)*
+- The maintainer accepted all seven answers (Q-A … Q-G) and committed the traverse (`ddecbfb`). The proposal's status
+  line records this.
+- Three calculations in `crates/civkit-core/src/calcs/levelling.rs` (a new file rather than `surveying.rs`, noted in the
+  proposal; the IDs stay in the `surveying` domain), registered in `Registry::with_builtins`:
+  `surveying.levelling.height_of_instrument`, `.rise_and_fall`, `.closure_adjustment`. Backsight/foresight pairs only;
+  no intermediate sights (D-20).
+- **Tests first** (28 in `tests/levelling.rs`, red before the code): registered descriptors, closed forms, units, errors
+  naming "setup k" and "point k", overflow, trace counts (2n+3, 3n+3, 2n+2) with structured items, a reduction chained
+  into the adjustment, and seven proptest properties (the two reductions always agree, last elevation = start + net
+  rise, rises and falls never negative, start shift, adjusted run ends on the known elevation, corrections proportional
+  to cumulative length, offset and scale invariance). Seven unit tests next to the code check the book's printed numbers
+  and the exact rational values.
+- **Five reference cases** in `tests/reference/surveying.levelling.*`: HI for C4 and C9, rise-and-fall for C4 and C9,
+  closure and adjustment for C4. Tolerance 0.0005 ft (half the last printed digit; C9: 0.005). The rise-and-fall titles
+  and `verification` texts say **consistency, not independent validation** (D-20 condition 2). The adjustment case has
+  `null` for the four adjusted values the book does not print. C9 uses backsight 11.56 with the erratum recorded.
+- **Mutation check:** thirteen planted errors (sign slips, swapped rise and fall, count instead of distance, wrong
+  cumulative length, removed overflow check, unbounded domain, wrong item label …), each caught; the script verified a
+  green baseline first and the rerun used a corrected compile-error detector (my first detector matched cargo's
+  "error: test failed" line and labelled everything a compile error; fixed before trusting the result).
+- **Lints caught three things the tests could not:** a too-complex tuple type (now `RiseFallLists`), a no-op
+  `..Default::default()`, and a strict `f64` equality in a property test (now a tolerance).
+- `proptest` saved a regressions file during the mutation runs; deleted (trivial seeds that only planted bugs fail).
+- **Checks (Windows, Rust 1.100):** fmt, clippy `-D warnings`, 226 tests, `cargo doc`, dependency rule: pass.
+  `cargo-deny` is not installed locally; CI runs it. No new crate and no `Cargo.lock` change this time.
+- **Uncommitted:** `crates/civkit-core/src/calcs/{mod,levelling}.rs`, `crates/civkit-core/tests/levelling.rs`,
+  `tests/reference/surveying.levelling.height_of_instrument/`, `.rise_and_fall/`, `.closure_adjustment/`,
+  `planning/{LEVELLING_DESCRIPTOR_PROPOSAL,AI_HANDOVER,IMPLEMENTATION_PLAN,REFERENCE_CASES}.md`.
+- Not done: earthwork (the last 2C calculation); Python or MCP exposure (Phase 3).
+
+### 2026-11-26 00:05 IST — Levelling descriptors proposed; no code *(Claude Sonnet 5.5)*
+- [LEVELLING_DESCRIPTOR_PROPOSAL.md](LEVELLING_DESCRIPTOR_PROPOSAL.md) written for review (D-20 condition 4); seven
+  questions, Q-A … Q-G. Traverse is committed (`ddecbfb`, Windows run passed).
+- **Recommended structure (Q-A, option B): three calculations**, `surveying.levelling.height_of_instrument`,
+  `.rise_and_fall` and `.closure_adjustment`. Reductions have fixed outputs and need no closing elevation (so C9 is
+  natural); the adjustment takes any reduced elevations, `section_lengths` and a known `closing_elevation`.
+- **Found by exact rational re-derivation of C4 and C9:** the HI reduction reproduces every printed number; **rise-and-fall
+  gives identical elevations** when a field book has only backsight/foresight pairs (no example has an intermediate
+  sight, so 0.1 has none: Q-B); adjusted TBM 16 = 134.84792 (book 134.848), the last adjusted point equals the known
+  elevation exactly; with the printed C9 backsight 11.65 the result would be 375.24, which confirms the 11.56 erratum.
+- The book's permissible closure (0.05·√M, a class constant in miles) is not in D-20 and is omitted (Q-C).
+- Open: the maintainer's answers. No levelling code until then.
 
 ### 2026-11-26 00:00 IST — Traverse implemented, tests first; nothing committed *(Claude Sonnet 5.5)*
 - The maintainer accepted all seven answers (Q-A … Q-G) and committed D-23 (`e948bc6`). The proposal's status line

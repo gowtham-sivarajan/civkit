@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! **Template calculation.** Copy this file to start a new calculation (see `CONTRIBUTING.md` §2).
 //!
@@ -88,7 +88,11 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         on_breach: Breach::Warning,
         reason: "a weight this extreme usually means one value was meant to be ignored".into(),
     }],
-    examples: vec!["tests/reference/math.demo.weighted_mean/demo-01.json".into()],
+    examples: vec![
+        "tests/reference/math.demo.weighted_mean/demo-01.json".into(),
+        "tests/reference/math.demo.weighted_mean/demo-02-extreme-weight.json".into(),
+        "tests/reference/math.demo.weighted_mean/demo-03-out-of-domain.json".into(),
+    ],
     ..Default::default() // no list groups (D-23)
 }
 });

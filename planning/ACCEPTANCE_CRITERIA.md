@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:14 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -26,11 +26,11 @@
 - [x] `civkit-core` registry and contract implemented; one dummy calculation runs end to end (request → response JSON).
       *2026-11-25: `math.demo.weighted_mean` (template), 23 tests incl. reference-case harness; local run with Rust 1.97.*
 - [x] Dependency rule checked in CI; `rustfmt` and `clippy` clean. *Same run; also cargo-deny and DCO.*
-- [ ] Tag `phase-1-done`.
+- [x] Tag `phase-1-done`. *Exists locally (checked 2026-11-26).*
 
 ### Phase 2 — Units, geometry, calculations
-- [ ] Every 0.1 calculation meets §3 below.
-- [ ] Property tests for units and geometry pass.
+- [ ] Every 0.1 calculation meets §3 below. *2026-11-26 (2D review, [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)): the technical items are met for all seven registered calculations; open: generated doc pages (Phase 3), code and engineering reviews, and the wording of "validity limits".*
+- [x] Property tests for units and geometry pass. *7 in `civkit-units`, 6 in `civkit-geometry`; CI green on `6d3d16a` and `bc06cb1` (2026-11-25); traverse, levelling and earthwork add property tests of their own (2026-11-26, local).*
 - [ ] Tag `phase-2-done`.
 
 ### Phase 3 — Python + MCP

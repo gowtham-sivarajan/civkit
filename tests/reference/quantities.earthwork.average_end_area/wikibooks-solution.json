@@ -1,0 +1,34 @@
+{
+  "provenance": "Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:18 IST · last edited 2026-11-26 00:18 IST",
+  "case": "wikibooks-solution",
+  "title": "Road with cut and fill sections, average end area and zero-end pyramids (Fundamentals of Transportation, Earthwork, Solution; case C2)",
+  "source": {
+    "kind": "published",
+    "register_id": "S1",
+    "citation": "Fundamentals of Transportation, Earthwork, Solution (Wikibooks)",
+    "location": "Earthwork, Solution page",
+    "licence": "CC BY-SA (Wikibooks site licence; numbers only are used)",
+    "url": "https://en.wikibooks.org/wiki/Fundamentals_of_Transportation/Earthwork/Solution"
+  },
+  "request": {
+    "id": "quantities.earthwork.average_end_area",
+    "version": 1,
+    "inputs": {
+      "method": { "value": "pyramid_at_zero_end" },
+      "chainages": { "value": [0, 50, 75, 100, 115, 150], "unit": "m" },
+      "cut_areas": { "value": [0, 0, 0, 10, 15, 30], "unit": "m^2" },
+      "fill_areas": { "value": [60, 50, 25, 5, 0, 0], "unit": "m^2" }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "total_fill": { "value": 4087.5, "unit": "m^3", "tolerance": { "absolute": 0.05 } },
+      "total_cut": { "value": 1058.3, "unit": "m^3", "tolerance": { "absolute": 0.05 } },
+      "net_fill": { "value": 3029.2, "unit": "m^3", "tolerance": { "absolute": 0.05 } },
+      "cut_volumes": { "value": [null, null, 83.3, null, null], "unit": "m^3", "tolerance": { "absolute": 0.05 } },
+      "fill_volumes": { "value": [null, null, null, 25, null], "unit": "m^3", "tolerance": { "absolute": 0.05 } }
+    },
+    "warnings": []
+  },
+  "verification": "Exact rational arithmetic (Python fractions, outside the repository, 2026-11-26) with the pyramid method requested: fill 2 750 + 937.5 + 375 + 25 + 0 = 4 087.5; cut 0 + 0 + 83.333 + 187.5 + 787.5 = 1 058.333; net fill 3 029.167 (book 3 029.2, difference 0.033 < the 0.05 tolerance). The source prints only two per-segment volumes, both pyramids (10 x 25/3 = 83.3 and 5 x 15/3 = 25), so every other segment entry is null (not printed, not checked). The pyramid is requested explicitly: the same data under average_end_area gives fill 4 100, cut 1 100 and net 3 000 (see the unit tests), which is why the method is a required input. Source inconsistency recorded in planning/REFERENCE_CASES.md: the Problem page says 0+00 to 2+50 while the Solution page and the data end at 1+50. Stations 0+50, 0+75, 1+00, 1+15, 1+50 are chainages 50, 75, 100, 115, 150 m; a kind not listed at a station is zero."
+}

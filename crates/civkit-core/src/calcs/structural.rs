@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Structural calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -461,5 +461,25 @@ mod tests {
     fn trace_is_in_internal_units() {
         let r = call(&beam(&[("udl", 1.0, "kN/m"), ("position", 2.0, "m")])).expect("ok");
         assert_eq!(r.trace.len(), 7);
+        // R_A, R_B, EI, y_w, y_P, y, θ_A: each in its own internal unit (the registry accepts any valid one).
+        let units: Vec<_> = r.trace.iter().map(|s| s.unit.as_deref()).collect();
+        assert_eq!(
+            units,
+            [
+                Some("N"),
+                Some("N"),
+                Some("N*m^2"),
+                Some("m"),
+                Some("m"),
+                Some("m"),
+                Some("rad")
+            ]
+        );
+        // The steps that are outputs carry the same numbers (this call asks for SI output units).
+        let step = |k: usize| r.trace[k].value.expect("numeric step");
+        close(step(0), value(&r, "reaction_a"));
+        close(step(1), value(&r, "reaction_b"));
+        close(step(5), value(&r, "deflection"));
+        close(step(6), value(&r, "end_slope_a"));
     }
 }

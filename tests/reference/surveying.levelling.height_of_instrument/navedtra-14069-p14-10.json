@@ -1,0 +1,31 @@
+{
+  "provenance": "Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:09 IST · last edited 2026-11-26 00:09 IST",
+  "case": "navedtra-14069-p14-10",
+  "title": "Single-setup levelling, height-of-instrument reduction (NAVEDTRA 14069, p. 14-10; case C9)",
+  "source": {
+    "kind": "published",
+    "register_id": "S13",
+    "citation": "US Navy, Engineering Aid, NAVEDTRA 14069, chapter 14, single-setup example",
+    "location": "ch. 14, p. 14-10",
+    "licence": "Public domain (US government work)",
+    "url": "https://engineeringtraining.tpub.com/14069/css/Level-Computations-480.htm"
+  },
+  "request": {
+    "id": "surveying.levelling.height_of_instrument",
+    "version": 1,
+    "inputs": {
+      "start_elevation": { "value": 365.01, "unit": "ft" },
+      "backsights": { "value": [11.56], "unit": "ft" },
+      "foresights": { "value": [1.42], "unit": "ft" }
+    },
+    "output_units": { "heights_of_instrument": "ft", "elevations": "ft" }
+  },
+  "expected": {
+    "outputs": {
+      "heights_of_instrument": { "value": [376.57], "unit": "ft", "tolerance": { "absolute": 0.005 } },
+      "elevations": { "value": [375.15], "unit": "ft", "tolerance": { "absolute": 0.005 } }
+    },
+    "warnings": []
+  },
+  "verification": "Exact rational arithmetic: 365.01 + 11.56 = 376.57; 376.57 - 1.42 = 375.15. SOURCE ERRATUM, recorded in planning/REFERENCE_CASES.md: the text prints the backsight as 11.65 ft, but its own arithmetic (and the printed height of instrument 376.57) uses 11.56. The request uses 11.56; with the printed 11.65 the result would be 376.66 and 375.24, which is not what the book states. Tolerance 0.005 ft is half the last printed digit (two decimals)."
+}

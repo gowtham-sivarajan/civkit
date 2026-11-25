@@ -1,10 +1,10 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
-## Phase 0 — Planning *(current)*
+## Phase 0 — Planning *(done, tag `plan-v1.0`)*
 
 | # | Task | Status |
 |---|---|---|
@@ -41,10 +41,10 @@ Order agreed 2026-11-25. The units parser is infrastructure: it is finished and 
 
 | Stage | Work | Exit condition | Status |
 |---|---|---|---|
-| 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | 🔄 2026-11-25: implemented and reviewed; CI green on `b4f37e2`. Follow-up enforces internal units in trace and messages (61 tests locally). Done when the maintainer's Windows check and CI on the follow-up pass |
-| 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ✅ 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green; implementation items confirmed. Follow-up (overflow rule for derived tolerances) pending the maintainer's check and CI |
-| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | 🔄 2026-11-25: Manning (C5) and beam reactions, deflection and end slope (C6–C8) done. Traverse, levelling and earthwork wait for D-23 (list and choice inputs): D-23 accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)). Traverse (C3) done: descriptor accepted ([proposal](TRAVERSE_DESCRIPTOR_PROPOSAL.md)), `surveying.traverse.compass_rule` implemented tests first with a mutation check (2026-11-26 00:00, 191 tests; awaiting the maintainer's Windows check and commit). Levelling and earthwork next, one at a time, each descriptor proposed first. Beam maximum shear/moment: still no qualifying example |
-| 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | ⬜ |
+| 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | ✅ 2026-11-25: implemented and reviewed; CI green on `b4f37e2` and on the internal-units follow-up `6d3d16a` |
+| 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ✅ 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green; implementation items confirmed; CI green on the overflow-rule follow-up `bc06cb1` |
+| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | 🔄 2026-11-26: **all five D-20 families are implemented**, as seven registered calculations: Manning (C5), beam reactions, deflection and end slope (C6–C8), traverse (C3, [proposal](TRAVERSE_DESCRIPTOR_PROPOSAL.md)), levelling in three calculations (C4, C9, [proposal](LEVELLING_DESCRIPTOR_PROPOSAL.md)) and earthwork (C1, C2, [proposal](EARTHWORK_DESCRIPTOR_PROPOSAL.md)). D-23 (lists and choices) accepted, [ADR 0011](decisions/0011-list-and-choice-inputs.md). Every descriptor was proposed and accepted before its code (D-20 condition 4). **Open:** the beam's maximum shear and moment (needs one more open worked example); levelling and earthwork await the maintainer's commit. Details: [AI_HANDOVER.md](AI_HANDOVER.md) |
+| 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | 🔄 2026-11-26: local review done, see [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md). **Blocked on CI:** the newest commits are not pushed (maintainer rule, 2026-11-26), so cross-platform and MSRV results exist only up to `47a5f25` |
 
 Before beam maximum shear and moment: collect one more openly licensed worked example that numerically verifies them (D-20). Searched 2026-11-25 (S4 ch. 7, an openly licensed statics text): none fits a full-span UDL with one point load.
 

@@ -2,10 +2,12 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 23:52 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
-> **Status:** Phase 0 — Planning. No code is written until the Phase 0 exit criteria are met
-> ([planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
+> **Status:** Phase 2 — units, geometry and calculations (review stage 2D). Phases 0 and 1 are done. The engine has
+> `civkit-core`, `civkit-units`, `civkit-geometry` and seven registered calculations; there is no release yet (0.1 comes
+> after Phase 4). Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
+> [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
 
 CivKit is a free, open-source, offline-first engineering toolkit. It brings reliable civil-engineering
 calculations, unit handling and drawing analysis into the tools engineers already use — AutoCAD / Civil 3D,
@@ -46,6 +48,9 @@ available in every interface with the same inputs, the same results and the same
 | | [`DECISIONS.md`](planning/DECISIONS.md) | Every decision and its status; records in `planning/decisions/`. |
 | | [`REFERENCE_SOURCES.md`](planning/REFERENCE_SOURCES.md) | Openly licensed sources for reference cases. |
 | | [`REFERENCE_CASES.md`](planning/REFERENCE_CASES.md) | Collected worked examples, re-derivations, source errata, 0.1 coverage. |
+| | [`PHASE_2D_REVIEW.md`](planning/PHASE_2D_REVIEW.md) | Phase 2 integration and regression review: checks, findings, decisions needed (2026-11-26). |
+| | [`EARTHWORK_DESCRIPTOR_PROPOSAL.md`](planning/EARTHWORK_DESCRIPTOR_PROPOSAL.md) | The earthwork calculation's descriptor, proposed for review before any code (D-20). |
+| | [`LEVELLING_DESCRIPTOR_PROPOSAL.md`](planning/LEVELLING_DESCRIPTOR_PROPOSAL.md) | The levelling calculations' descriptors, proposed for review before any code (D-20). |
 | | [`TRAVERSE_DESCRIPTOR_PROPOSAL.md`](planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md) | The traverse calculation's descriptor, proposed for review before any code (D-20). |
 | | [`COMPETITIVE_LANDSCAPE.md`](planning/COMPETITIVE_LANDSCAPE.md) | Who else is building this, licences, gaps, naming risks (research, 2026-11-25). |
 | | [`FEATURE_PROPOSALS.md`](planning/FEATURE_PROPOSALS.md) | Feature ideas from that research, scored; none accepted. |
