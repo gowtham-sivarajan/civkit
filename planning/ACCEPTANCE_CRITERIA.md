@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:16 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:03 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -8,9 +8,10 @@
 ## 1. Phase exit criteria
 
 ### Phase 0 — Planning
-- [ ] All **P0** decisions in [DECISIONS.md](DECISIONS.md) are Accepted (or explicitly deferred with a reason).
-- [ ] [API_DESIGN.md](../docs/API_DESIGN.md) has no remaining **TBD** for the contract (§3–§6) and units (§7).
-      *All TBDs have proposed resolutions (§12); tick on maintainer acceptance.*
+- [x] All **P0** decisions in [DECISIONS.md](DECISIONS.md) are Accepted (or explicitly deferred with a reason).
+      *All P0 accepted as of D-19, 2026-11-25; D-8 – D-11, D-13, D-14 are P1.*
+- [x] [API_DESIGN.md](../docs/API_DESIGN.md) has no remaining **TBD** for the contract (§3–§6) and units (§7).
+      *Resolved 2026-11-25 (D-19, ADR 0007).*
 - [x] The 0.1 calculation set is fixed (D-7), and **each calculation has ≥1 published worked example** collected
       (source, edition, page, inputs, expected outputs). *[REFERENCE_CASES.md](REFERENCE_CASES.md) C1–C9; prismoidal (general)
       and soil phase relationships deferred; human engineering review deferred until the product is complete.*

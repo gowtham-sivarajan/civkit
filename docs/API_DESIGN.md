@@ -1,10 +1,10 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 10:15 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 10:03 IST
 
-> **Status:** Draft — a Phase 0 deliverable. The former TBDs now carry **proposed resolutions** (task 0.7, marked
-> **Resolved (proposed)**), awaiting maintainer acceptance. Summary in §12.
-> Related decisions: D-5 (units) and D-6 (FFI) — both accepted, ADR 0005; D-13 (MCP SDK, proposed).
+> **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
+> maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
+> Related decisions: D-5 (units) and D-6 (FFI) — both accepted, ADR 0005; D-19 (contract details) — accepted, ADR 0007; D-13 (MCP SDK, proposed).
 
 ## 1. Design goals
 
@@ -68,14 +68,14 @@ The descriptor is exported as JSON Schema for MCP and for validation in other la
 
 Values in this example are rounded for display; the engine returns full `f64` precision.
 
-**Resolved (proposed): omitting `version`.**
+**Resolved: omitting `version`.**
 - A request **may omit** `version`; the engine then uses the latest version.
 - The response **always** includes the resolved `version`, so the result can still be reproduced.
 - Anything CivKit **saves** (exported results, quantity schedules, drawing annotations, later the desktop history)
   stores the explicit version. Loading a saved request that has no version is an error (`MISSING_INPUT` on `version`).
 - Python and MCP accept an omitted version. Typed Python functions pin the version they were generated for.
 
-**Resolved (proposed): output units.** A request may contain `"output_units": { "velocity": "ft/s" }`.
+**Resolved: output units.** A request may contain `"output_units": { "velocity": "ft/s" }`.
 - Outputs not listed are returned in SI (the descriptor's display unit).
 - Naming an unknown output gives `UNKNOWN_OUTPUT`. A unit of the wrong dimension gives `UNIT_MISMATCH`.
 - The trace always stays in SI, so that it reads the same way for everyone.
@@ -108,7 +108,7 @@ Several input errors may be reported at once as `{ "errors": [ … ] }`.
 **Warnings** do not stop it. Each has a `code`, `message` and `level` (`info` | `caution`). Typical:
 `OUTSIDE_VALIDITY_RANGE` (input outside the method's stated range), `ROUNDING_SENSITIVE`.
 
-**Resolved (proposed): validity breaches.**
+**Resolved: validity breaches.**
 - A mathematically invalid input is **always** an error (`OUT_OF_DOMAIN`).
 - An input outside a method's *stated* validity range is, by default, a **warning** (`OUTSIDE_VALIDITY_RANGE`, level `caution`).
 - A calculation may escalate a specific rule to an **error** with the same code. It does this by setting
@@ -140,7 +140,7 @@ is what lets an engineer — or an AI client — explain a result without recomp
 - **Output units:** see §3.
 - **Temperature** (affine °C/°F) excluded from 0.1.
 
-**Resolved (proposed): angle formats.** Angles are never dimensionless. A request may give an angle in any of these forms:
+**Resolved: angle formats.** Angles are never dimensionless. A request may give an angle in any of these forms:
 - **Decimal:** `{ "value": 12.5822, "unit": "deg" }`. Also `rad`, `grad`.
 - **DMS (canonical JSON form):** `{ "value": [12, 34, 56.7], "unit": "dms" }`.
   - Degrees are an integer; minutes and seconds are in [0, 60).
@@ -151,7 +151,7 @@ is what lets an engineer — or an AI client — explain a result without recomp
 - Malformed values give `INVALID_VALUE`. The Python and MCP layers may also accept the strings `"12°34'56.7\""`
   and `"12d34m56.7s"` and convert them to the canonical form before calling the engine.
 
-**Resolved (proposed): unit list for 0.1.**
+**Resolved: unit list for 0.1.**
 - These are the **named units**. Compound units are built from them with `*`, `/` and `^`
   (e.g. `kN/m`, `kip/ft`, `in^4`, `kN*m`), so second moments of area, line loads and similar need no separate entries.
 - Prefixes are **not** parsed generally (no `mN`, `Mm`). Only the names listed are recognised, which keeps the parser unambiguous.
@@ -180,7 +180,7 @@ moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
 - Generated typed functions per calculation, e.g. `civkit.fluids.open_channel.manning(...)`, with docstrings
   built from the descriptor.
 - Discovery: `civkit.list()`, `civkit.describe(id)`.
-- **Resolved (proposed): quantity input forms.** Python accepts all three:
+- **Resolved: quantity input forms.** Python accepts all three:
   - a string: `"2.4 m^2"`
   - a tuple: `(2.4, "m^2")`
   - a quantity object: `civkit.Q(2.4, "m^2")`
@@ -196,7 +196,7 @@ moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
 - All strings UTF-8, NUL-terminated. Every returned `char*` is owned by CivKit and must be released with `civkit_free`.
 - **No panic crosses the boundary**: panics are caught and returned as `INTERNAL` errors.
 - Thread-safe: calls may be made from any thread.
-- **Resolved (proposed): ABI versioning.**
+- **Resolved: ABI versioning.**
   - `uint32_t civkit_abi_version(void)` returns the ABI major number, starting at 1.
   - A host checks it once at load and refuses to run on a mismatch.
   - The number changes only when a function signature, a memory-ownership rule or the error envelope changes incompatibly.
@@ -208,7 +208,7 @@ moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
 - Transport: stdio only (see [OFFLINE_POLICY.md](OFFLINE_POLICY.md)).
 - For 0.1, one MCP tool per calculation, generated from descriptors, all annotated read-only.
 - Plus generic tools so the surface scales as calculations grow: `civkit_list`, `civkit_describe`, `civkit_call`.
-  **Resolved (proposed): tool surface.**
+  **Resolved: tool surface.**
   - A server option `--tools per-calc|generic|both` sets which tools are exposed. The default for 0.1 is `both`.
   - The default is revisited when the registry passes about 40 calculations, because large tool lists degrade some clients.
     At that point the default may switch to `generic`, with per-calculation tools left as an option.
@@ -222,9 +222,9 @@ moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
 - The **JSON contract** is more stable than the Rust API: calculation results are governed by §4 even pre-1.0.
 - Every interface reports the CivKit version and the calculation version in its output.
 
-## 12. Resolved TBDs — summary (task 0.7, proposed 2026-11-25)
+## 12. Resolved TBDs — summary (task 0.7, accepted 2026-11-25)
 
-| # | Topic | Proposed resolution | Section |
+| # | Topic | Resolution | Section |
 |---|---|---|---|
 | 1 | Omitting `version` | Optional in requests (latest); always echoed in the response; required in anything saved | §3 |
 | 2 | Output units | `output_units` map per output; trace stays SI | §3 |

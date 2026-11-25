@@ -1,6 +1,6 @@
 # MVP Scope — CivKit 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:57 IST
 
 > **Status:** Accepted (D-3, D-7). Calculation set fixed 2026-11-25 after task 0.8: five calculations in, two deferred.
 

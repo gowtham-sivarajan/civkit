@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 09:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-25 10:03 IST
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -40,6 +40,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-16 | P0 | Documentation structure and AI provenance? | Root README/ROADMAP/CONTRIBUTING · `docs/` (stable design) · `planning/` (plans, decisions, handover); provenance line on every AI-written file. | **Accepted** 2026-11-25 · [ADR 0003](decisions/0003-documentation-structure.md) |
 | D-17 | P0 | When does the code become public? | **Public GitHub repository from day one**, including the planning history. | **Accepted** 2026-11-25 · [ADR 0004](decisions/0004-name-licence-public-repo.md) |
 | D-18 | P0 | Where may reference cases come from? | **Only openly licensed or public-domain sources.** Register: [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md). | **Accepted** 2026-11-25 · [ADR 0006](decisions/0006-open-sources-and-0-1-calculations.md) |
+| D-19 | P0 | API contract details (version omission, output units, validity breaches, bare numbers, angle formats, unit list, Python quantities, ABI version, MCP tool surface)? | The nine resolutions in [API_DESIGN.md §12](../docs/API_DESIGN.md#12-resolved-tbds--summary-task-07-accepted-2026-11-25). | **Accepted** 2026-11-25 · [ADR 0007](decisions/0007-api-contract-details.md) |
 
 ## Decision record index
 
@@ -51,6 +52,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0004](decisions/0004-name-licence-public-repo.md) | Name, licence and public repository | D-1, D-2, D-17 |
 | [0005](decisions/0005-scope-order-units-ffi.md) | 0.1 scope, build order, units model and FFI contract | D-3, D-4, D-5, D-6 |
 | [0006](decisions/0006-open-sources-and-0-1-calculations.md) | Openly licensed reference sources and the 0.1 calculation set | D-7, D-18 |
+| [0007](decisions/0007-api-contract-details.md) | API contract details for 0.1 | D-19 |
 
 ## Template for a new decision record
 

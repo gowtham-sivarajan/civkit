@@ -1,6 +1,6 @@
 # Reference Sources
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 10:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:05 IST · last edited 2026-11-25 09:57 IST
 
 > **Status:** Living register. The only place where reference sources are listed (ADR 0003 "one home per fact").
 > Policy: D-18 ([ADR 0006](decisions/0006-open-sources-and-0-1-calculations.md)). Use: [ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md).

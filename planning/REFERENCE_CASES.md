@@ -1,6 +1,6 @@
 # Reference Cases (Phase 0 collection)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-25 10:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-25 09:57 IST
 
 > **Status:** Task 0.8. Worked examples collected from open sources ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)),
 > each **re-derived independently** by script (Claude Opus 5.5, 2026-11-25). **Human engineering review: pending.**
@@ -117,7 +117,7 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
 | Traverse closure + compass (Bowditch) rule | C3 | ✅ In 0.1 (with documented source erratum) |
 | Soil phase relationships | none | ❎ Deferred to a later release (maintainer, 2026-11-25) — no openly licensed worked example after two searches |
 
-Second search (2026-11-25 10:00 IST) checked FHWA NHI-06-088 ch. 2 (formulas only), USACE EM 1110-2-1906 App. II
+Second search (2026-11-25 09:56 IST) checked FHWA NHI-06-088 ch. 2 (formulas only), USACE EM 1110-2-1906 App. II
 (blank forms), NPTEL IIT Guwahati soil mechanics (has examples, but licence unclear) and Sivakugan 1998 notes
 (has examples, no licence). None qualifies under D-18. See REFERENCE_SOURCES.md §3.
 

@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 10:16 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 10:03 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -14,7 +14,7 @@
 | 0.4 | Install and verify toolchain (Rust, VS 2026 C++/.NET, `.venv`, SQLite CLI, VS Code extensions) | ✅ 2026-11-25 |
 | 0.5 | Decide name (D-1) and licence (D-2); add `LICENSE` | ✅ 2026-11-25 |
 | 0.6 | Decide D-3, D-4, D-5, D-6, D-7 (+ D-18 open sources only) | ✅ 2026-11-25 |
-| 0.7 | Finish [API_DESIGN.md](../docs/API_DESIGN.md) TBDs (contract, units) | 🔄 2026-11-25 — 9 resolutions proposed (§12); awaiting maintainer acceptance |
+| 0.7 | Finish [API_DESIGN.md](../docs/API_DESIGN.md) TBDs (contract, units) | ✅ 2026-11-25 — 9 resolutions accepted (D-19, ADR 0007) |
 | 0.8 | For each 0.1 candidate, collect ≥1 worked example from an **open** source ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)), record citation and numbers, re-derive independently; drop candidates with none | ✅ 2026-11-25 — 9 cases (C1–C9) re-derived; soil phase relationships and general prismoidal deferred; human engineering review deferred until product complete |
 | 0.9 | Collect 3–5 licence-safe sample DXF drawings | ⬜ |
 | 0.10 | Decide when to create the GitHub repository → public from day one (D-17) | ✅ 2026-11-25 |
