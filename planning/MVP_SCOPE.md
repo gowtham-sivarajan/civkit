@@ -1,6 +1,6 @@
 # MVP Scope — CivKit 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:52 IST
 
 > **Status:** Accepted (D-3, D-7). The calculation list is conditional: a calculation stays in 0.1 only once an
 > open worked example is collected and re-derived ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md), task 0.8).
@@ -27,15 +27,15 @@ in 0.1 instead. The plugin then reuses that analysis (ADR 0002).
 
 | Domain | Calculation | Open sources | Status |
 |---|---|---|---|
-| Quantities | Earthwork volume — average end area | S1 | ✅ Example confirmed and re-derived |
-| Quantities | Earthwork volume — prismoidal | S1 (formula only) | ⚠️ Needs an open worked example |
-| Fluids | Manning's equation for uniform open-channel flow | S2, S11 | 🔎 Example to locate |
-| Structural | Simply supported beam: reactions, max shear/moment, deflection (UDL and point load) | S3, S4, S5 | 🔎 Examples to locate |
-| Geotechnical | Soil phase relationships (void ratio, porosity, degree of saturation, unit weights) | S6, S7 | 🔎 Example to locate |
-| Surveying | Levelling reduction (rise & fall; height of instrument) | S8, S9, S10 | 🔎 Example to locate |
-| Surveying | Traverse closure and compass-rule (Bowditch) adjustment | S9 (partial), S10 | ⚠️ No complete open example yet — moves to a later release if none is found |
+| Quantities | Earthwork volume — average end area (incl. zero-end pyramid) | C1, C2 | ✅ In 0.1 |
+| Quantities | Earthwork volume — prismoidal (general mid-area) | C2 covers only the pyramid case | ⚠️ Decision needed |
+| Fluids | Manning's equation for uniform open-channel flow | C5 | ✅ In 0.1 |
+| Structural | Simply supported beam: reactions, max shear/moment, deflection (UDL and point loads) | C6, C7, C8 | ✅ In 0.1 |
+| Surveying | Levelling reduction (height of instrument; rise & fall), closure and adjustment | C4, C9 | ✅ In 0.1 |
+| Surveying | Traverse closure and compass-rule (Bowditch) adjustment | C3 | ✅ In 0.1 |
+| Geotechnical | Soil phase relationships | — | ❌ No open worked example — out of 0.1 unless one is found before Phase 0 ends |
 
-Source IDs (S1 …) refer to [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md).
+Case IDs (C1 …) refer to [REFERENCE_CASES.md](REFERENCE_CASES.md); sources to [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md).
 
 **Drawing analysis (DXF, read-only)**
 - Entity listing by layer; lengths and areas; drawing-unit consistency check; quantity schedule export (CSV/JSON).

@@ -1,6 +1,6 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:52 IST
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 
@@ -33,6 +33,8 @@ Full checklist: [planning/ACCEPTANCE_CRITERIA.md](../planning/ACCEPTANCE_CRITERI
 
 - Internal computation in SI, `f64`.
 - **No rounding inside the engine.** Rounding happens only when displaying.
+- When a source rounds an intermediate value (e.g. R to two figures) the tolerance may widen to cover that rounding;
+  the reason is recorded with the case. Source errata are recorded, never silently "fixed" into expected values.
 - Reference-case tolerance reflects the precision **printed in the source** (a textbook giving 3 significant
   figures is checked to that), not machine precision. Exact algebraic identities are tested tightly (relative ~1e-9).
 - Iterative methods state their convergence criterion and maximum iterations, and report non-convergence as an error.

@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 08:58 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:52 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -11,7 +11,8 @@
 - [ ] All **P0** decisions in [DECISIONS.md](DECISIONS.md) are Accepted (or explicitly deferred with a reason).
 - [ ] [API_DESIGN.md](../docs/API_DESIGN.md) has no remaining **TBD** for the contract (§3–§6) and units (§7).
 - [ ] The 0.1 calculation set is fixed (D-7), and **each calculation has ≥1 published worked example** collected
-      (source, edition, page, inputs, expected outputs).
+      (source, edition, page, inputs, expected outputs). *Collected and re-derived: [REFERENCE_CASES.md](REFERENCE_CASES.md);
+      open: prismoidal decision, soil phase relationships, human engineering review.*
 - [ ] 3–5 licence-safe sample DXF drawings collected for fixtures.
 - [x] Toolchain installed and verified (Rust builds and links a test program; Python `.venv` works) — 2026-11-25.
 - [x] Licence chosen and `LICENSE` added (Apache-2.0, 2026-11-25).

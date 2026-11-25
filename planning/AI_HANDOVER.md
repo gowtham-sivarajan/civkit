@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 09:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 09:52 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -58,8 +58,8 @@
 
 ## 4. Next actions
 
-1. Task 0.8: locate open worked examples per [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md) §4; re-derive each.
-   Priority gaps: traverse/Bowditch and prismoidal (no complete open example yet).
+1. Maintainer decisions: prismoidal (general case) and soil phase relationships — see [REFERENCE_CASES.md](REFERENCE_CASES.md) coverage table.
+   Human engineering review of cases C1–C9.
 2. Finish the TBDs in API_DESIGN.md.
 3. Collect 3–5 licence-safe DXF fixtures (task 0.9).
 
@@ -70,6 +70,19 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 09:52 IST — Task 0.8: reference cases collected and re-derived *(Claude Opus 5.5)*
+- New `planning/REFERENCE_CASES.md`: 9 cases (C1–C9) from open sources, all re-derived by script.
+- Gaps filled: traverse + compass/Bowditch (US Navy NAVEDTRA 14070, complete worked adjustment) and levelling
+  (NAVEDTRA 14069, 5-setup circuit with closure and adjustment). Beams from two independent sources (Udoeyo; Virginia Tech).
+- Still open: soil phase relationships (no open worked example found in 5 sources checked) and the general
+  prismoidal case (only the pyramid special case found).
+- Source errata found and recorded: NAVEDTRA 14070 CD departure; NAVEDTRA 14069 backsight 11.65/11.56;
+  HDS-4 Ex 4.1 rounding and unit typo; Wikibooks station range; Kouretzis ρw.
+- Correction: during research Claude first called HDS-4 Ex 4.1 an arithmetic error (mental arithmetic slip);
+  the script re-derivation showed the book is right apart from rounding. Lesson recorded: verify by computation only.
+- Sources rejected: Mahun (no licence stated); Verruijt (licence unclear).
+- **Next:** maintainer decides prismoidal + soil phase; human review of C1–C9; then API_DESIGN TBDs.
 
 ### 2026-11-25 09:08 IST — D-3 … D-7 decided; open-source reference policy *(Claude Opus 5.5)*
 - **Accepted D-3 … D-6** (ADR 0005) as recommended.
