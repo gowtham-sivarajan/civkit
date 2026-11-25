@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 19:15 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Structural calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -42,6 +42,7 @@ fn input(i: In<'_>) -> InputSpec {
         default: i.default,
         accepts_bearing: false,
         domain: i.domain,
+        ..Default::default() // scalar input: no list, group or choices (D-23)
     }
 }
 
@@ -58,6 +59,7 @@ fn output(
         dimension,
         si_unit: Some(si.into()),
         display_unit: Some(display.into()),
+        ..Default::default() // scalar output (D-23)
     }
 }
 
@@ -189,6 +191,7 @@ static BEAM: LazyLock<Descriptor> = LazyLock::new(|| {
         "tests/reference/structural.beam.simply_supported/lord-ex11-1.json".into(),
         "tests/reference/structural.beam.simply_supported/lord-ex11-5.json".into(),
     ],
+    ..Default::default() // no list groups (D-23)
 }
 });
 
@@ -330,7 +333,7 @@ mod tests {
     }
 
     fn value(r: &crate::Response, name: &str) -> f64 {
-        r.outputs[name].value
+        r.outputs[name].value.as_scalar().expect("scalar output")
     }
 
     fn close(a: f64, b: f64) {

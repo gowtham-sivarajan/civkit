@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 16:08 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -31,6 +31,30 @@ Each calculation registers a descriptor with:
 | `examples` | Links to reference cases in `tests/reference/` |
 
 The descriptor is exported as JSON Schema for MCP and for validation in other languages.
+
+### 2.1 List and choice inputs, list outputs (D-23)
+
+Added by [ADR 0011](../planning/decisions/0011-list-and-choice-inputs.md); rationale and options in
+[CONTRACT_LISTS_PROPOSAL.md](../planning/CONTRACT_LISTS_PROPOSAL.md) §3. A pure addition: every new field is omitted
+from JSON when unused, so scalar calculations keep their exact shape.
+
+| Where | Field | Meaning |
+|---|---|---|
+| Input | `kind` | `scalar` (default), `list` or `choice` |
+| List input | `group` | The group it belongs to. One unit for the whole list; each element is checked like a scalar. Required, no default, in 0.1. |
+| Choice input | `choices` | Allowed values: non-empty, unique, lower-case `snake_case`. Required, no default, in 0.1. |
+| Descriptor | `groups` | Named index sets: `name`, `item` (singular label), `min_len` (≥ 1), `description`. All lists in a group have the same length. |
+| Output | `kind`, `length` | A list output declares `length`: `group`, `offset` ∈ {−1, 0, +1} and `item`. Its length is the group's length plus `offset`. |
+
+- An item label names an **index set** (group, offset). Outputs that share both may share a label; one label never
+  names two different index sets.
+- **Limit:** at most 10 000 elements in any list, input or output. A group's maximum is 10 000 minus the largest
+  positive `offset` among its list outputs.
+- `check_descriptor` rejects: a group with no list input; a list naming an unknown group; a list output with an
+  unknown group, a bad offset, an empty `item` or `description`, or a possible length below 1; a choice input that is
+  optional, has a default, or has bad choices.
+- Not in 0.1: optional lists, list defaults, lists of DMS values, nested lists, records, lists of choices, and
+  machine-readable conditional requirements.
 
 ## 3. Request and response
 
@@ -80,6 +104,20 @@ Values in this example are rounded for display; the engine returns full `f64` pr
 - Naming an unknown output gives `UNKNOWN_OUTPUT`. A unit of the wrong dimension gives `UNIT_MISMATCH`.
 - The trace always stays in the internal SI units, so that it reads the same way for everyone.
 
+**Lists and choices in a request (D-23).** A list is a JSON array with one unit; a bearing list uses
+`"unit": "bearing"`. A choice is a string and has no unit:
+
+```json
+"inputs": {
+  "bearings":  { "value": ["N 3°45'00\" E", "S 89°12'00\" E"], "unit": "bearing" },
+  "distances": { "value": [584.21, 211.04], "unit": "ft" },
+  "method":    { "value": "pyramid_at_zero_end" }
+}
+```
+
+A list output is an array with one unit, `"volumes": { "value": [3570, 2510.5, 2032.5], "unit": "m^3" }`, and
+`output_units` applies to every element. A choice is never an output; it appears in the trace (§6).
+
 ## 4. IDs and versioning
 
 - IDs are lowercase, dot-separated, `domain.topic.method`. Domains: `geotech`, `structural`, `surveying`,
@@ -105,6 +143,19 @@ Codes:
 `INVALID_VALUE` covers a malformed DMS, bearing or other structured value.
 Several input errors may be reported at once as `{ "errors": [ … ] }`.
 
+**List and choice errors (D-23).** No new codes. The error object gains an optional 0-based **`index`** (omitted when
+not about a list element); messages use the 1-based item number for people:
+`{ "code": "OUT_OF_DOMAIN", "input": "distances", "index": 2, "message": "leg 3: distances[2] = -5 ft must be greater than 0" }`.
+
+| Case | Code |
+|---|---|
+| element not finite or outside `domain`; malformed element unit or bearing | the scalar code (`OUT_OF_DOMAIN`, `UNIT_MISMATCH`, `INVALID_VALUE`, …), with `index` |
+| a list that is not an array; an element of the wrong JSON type | `INVALID_VALUE` |
+| lists in one group of different lengths (message gives the group and both lengths) | `INVALID_VALUE` |
+| list shorter than the group's `min_len`, or longer than its maximum (message gives the limit) | `INVALID_VALUE` |
+| a choice that is not allowed (message lists every allowed value) | `INVALID_VALUE` |
+| a calculation returns a list of the wrong length, or breaks a trace rule below | `INTERNAL` |
+
 **Warnings** do not stop it. Each has a `code`, `message` and `level` (`info` | `caution`). Typical:
 `OUTSIDE_VALIDITY_RANGE` (input outside the method's stated range), `ROUNDING_SENSITIVE`.
 
@@ -121,10 +172,26 @@ Several input errors may be reported at once as `{ "errors": [ … ] }`.
 An ordered list of steps: symbolic expression, value, unit, and optionally a reference for that step. The trace
 is what lets an engineer — or an AI client — explain a result without recomputing it.
 
+**List and choice steps (D-23).** A step has one of two forms and never both `value` and `choice`:
+
+| Form | Fields |
+|---|---|
+| numeric | `step`, `value`, `unit` (omitted when dimensionless), optional `reference`, optional **`item`**: `{ "label": "leg", "index": 2 }` |
+| choice | `step` (the choice input's name) and **`choice`** (the selected value), e.g. `{ "step": "method", "choice": "pyramid_at_zero_end" }` |
+
+- `item.index` is 0-based; the step text starts with the 1-based label, e.g. `"leg 3: Lat = d·cos α"`. Clients read
+  `item`, not the text. The registry returns `INTERNAL` if the label names no declared index set, the index is not
+  below that set's length, or the text does not start with `"<label> <index + 1>: "`.
+- **Exactly one choice step per choice input**, before any numeric step and in declaration order. The trace is
+  ordered: choice steps, then the registry's conversion steps (bearing → azimuth), then the calculation's steps.
+  Anything else (missing, duplicated, undeclared, a value different from the request, out of order) is `INTERNAL`.
+
 ## 7. Units
 
 - **Internal representation:** value in SI + exponents over base dimensions
   (length, mass, time, temperature, amount, current, luminous intensity) **plus angle** as its own dimension.
+- **Lists:** a list input has one unit for the whole list; each element is converted once, then checked against
+  `domain`. `output_units` applies to every element of a list output.
 - **Unit strings:** ASCII, `*` or `·` for products, `/` for division, `^` for powers: `kN/m^2`, `m^3/s`, `kN*m`.
 - **Dimensionless inputs** omit `unit` (a plain ratio) or use `%`: `{ "value": 0.2, "unit": "%" }` = 0.002.
 - **No silent default unit.** A dimensional input given without a unit is rejected with `MISSING_UNIT`.
@@ -342,7 +409,9 @@ Request processing:
 
   A plain Python number is accepted only for dimensionless inputs. For a dimensional input it raises `MISSING_UNIT` (§7).
   Result outputs are `civkit.Q` objects with `.value`, `.unit` and `.to("ft/s")`.
-  Array (vectorised) inputs are out of scope for 0.1.
+  Batch (vectorised) calls, meaning one calculation applied to many independent input sets, are out of scope for 0.1.
+  This is different from a list that is part of one calculation's input (§2.1, `kind: list`), which Python passes as a
+  list of numbers with one `civkit.Q` unit, or as a list of `Q` of one dimension. List outputs come back as lists of `Q`.
 
 ## 9. FFI (`crates/civkit-ffi`)
 
@@ -376,6 +445,8 @@ Request processing:
 - Rust crates follow semantic versioning; before 1.0, minor versions may break the Rust API.
 - The **JSON contract** is more stable than the Rust API: calculation results are governed by §4 even pre-1.0.
 - Every interface reports the CivKit version and the calculation version in its output.
+- List and choice inputs, list outputs, `groups`, the error `index` and the `item` and `choice` trace fields (§2.1) are
+  additions under §4: they change no existing result, and clients that ignore them keep working.
 
 ## 12. Resolved TBDs — summary (task 0.7, accepted 2026-11-25)
 

@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 16:07 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 
@@ -125,6 +125,7 @@ impl Doubler {
                 default: None,
                 accepts_bearing: false,
                 domain: Range::at_least(0.0),
+                ..Default::default()
             }],
             outputs: vec![OutputSpec {
                 name: "double".into(),
@@ -132,11 +133,13 @@ impl Doubler {
                 dimension: Dimension::LENGTH,
                 si_unit: Some("m".into()),
                 display_unit: Some("m".into()),
+                ..Default::default()
             }],
             references: vec!["Test".into()],
             assumptions: vec![],
             validity: vec![],
             examples: vec![],
+            ..Default::default()
         })
     }
 }

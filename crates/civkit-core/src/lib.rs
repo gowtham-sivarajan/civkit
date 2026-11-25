@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 22:03 IST
 
 //! # civkit-core
 //!
@@ -31,12 +31,17 @@ mod error;
 mod registry;
 
 pub use contract::{
-    InputValue, Level, OutputValue, Request, Response, TraceStep, Warning, WarningCode,
+    InputValue, Level, Number, OutputValue, Request, Response, TraceItem, TraceStep, Warning,
+    WarningCode,
 };
-pub use descriptor::{Breach, Descriptor, InputSpec, Limit, OutputSpec, Range, ValidityRule};
+pub use descriptor::{
+    Breach, Descriptor, Group, InputKind, InputSpec, Limit, ListLength, OutputKind, OutputSpec,
+    Range, ValidityRule,
+};
 pub use error::{CalcError, ErrorCode, ErrorEnvelope};
 pub use registry::{
-    Calculation, Context, DOMAINS, Inputs, Outputs, Registry, RegistryError, check_descriptor,
+    Calculation, Context, DOMAINS, Inputs, MAX_LIST_LEN, Outputs, Registry, RegistryError,
+    check_descriptor,
 };
 
 /// The CivKit version, reported in every response.

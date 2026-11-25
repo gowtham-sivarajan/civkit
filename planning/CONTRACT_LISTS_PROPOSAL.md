@@ -1,6 +1,6 @@
 # Proposal: list and choice inputs in the calculation contract (D-23)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 21:50 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 22:03 IST
 
 > **Status:** Direction decided by the maintainer (2026-11-25 21:32 IST):
 > 1. option A, parallel lists with one unit per list;
@@ -15,8 +15,12 @@
 > - exactly one choice step per choice input (§3.6);
 > - structured item indices in the trace (§3.6).
 >
-> Next: ADR 0011, the API_DESIGN text (§5 of this document), then the contract extension, tests first. Nothing in
-> the contract or code depends on it yet.
+> On 2026-11-25 (21:54 IST) the maintainer accepted the clarified rules with one correction and one compatibility
+> rule, both applied below:
+> - an item label names an **index set**, so several list outputs may share one (§3.3, §3.6);
+> - **unused new fields are omitted** from serialized JSON (§3.8).
+>
+> **Accepted** as D-23 ([ADR 0011](decisions/0011-list-and-choice-inputs.md)).
 
 ## 1. The gap
 
@@ -103,8 +107,14 @@ group**:
   - `offset` is not −1, 0 or +1;
   - smallest possible length, `min_len` of its group + `offset`, is below 1 (no list output may be empty);
   - `item` or `description` is empty;
-  - `item` label is already used for a different index set. Item labels must be unique across groups and list
-    outputs; the one exception is a list output with `offset` 0, which may reuse its group's label.
+  - `item` label already names a different index set.
+- **An item label names an index set (maintainer's correction).** An index set is a pair (group, offset):
+  - a group's own `item` names (group, 0);
+  - a list output's `item` names (its group, its offset).
+
+  Several list outputs may share a label when they share group and offset. For example, `cut_volume`,
+  `fill_volume` and `net_volume` can all use "segment" on (stations, −1). A label may never name two different
+  index sets. The length of an index set is the group's length plus the offset.
 - **The registry checks the actual length after `compute`.** A mismatch is an `INTERNAL` error: it is a defect in
   the calculation, not in the input.
 
@@ -157,12 +167,21 @@ A trace step is one of two forms; a step never has both `value` and `choice`.
 - In `civkit-core`, per-item steps go through one helper that writes the text prefix from `item`, so the two cannot
   disagree.
 - After `compute`, the registry returns `INTERNAL` when:
-  - an `item` label is not a declared group or list-output item;
-  - its `index` is not below that list's length;
+  - an `item` label does not name a declared index set (§3.3);
+  - its `index` is not below that index set's length (group length + offset);
   - the step text does not start with `"<label> <index + 1>: "`.
 
 **Choice steps: exactly one per choice input (Clarified).** `compute` records every choice input exactly once, as
 a choice step, before its first numeric step and in the order the inputs are declared. Example:
+
+> **Placement of the registry's own steps.** The registry's input-conversion steps (bearing → azimuth) are
+> numeric. In the final trace they come **after** the choice steps and before `compute`'s numeric steps:
+> 1. choice steps;
+> 2. conversion steps;
+> 3. computation steps.
+>
+> So "choice steps come first" holds for the whole trace.
+
 
 ```json
 { "step": "method", "choice": "pyramid_at_zero_end" }
@@ -187,6 +206,14 @@ Numeric steps keep today's checks: finite value, internal unit.
 
 - A **pure addition** under API_DESIGN §4 and §11: `kind` defaults to `scalar`, and `groups`, `index` and `choice`
   steps are new optional fields. Existing calculations, their reference cases and stored requests are unaffected.
+- **Unused fields are omitted (maintainer's rule).** Serialized descriptors, responses, trace steps and errors leave
+  out every new field that is not in use:
+  - `kind` when `scalar`; `group`, `choices`, `groups` and `length` when empty;
+  - `item` and `choice` on trace steps;
+  - `index` on errors.
+
+  The JSON of every existing scalar calculation, its responses and its errors is therefore byte-for-byte as before.
+  A test pins this.
 - **Python (Phase 3):** list inputs take a list of numbers with one `civkit.Q` unit, or a list of `Q` of one
   dimension. List outputs come back as lists of `Q`.
 - **MCP (Phase 5):** list inputs become JSON arrays in the tool schema, with `minItems`, and choices become `enum`.

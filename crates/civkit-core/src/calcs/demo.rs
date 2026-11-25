@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! **Template calculation.** Copy this file to start a new calculation (see `CONTRIBUTING.md` §2).
 //!
@@ -42,6 +42,8 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
             default: None,
             accepts_bearing: false,
             domain: Range::UNBOUNDED,
+            // Scalar input: `kind`, `group` and `choices` keep their defaults (D-23).
+            ..Default::default()
         },
         InputSpec {
             name: "b".into(),
@@ -53,6 +55,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
             default: None,
             accepts_bearing: false,
             domain: Range::UNBOUNDED,
+            ..Default::default()
         },
         InputSpec {
             name: "w".into(),
@@ -65,6 +68,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
             accepts_bearing: false,
             // Mathematical domain: outside [0, 1] it is no longer a mean → OUT_OF_DOMAIN error.
             domain: Range::closed(0.0, 1.0),
+            ..Default::default()
         },
     ],
     outputs: vec![OutputSpec {
@@ -73,6 +77,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         dimension: Dimension::DIMENSIONLESS,
         si_unit: None,
         display_unit: None,
+        ..Default::default() // scalar output (D-23)
     }],
     references: vec!["Definition of the weighted arithmetic mean (demonstration only).".into()],
     assumptions: vec!["Weights sum to 1.".into()],
@@ -84,6 +89,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         reason: "a weight this extreme usually means one value was meant to be ignored".into(),
     }],
     examples: vec!["tests/reference/math.demo.weighted_mean/demo-01.json".into()],
+    ..Default::default() // no list groups (D-23)
 }
 });
 
@@ -118,6 +124,11 @@ mod tests {
         r
     }
 
+    /// A scalar output's value (this calculation has no list outputs).
+    fn scalar(r: &crate::Response, name: &str) -> f64 {
+        r.outputs[name].value.as_scalar().expect("scalar output")
+    }
+
     fn request(inputs: &[(&str, f64)]) -> Request {
         Request {
             id: "math.demo.weighted_mean".into(),
@@ -135,7 +146,7 @@ mod tests {
         let r = registry()
             .call(&request(&[("a", 2.0), ("b", 4.0)]))
             .expect("ok");
-        assert!((r.outputs["mean"].value - 3.0).abs() < 1e-12);
+        assert!((scalar(&r, "mean") - 3.0).abs() < 1e-12);
         assert_eq!(r.version, 1);
         assert!(r.warnings.is_empty());
         assert_eq!(r.trace.len(), 1);
@@ -147,7 +158,7 @@ mod tests {
             let r = registry()
                 .call(&request(&[("a", 2.0), ("b", 4.0), ("w", w)]))
                 .expect("ok");
-            assert!((r.outputs["mean"].value - expected).abs() < 1e-12);
+            assert!((scalar(&r, "mean") - expected).abs() < 1e-12);
             assert_eq!(r.warnings.len(), 1);
             assert_eq!(r.warnings[0].code, WarningCode::OutsideValidityRange);
         }

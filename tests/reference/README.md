@@ -1,6 +1,6 @@
 # Reference cases
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 A reference case is a published worked example turned into a test. It has a known input, a cited method, and an independently verified expected result ([ENGINEERING_STANDARDS.md](../../docs/ENGINEERING_STANDARDS.md)).
 Every registered calculation must have at least one; CI fails otherwise.
@@ -50,6 +50,7 @@ The folder name must equal the calculation ID in the request.
 | `source.register_id` | Required for `published`: the source's S-number in [REFERENCE_SOURCES.md](../../planning/REFERENCE_SOURCES.md). Only openly licensed or public-domain sources (D-18). |
 | `request` | Exactly what an interface would send ([API_DESIGN.md §3](../../docs/API_DESIGN.md)). |
 | `expected.outputs` | Each with `value`, `unit` (omit for dimensionless) and a `tolerance`: `{ "relative": r }` or `{ "absolute": a }`. |
+| List outputs | `"value": [ … ]` for a list output ([API_DESIGN.md §2](../../docs/API_DESIGN.md), `kind: list`). The tolerance applies to every entry, and the unit is checked once. An entry may be `null`: the source does not print it, so it is not checked. At least one entry must be checked. A mismatch names the entry, e.g. `'volumes': segment 2: got 2510.5, expected 2511 ± 0.5`. The length must match. |
 | Tolerance | Reflects the precision printed in the source. Widen it only to cover the source's own intermediate rounding, and explain why in `verification`. |
 | `expected.warnings` / `expected.errors` | Warning or error codes, in order. A case expecting errors has no `outputs`. |
 | `verification` | Required. Say how the result was re-derived (hand calculation, script, second source) and record any erratum. |

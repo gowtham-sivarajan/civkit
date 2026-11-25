@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 22:03 IST
 
 //! Calculation descriptors: how a calculation describes itself (`docs/API_DESIGN.md` §2).
 //! Every interface (Python, MCP, FFI, desktop forms, documentation) is generated from these.
@@ -7,7 +7,7 @@ use civkit_units::Dimension;
 use serde::Serialize;
 
 /// Everything an interface needs to know about one version of one calculation.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
 pub struct Descriptor {
     /// Namespaced ID, `domain.topic.method`, e.g. `fluids.open_channel.manning`.
     pub id: String,
@@ -29,10 +29,78 @@ pub struct Descriptor {
     pub validity: Vec<ValidityRule>,
     /// Paths of reference-case files in `tests/reference/`.
     pub examples: Vec<String>,
+    /// Named index sets shared by list inputs (D-23). Omitted from JSON when empty.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<Group>,
+}
+
+/// A group of list inputs that share one index: entry k of every list in the group belongs together (D-23).
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
+pub struct Group {
+    /// Name, `snake_case`, referenced by list inputs and list outputs.
+    pub name: String,
+    /// Singular word used to number entries from 1 in messages and the trace ("leg 3").
+    pub item: String,
+    /// Smallest allowed length, at least 1.
+    pub min_len: usize,
+    /// What one entry is and how the entries are ordered.
+    pub description: String,
+}
+
+/// The shape of an input (D-23). Omitted from JSON when `scalar`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InputKind {
+    /// One value: a number, a DMS array or a bearing.
+    #[default]
+    Scalar,
+    /// A JSON array with one unit for the whole list; belongs to a group. Required in 0.1.
+    List,
+    /// One string from `choices`. Required, with no default, in 0.1.
+    Choice,
+}
+
+impl InputKind {
+    /// `true` for `Scalar`.
+    pub fn is_scalar(&self) -> bool {
+        *self == Self::Scalar
+    }
+}
+
+/// The shape of an output (D-23). Omitted from JSON when `scalar`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OutputKind {
+    /// One value.
+    #[default]
+    Scalar,
+    /// A list whose length follows a group (see [`ListLength`]).
+    List,
+}
+
+impl OutputKind {
+    /// `true` for `Scalar`.
+    pub fn is_scalar(&self) -> bool {
+        *self == Self::Scalar
+    }
+}
+
+/// How long a list output is, and what its entries are called (D-23).
+///
+/// Its index set is (`group`, `offset`): the length is the group's length + `offset`. `item` names that index
+/// set; outputs that share a group and offset may share an item label.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
+pub struct ListLength {
+    /// The group the length follows.
+    pub group: String,
+    /// −1 (one entry between consecutive group items), 0 (one per item) or +1 (one per item plus one).
+    pub offset: i8,
+    /// Singular word for one entry ("segment").
+    pub item: String,
 }
 
 /// One input.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
 pub struct InputSpec {
     /// Name used in requests, `snake_case`.
     pub name: String,
@@ -58,13 +126,23 @@ pub struct InputSpec {
     /// Only for surveying inputs; requires the angle dimension (`docs/API_DESIGN.md` §7).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub accepts_bearing: bool,
-    /// Mathematical domain, in SI. A value outside it is an `OUT_OF_DOMAIN` error.
+    /// Mathematical domain, in SI. A value outside it is an `OUT_OF_DOMAIN` error. For a list, it applies to
+    /// every element.
     #[serde(skip_serializing_if = "Range::is_unbounded")]
     pub domain: Range,
+    /// Scalar, list or choice (D-23).
+    #[serde(skip_serializing_if = "InputKind::is_scalar")]
+    pub kind: InputKind,
+    /// For a list input: the group it belongs to.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    /// For a choice input: the allowed values, lower-case `snake_case`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub choices: Vec<String>,
 }
 
 /// One output.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
 pub struct OutputSpec {
     /// Name used in responses, `snake_case`.
     pub name: String,
@@ -80,6 +158,12 @@ pub struct OutputSpec {
     /// `output_units` (may differ from `si_unit`, e.g. `mm` for a deflection). `None` means present in `si_unit`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_unit: Option<String>,
+    /// Scalar or list (D-23).
+    #[serde(skip_serializing_if = "OutputKind::is_scalar")]
+    pub kind: OutputKind,
+    /// For a list output: its length rule and item label.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub length: Option<ListLength>,
 }
 
 /// One end of a range.

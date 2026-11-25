@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:07 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 23:48 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -56,10 +56,11 @@
     confirmed by the maintainer. The follow-up (derived tolerances must be finite) passed the maintainer's Windows
     check; it is committed together with 2C part 1.
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
-    `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). **Blocked on D-23**: traverse,
-    levelling and earthwork need list inputs and a method choice. Design confirmed (option A, required
-    choices, §8 wording) with four clarified edge rules ([proposal](CONTRACT_LISTS_PROPOSAL.md) §3); next: ADR 0011,
-    API_DESIGN text, contract extension (tests first). Beam maximum shear and moment: still no qualifying example.
+    `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
+    is accepted ([ADR 0011](decisions/0011-list-and-choice-inputs.md)); its contract extension, list support in the
+    reference-case harness and the API_DESIGN text are **written and green locally but uncommitted** (161 tests; see the
+    23:48 log entry). Next: traverse, levelling and earthwork, one at a time, each descriptor proposed first. Beam
+    maximum shear and moment: still no qualifying example.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
@@ -103,8 +104,10 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next:** D-23 is confirmed with clarified edge rules. Write ADR 0011 and the API_DESIGN text, then extend the
-   contract (tests first), then traverse, levelling and earthwork with descriptors proposed first.
+1. **Next:** Windows check and commit of the D-23 implementation (see the 23:48 entry; `git add` the listed files only,
+   never `planning/ui-concepts/`). Then **propose the traverse descriptor** (groups, list inputs, outputs and offsets,
+   choice inputs, reference case C3) for the maintainer's review before any traverse code; then levelling and
+   earthwork the same way (D-20 condition 4).
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
@@ -126,6 +129,32 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 23:48 IST — D-23 implementation finished and green; nothing committed *(Claude Sonnet 5.5)*
+- The working tree held a half-done D-23 extension (the previous Opus session wrote ADR 0011, the new descriptor and
+  contract types, a large registry change and `tests/contract_lists.rs`, but not the callers; the 21:50 log entry said
+  "no code changed yet"). `cargo test` did not compile: 14 library and 25 test errors.
+- Fixed, with the registry design left as written:
+  - the three built-in descriptors and two test fixtures now use `..Default::default()` for the new fields
+    (scalar input and output, no groups); two registry slips (`&&str`, and the bearing trace step needed `Some(value)`,
+    `item` and `choice`);
+  - tests that read `outputs[..].value` as `f64` now use `Number::as_scalar()`.
+- **Two bugs were in the new test file, not the engine:** the test-only `spacing` calculation produced 4 marks for an
+  output declared "points + 1" (the expected `[0, 2, 5, 9, 9]` shows the intent, so it now closes with the total); and
+  the "scalar JSON shape" test searched for the substring `"length"`, which every dimension serialises, so it now
+  checks descriptor fields structurally.
+- **Reference-case harness (tests first):** list expectations with `null` entries per proposal §3.7; mismatch messages
+  name the entry ("segment 2: got …"); unit checked once; at least one entry must be checked. 6 new tests.
+- **Docs:** API_DESIGN §2.1 (new), §3, §5, §6, §7, §8, §11 and `tests/reference/README.md`, as ADR 0011 promised. The
+  descriptor rules written there were checked against `check_descriptor`.
+- **Checks (Windows, Rust 1.100, run from the working folder):** fmt, clippy `-D warnings`, 161 tests, `cargo doc`,
+  dependency rule: all pass. `cargo-deny` is not installed on this machine; CI runs it.
+- **Uncommitted files:** `crates/civkit-core/src/{contract,descriptor,error,lib,registry}.rs`,
+  `src/calcs/{demo,fluids,structural}.rs`, `tests/{contract,reference_cases,contract_lists}.rs`,
+  `docs/API_DESIGN.md`, `tests/reference/README.md`, `planning/{CONTRACT_LISTS_PROPOSAL,DECISIONS,IMPLEMENTATION_PLAN,AI_HANDOVER}.md`,
+  `planning/decisions/0011-list-and-choice-inputs.md`. `planning/ui-concepts/` stays unstaged.
+- Not done: no traverse, levelling or earthwork code; no new reference cases with list outputs yet (the harness is
+  ready for them).
 
 ### 2026-11-25 23:07 IST — Competitive research; two reports, no decisions *(Claude Sonnet 5.5)*
 - Research-only task from the maintainer. New files: [COMPETITIVE_LANDSCAPE.md](COMPETITIVE_LANDSCAPE.md) (11 sections) and

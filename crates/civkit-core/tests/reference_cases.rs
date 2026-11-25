@@ -1,10 +1,11 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Runs every reference case in `tests/reference/` (repository root) against the engine.
 //! Format: `tests/reference/README.md`. A case that fails to parse is a test failure, not a skip.
 
-use civkit_core::{Registry, Request, calcs::demo::WeightedMean};
+use civkit_core::{Number, OutputValue, Registry, Request, calcs::demo::WeightedMean};
 use serde::Deserialize;
+use serde_json::json;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -64,10 +65,19 @@ struct Expected {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ExpectedValue {
-    value: f64,
+    value: ExpectedNumber,
     #[serde(default)]
     unit: Option<String>,
     tolerance: Tolerance,
+}
+
+/// An expected output: one number, or a list. A list entry may be `null`, meaning "the source does not print
+/// this value, so it is not checked" (CONTRACT_LISTS_PROPOSAL §3.7).
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum ExpectedNumber {
+    Scalar(f64),
+    List(Vec<Option<f64>>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -99,6 +109,78 @@ fn registry() -> Registry {
     let mut r = Registry::with_builtins();
     r.register(Box::new(WeightedMean)).expect("demo registers");
     r
+}
+
+/// Whether `got` is within the tolerance of `exp`, and the allowed deviation (for messages).
+fn within(tolerance: &Tolerance, got: f64, exp: f64) -> (bool, f64) {
+    let allowed = match *tolerance {
+        Tolerance::Relative(r) => r * exp.abs().max(f64::MIN_POSITIVE),
+        Tolerance::Absolute(a) => a,
+    };
+    ((got - exp).abs() <= allowed, allowed)
+}
+
+/// Compares one output with its expectation; returns a description of every mismatch.
+///
+/// A list is compared entry by entry with the output's tolerance; `None` entries are not checked, but at least
+/// one entry must be. `item` is the output's item label ("segment"), used to say which entry is wrong.
+fn compare_output(
+    name: &str,
+    exp: &ExpectedValue,
+    got: &OutputValue,
+    item: Option<&str>,
+) -> Vec<String> {
+    let mut problems = Vec::new();
+    match (&exp.value, &got.value) {
+        (ExpectedNumber::Scalar(e), Number::Scalar(g)) => {
+            let (ok, allowed) = within(&exp.tolerance, *g, *e);
+            if !ok {
+                problems.push(format!("'{name}': got {g}, expected {e} ± {allowed}"));
+            }
+        }
+        (ExpectedNumber::List(entries), Number::List(values)) => {
+            if entries.iter().all(Option::is_none) {
+                problems.push(format!(
+                    "'{name}': an expected list needs at least one checked entry (not all null)"
+                ));
+            }
+            if entries.len() != values.len() {
+                problems.push(format!(
+                    "'{name}': expected {} entries, got {}",
+                    entries.len(),
+                    values.len()
+                ));
+            } else {
+                let label = item.unwrap_or("entry");
+                for (k, (e, g)) in entries.iter().zip(values).enumerate() {
+                    let Some(e) = e else { continue };
+                    let (ok, allowed) = within(&exp.tolerance, *g, *e);
+                    if !ok {
+                        problems.push(format!(
+                            "'{name}': {label} {}: got {g}, expected {e} ± {allowed}",
+                            k + 1
+                        ));
+                    }
+                }
+            }
+        }
+        (ExpectedNumber::List(_), Number::Scalar(_)) => {
+            problems.push(format!("'{name}': expected a list, got a scalar"));
+        }
+        (ExpectedNumber::Scalar(_), Number::List(values)) => {
+            problems.push(format!(
+                "'{name}': expected a scalar, got a list of {} entries",
+                values.len()
+            ));
+        }
+    }
+    if exp.unit != got.unit {
+        problems.push(format!(
+            "'{name}': unit {:?}, expected {:?}",
+            got.unit, exp.unit
+        ));
+    }
+    problems
 }
 
 /// Checks one case; returns a description of every mismatch.
@@ -150,25 +232,17 @@ fn check(path: &Path, registry: &Registry) -> Vec<String> {
                     problems.push(format!("output '{name}' missing"));
                     continue;
                 };
-                let (ok, allowed) = match exp.tolerance {
-                    Tolerance::Relative(r) => {
-                        let allowed = r * exp.value.abs().max(f64::MIN_POSITIVE);
-                        ((got.value - exp.value).abs() <= allowed, allowed)
-                    }
-                    Tolerance::Absolute(a) => ((got.value - exp.value).abs() <= a, a),
-                };
-                if !ok {
-                    problems.push(format!(
-                        "'{name}': got {}, expected {} ± {allowed} ({})",
-                        got.value, exp.value, case.case
-                    ));
-                }
-                if exp.unit != got.unit {
-                    problems.push(format!(
-                        "'{name}': unit {:?}, expected {:?}",
-                        got.unit, exp.unit
-                    ));
-                }
+                // The item label of a list output ("segment") comes from the descriptor, for messages.
+                let item = registry
+                    .describe(&response.id, Some(response.version))
+                    .and_then(|d| d.outputs.iter().find(|o| &o.name == name))
+                    .and_then(|o| o.length.as_ref())
+                    .map(|l| l.item.as_str());
+                problems.extend(
+                    compare_output(name, exp, got, item)
+                        .into_iter()
+                        .map(|p| format!("{p} ({})", case.case)),
+                );
             }
             let got_warnings: Vec<String> = response
                 .warnings
@@ -231,6 +305,112 @@ fn every_reference_case_passes() {
         failures.len(),
         failures.join("\n")
     );
+}
+
+// --- Output comparison, including list outputs (D-23, CONTRACT_LISTS_PROPOSAL §3.7) ----------------------
+
+fn expected(json: serde_json::Value) -> ExpectedValue {
+    serde_json::from_value(json).expect("expected value parses")
+}
+
+fn got(value: Number, unit: Option<&str>) -> OutputValue {
+    OutputValue {
+        value,
+        unit: unit.map(str::to_owned),
+    }
+}
+
+#[test]
+fn scalar_outputs_compare_as_before() {
+    let exp = expected(json!({ "value": 2.96, "unit": "m", "tolerance": { "relative": 0.005 } }));
+    assert!(compare_output("q", &exp, &got(Number::Scalar(2.961), Some("m")), None).is_empty());
+    let p = compare_output("q", &exp, &got(Number::Scalar(3.1), Some("m")), None);
+    assert_eq!(p.len(), 1, "{p:?}");
+    assert!(p[0].contains("got 3.1") && p[0].contains("2.96"), "{p:?}");
+    let p = compare_output("q", &exp, &got(Number::Scalar(2.96), Some("ft")), None);
+    assert!(p.iter().any(|m| m.contains("unit")), "{p:?}");
+}
+
+#[test]
+fn a_list_is_checked_entry_by_entry_with_the_same_tolerance() {
+    let exp = expected(
+        json!({ "value": [10.0, 20.0, 30.0], "unit": "m", "tolerance": { "absolute": 0.5 } }),
+    );
+    let ok = got(Number::List(vec![10.2, 19.8, 30.5]), Some("m"));
+    assert!(compare_output("v", &exp, &ok, Some("segment")).is_empty());
+}
+
+#[test]
+fn a_list_mismatch_names_the_item_and_its_number() {
+    let exp = expected(
+        json!({ "value": [10.0, 20.0, 30.0], "unit": "m", "tolerance": { "absolute": 0.5 } }),
+    );
+    let bad = got(Number::List(vec![10.0, 21.0, 30.0]), Some("m"));
+    let p = compare_output("v", &exp, &bad, Some("segment"));
+    assert_eq!(p.len(), 1, "{p:?}");
+    assert!(
+        p[0].contains("segment 2") && p[0].contains("got 21") && p[0].contains("expected 20"),
+        "{p:?}"
+    );
+}
+
+#[test]
+fn null_entries_are_not_checked_but_at_least_one_entry_must_be() {
+    let exp = expected(
+        json!({ "value": [null, 20.0, null], "unit": "m", "tolerance": { "absolute": 0.5 } }),
+    );
+    // Entries 1 and 3 are not printed by the source: anything goes there.
+    let any = got(Number::List(vec![999.0, 20.0, -5.0]), Some("m"));
+    assert!(compare_output("v", &exp, &any, Some("segment")).is_empty());
+
+    let nothing =
+        expected(json!({ "value": [null, null], "unit": "m", "tolerance": { "absolute": 0.5 } }));
+    let p = compare_output(
+        "v",
+        &nothing,
+        &got(Number::List(vec![1.0, 2.0]), Some("m")),
+        None,
+    );
+    assert!(p.iter().any(|m| m.contains("at least one")), "{p:?}");
+    let empty = expected(json!({ "value": [], "unit": "m", "tolerance": { "absolute": 0.5 } }));
+    let p = compare_output("v", &empty, &got(Number::List(vec![]), Some("m")), None);
+    assert!(p.iter().any(|m| m.contains("at least one")), "{p:?}");
+}
+
+#[test]
+fn list_length_and_shape_must_agree() {
+    let exp =
+        expected(json!({ "value": [10.0, 20.0], "unit": "m", "tolerance": { "absolute": 0.5 } }));
+    let p = compare_output("v", &exp, &got(Number::List(vec![10.0]), Some("m")), None);
+    assert!(
+        p.iter().any(|m| m.contains("2 entries") && m.contains('1')),
+        "{p:?}"
+    );
+    let p = compare_output("v", &exp, &got(Number::Scalar(10.0), Some("m")), None);
+    assert!(p.iter().any(|m| m.contains("expected a list")), "{p:?}");
+
+    let scalar = expected(json!({ "value": 10.0, "unit": "m", "tolerance": { "absolute": 0.5 } }));
+    let p = compare_output(
+        "v",
+        &scalar,
+        &got(Number::List(vec![10.0, 11.0]), Some("m")),
+        None,
+    );
+    assert!(p.iter().any(|m| m.contains("expected a scalar")), "{p:?}");
+}
+
+#[test]
+fn a_list_output_unit_is_checked_once() {
+    let exp =
+        expected(json!({ "value": [1.0, 2.0], "unit": "m", "tolerance": { "absolute": 0.5 } }));
+    let p = compare_output(
+        "v",
+        &exp,
+        &got(Number::List(vec![1.0, 2.0]), Some("mm")),
+        None,
+    );
+    assert_eq!(p.len(), 1, "{p:?}");
+    assert!(p[0].contains("unit"), "{p:?}");
 }
 
 #[test]

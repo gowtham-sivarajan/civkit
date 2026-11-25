@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 19:15 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Fluids calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -32,6 +32,7 @@ fn input(
         default: None,
         accepts_bearing: false,
         domain,
+        ..Default::default() // scalar input: no list, group or choices (D-23)
     }
 }
 
@@ -42,6 +43,7 @@ fn output(name: &str, description: &str, dimension: Dimension, si_unit: &str) ->
         dimension,
         si_unit: Some(si_unit.into()),
         display_unit: Some(si_unit.into()),
+        ..Default::default() // scalar output (D-23)
     }
 }
 
@@ -119,6 +121,7 @@ static MANNING: LazyLock<Descriptor> = LazyLock::new(|| {
         "tests/reference/fluids.open_channel.manning_trapezoidal/hds4-ex4-1.json".into(),
         "tests/reference/fluids.open_channel.manning_trapezoidal/hds4-ex4-2.json".into(),
     ],
+    ..Default::default() // no list groups (D-23)
 }
 });
 
@@ -201,22 +204,27 @@ mod tests {
         assert!((a - b).abs() <= 1e-12 * b.abs(), "{a} vs {b}");
     }
 
+    /// A scalar output's value (this calculation has no list outputs).
+    fn out(r: &crate::Response, name: &str) -> f64 {
+        r.outputs[name].value.as_scalar().expect("scalar output")
+    }
+
     #[test]
     fn rectangle_and_triangle_are_special_cases() {
         // Rectangle 2 m x 1 m: A = 2, P = 4, R = 0.5.
         let r = call(&channel(2.0, 0.0, 1.0)).expect("rectangle");
-        close(r.outputs["area"].value, 2.0);
-        close(r.outputs["wetted_perimeter"].value, 4.0);
-        close(r.outputs["hydraulic_radius"].value, 0.5);
+        close(out(&r, "area"), 2.0);
+        close(out(&r, "wetted_perimeter"), 4.0);
+        close(out(&r, "hydraulic_radius"), 0.5);
         // Triangle, z = 1, y = 1: A = 1, P = 2·√2.
         let r = call(&channel(0.0, 1.0, 1.0)).expect("triangle");
-        close(r.outputs["area"].value, 1.0);
-        close(r.outputs["wetted_perimeter"].value, 2.0 * 2.0_f64.sqrt());
+        close(out(&r, "area"), 1.0);
+        close(out(&r, "wetted_perimeter"), 2.0 * 2.0_f64.sqrt());
         // V and Q follow from R by the SI formula.
         let v = 0.5_f64.powf(2.0 / 3.0) * 0.002_f64.sqrt() / 0.013;
         let r = call(&channel(2.0, 0.0, 1.0)).expect("rectangle");
-        close(r.outputs["velocity"].value, v);
-        close(r.outputs["discharge"].value, 2.0 * v);
+        close(out(&r, "velocity"), v);
+        close(out(&r, "discharge"), 2.0 * v);
         assert_eq!(r.trace.len(), 5);
     }
 
@@ -264,7 +272,7 @@ mod tests {
         ])
         .expect("metres");
         for name in ["area", "wetted_perimeter", "velocity", "discharge"] {
-            close(feet.outputs[name].value, metres.outputs[name].value);
+            close(out(&feet, name), out(&metres, name));
         }
     }
 

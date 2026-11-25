@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 22:03 IST
 
 //! Errors: the codes of `docs/API_DESIGN.md` §5 and the JSON error envelope.
 
@@ -48,6 +48,9 @@ pub struct CalcError {
     /// The input concerned, if any.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub input: Option<String>,
+    /// For an element of a list input: its 0-based position (D-23). The message names it 1-based ("leg 3").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl CalcError {
@@ -57,6 +60,7 @@ impl CalcError {
             code,
             message: message.into(),
             input: None,
+            index: None,
         }
     }
 
@@ -70,6 +74,7 @@ impl CalcError {
             code,
             message: message.into(),
             input: Some(input.into()),
+            index: None,
         }
     }
 

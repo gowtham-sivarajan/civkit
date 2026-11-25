@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 22:03 IST
 
 //! The JSON request and response shapes (`docs/API_DESIGN.md` §3, §5, §6).
 
@@ -71,29 +71,74 @@ pub struct Response {
     pub assumptions: Vec<String>,
 }
 
+/// A scalar or a list of numbers. Serialized as a bare number or a JSON array (D-23).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum Number {
+    /// One value.
+    Scalar(f64),
+    /// A list of values in one unit.
+    List(Vec<f64>),
+}
+
+impl Number {
+    /// The value, if scalar.
+    pub fn as_scalar(&self) -> Option<f64> {
+        match self {
+            Self::Scalar(v) => Some(*v),
+            Self::List(_) => None,
+        }
+    }
+
+    /// The values, if a list.
+    pub fn as_list(&self) -> Option<&[f64]> {
+        match self {
+            Self::Scalar(_) => None,
+            Self::List(v) => Some(v),
+        }
+    }
+}
+
 /// One output value.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct OutputValue {
-    /// Full `f64` precision; interfaces round for display only.
-    pub value: f64,
+    /// Full `f64` precision; interfaces round for display only. A list output is an array.
+    pub value: Number,
     /// Unit; omitted for dimensionless outputs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
 }
 
-/// One step of the trace: what was computed and the value it gave.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+/// One step of the trace. Either **numeric** (`value`, `unit`, optional `item`) or a **choice** step (`choice`
+/// only, naming the selected value of a choice input; D-23).
+#[derive(Debug, Clone, PartialEq, Default, Serialize)]
 pub struct TraceStep {
-    /// Symbolic expression, e.g. `R = A / P`.
+    /// Symbolic expression, e.g. `R = A / P`; for a choice step, the choice input's name.
     pub step: String,
-    /// Value of the step, in SI.
-    pub value: f64,
+    /// Value of a numeric step, in SI.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<f64>,
     /// SI unit; omitted when dimensionless.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
     /// Source for this step (book page, code clause), if it differs from the calculation's references.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
+    /// For a per-item step: which entry it is about. The step text starts with `"<label> <index + 1>: "`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item: Option<TraceItem>,
+    /// For a choice step: the selected value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub choice: Option<String>,
+}
+
+/// The entry a per-item trace step is about (D-23).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TraceItem {
+    /// Item label of a declared index set ("leg", "segment").
+    pub label: String,
+    /// 0-based position in that index set.
+    pub index: usize,
 }
 
 /// How serious a warning is.
