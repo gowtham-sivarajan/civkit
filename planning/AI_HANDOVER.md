@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 00:40 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 08:58 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -24,6 +24,8 @@
 ## 2. Working rules
 
 1. **No code until Phase 0 is complete** ([ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md)). Documents only.
+   In particular, **no calculation is implemented until D-3 … D-7 are resolved** and every Phase 0 criterion is met.
+   The only exception is a throwaway toolchain smoke test outside the repository.
 2. **Work only inside this repository folder.** Do not read or modify anything else on the maintainer's machine.
 3. **Provenance on every write.** Every file an AI creates or edits carries, near the top, a provenance line
    with model name, model ID and timestamp in IST; update "last edited" on every edit. Use a comment line in
@@ -34,6 +36,8 @@
 6. **Git:** the maintainer runs git commands; AI tools cannot write inside `.git`. After changes, give the
    maintainer the exact `git add` / `git commit` commands. Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
 7. Never present unverified engineering content as fact; flag it for engineering review.
+8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
+9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
 ## 3. Where things stand
 
@@ -41,17 +45,21 @@
 - Accepted: D-1 name (CivKit), D-2 licence (Apache-2.0), D-12 drawing model, D-15 repository layout,
   D-16 documentation structure, D-17 public repository from day one.
 - Open P0 decisions: D-3, D-4, D-5, D-6, D-7.
-- Maintainer's development machine: Windows 11, PowerShell 5.1. Toolchain install in progress
-  (task 0.4 in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md); required tools in [CONTRIBUTING.md §4](../CONTRIBUTING.md#4-development-setup-windows-all-free)).
+- Maintainer's development machine: Windows 11, PowerShell 5.1. **Toolchain verified 2026-11-25:** Rust 1.100.0
+  (`stable-x86_64-pc-windows-msvc`, rustfmt 1.11.0, clippy), MSVC linker works (smoke test built and ran),
+  .NET SDK 11.0.100, SQLite 3.54.1, `.venv` with maturin 1.16.0 and JupyterLab 4.6.6, VS Code extensions.
+  Note for Phase 5: only the .NET **11** SDK is installed; it can build `net10.0` targets for AutoCAD 2027,
+  but pin the SDK with `global.json` (or add the .NET 10 SDK) if builds misbehave.
+  Required tools: [CONTRIBUTING.md §4](../CONTRIBUTING.md#4-development-setup-windows-all-free).
   Use the project's `.venv` for Python, not any system-wide distribution.
-- Git tags: `plan-v0.1`. GitHub repository being created (task 0.12).
+- Git tags: `plan-v0.1`. Public at github.com/gowtham-sivarajan/civkit (pushed 2026-11-25 ~00:47 IST);
+  private vulnerability reporting enabled. Dependency graph / Dependabot to be enabled in Phase 1.
 
 ## 4. Next actions
 
-1. Push to the public GitHub repository (task 0.12).
-2. Verify the toolchain (task 0.4).
-3. Decide D-3 … D-7, then finish the TBDs in API_DESIGN.md.
-4. Collect worked examples for each 0.1 calculation.
+1. Decide D-3 … D-7 (see [DECISIONS.md](DECISIONS.md)).
+2. Finish the TBDs in API_DESIGN.md.
+3. Collect and independently verify worked examples for each 0.1 calculation.
 
 Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
@@ -60,6 +68,20 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 08:58 IST — Toolchain verified *(Claude Opus 5.5)*
+- Task 0.4 done: Rust 1.100.0 stable-msvc with rustfmt and clippy; smoke test compiled, linked and ran
+  (outside the repository); .NET SDK 11.0.100; SQLite 3.54.1; `.venv` with maturin 1.16.0, JupyterLab 4.6.6,
+  ipykernel 7.4.0; all VS Code extensions installed.
+- **Next:** decide D-3 … D-7.
+
+### 2026-11-25 01:00 IST — Principles locked in; repository public *(Claude Opus 5.5)*
+- Repository pushed to GitHub (`main` at `8de55c2`, tag `plan-v0.1`); private vulnerability reporting enabled.
+- Maintainer's protected principles written into the docs: reference cases are mandatory and independently
+  verified; the engine has no AutoCAD, Python, network or AI dependency; no calculation is implemented until
+  D-3 … D-7 are resolved and Phase 0 is complete.
+- Status: Rust (rustup) and `.venv` installed but **not yet verified**; Visual Studio 2026 still installing.
+- **Next:** toolchain checkpoint (see §4), then D-3 … D-7.
 
 ### 2026-11-25 00:40 IST — Name, licence, public repository *(Claude Opus 5.5)*
 - **Accepted D-1** (name: CivKit), **D-2** (licence: Apache-2.0), **D-17** (public GitHub repository from day one) — ADR 0004.

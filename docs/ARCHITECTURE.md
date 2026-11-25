@@ -1,6 +1,6 @@
 # Architecture
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 01:00 IST
 
 > **Status:** Design — accepted parts are marked with their decision ID; the rest is proposed.
 > Contract and API details: [API_DESIGN.md](API_DESIGN.md).
@@ -51,7 +51,14 @@ CivKit/
 
 ### The dependency rule
 **Nothing in `crates/` depends on anything outside `crates/`.** Interfaces depend on the engine, never the
-reverse. This is checked in review and, from Phase 1, in CI.
+reverse. In particular, the engine has:
+
+- **no AutoCAD / .NET dependency** — AutoCAD is an integration target, not a dependency;
+- **no Python dependency** — PyO3 lives only in `bindings/python`;
+- **no network dependency** — see [OFFLINE_POLICY.md](OFFLINE_POLICY.md);
+- **no AI dependency** — no model, AI service or MCP code; MCP lives only in `integrations/mcp`.
+
+Checked in review and, from Phase 1, in CI (`cargo-deny` bans for `crates/`: PyO3, MCP SDKs, HTTP/network crates).
 
 Further rules:
 - Domain calculations (geotech, structural, surveying, fluids, quantities, math) start as modules inside

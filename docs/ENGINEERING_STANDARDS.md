@@ -1,11 +1,13 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 01:00 IST
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 
 ## 1. Trust principles
 
+- **Reference cases are not optional paperwork.** They are the test cases that stop CivKit from confidently
+  producing nonsense. A calculation without verified reference cases is not merged.
 - **No silent results.** Every result carries its units, the steps used, the reference it came from, and any warnings.
 - **No silent changes.** A calculation's formula never changes under the same ID and version ([API_DESIGN.md §4](API_DESIGN.md#4-ids-and-versioning)).
 - **Fail loudly on units.** Dimensionally inconsistent input is an error, never a guess.
@@ -20,7 +22,7 @@
 | 2 | **References** — book (title, edition, page/section) or code clause number. Cited, not copied. |
 | 3 | **Assumptions** in plain language |
 | 4 | **Validity limits**, enforced as warnings or errors |
-| 5 | **≥1 reference case** from a cited published worked example in `tests/reference/`, with a stated tolerance |
+| 5 | **≥1 reference case** in `tests/reference/`: known input, documented method and assumptions, cited source, stated tolerance, and an expected result that is **independently verified** — re-derived by hand or confirmed by a second source, not just copied from the book (textbooks have errata) |
 | 6 | **Edge-case tests**: zero, limits of validity range, invalid inputs, unit variations |
 | 7 | A generated **doc page**: formula, symbols, references, assumptions, limits, example |
 | 8 | **Two reviews**: one code review and one engineering review |

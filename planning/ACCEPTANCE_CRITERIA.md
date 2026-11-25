@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 00:40 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 08:58 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -13,9 +13,9 @@
 - [ ] The 0.1 calculation set is fixed (D-7), and **each calculation has ≥1 published worked example** collected
       (source, edition, page, inputs, expected outputs).
 - [ ] 3–5 licence-safe sample DXF drawings collected for fixtures.
-- [ ] Toolchain installed and verified (Rust builds and links a test program; Python `.venv` works).
+- [x] Toolchain installed and verified (Rust builds and links a test program; Python `.venv` works) — 2026-11-25.
 - [x] Licence chosen and `LICENSE` added (Apache-2.0, 2026-11-25).
-- [ ] Public GitHub repository created and pushed; private vulnerability reporting enabled.
+- [x] Public GitHub repository created and pushed; private vulnerability reporting enabled (2026-11-25).
 - [ ] Tag `plan-v1.0`.
 
 ### Phase 1 — Architecture and Rust core
@@ -60,7 +60,8 @@
 ## 3. Per-calculation checklist
 
 - [ ] Descriptor complete: ID, version, inputs/outputs with dimensions, references, assumptions, validity.
-- [ ] ≥1 reference case from a cited published worked example, within the source's printed precision.
+- [ ] ≥1 reference case: known input, documented method and assumptions, cited source, result within the source's printed precision.
+- [ ] Expected result **independently verified** (hand re-derivation or second source), with who verified it recorded in the case file.
 - [ ] Edge cases: zero, validity-range limits, invalid inputs (correct error codes), alternative units.
 - [ ] Trace steps present and correct.
 - [ ] Generated doc page reviewed.

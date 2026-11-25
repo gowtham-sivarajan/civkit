@@ -1,6 +1,6 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 00:40 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 08:58 IST
 
 > **Status:** Phase 0 — Planning. Code contributions are not open yet; feedback on the planning documents is
 > welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that
@@ -38,8 +38,8 @@ reverse. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | Tool | Version / notes | Needed for |
 |---|---|---|
 | Git for Windows | 2.55+ | Everything |
-| Rust via rustup | stable, `stable-msvc` toolchain, with `rustfmt` and `clippy` | Engine |
-| Visual Studio 2026 Community | "Desktop development with C++" (Rust linker) and ".NET desktop development" (.NET 10 SDK) | Engine (linker), AutoCAD/Civil 3D integration |
+| Rust via rustup | stable, `stable-msvc` toolchain, with `rustfmt` and `clippy` (verified with 1.100.0) | Engine |
+| Visual Studio 2026 Community | "Desktop development with C++" (Rust linker) and ".NET desktop development" (brings a .NET SDK; the AutoCAD 2027 plugin targets `net10.0`) | Engine (linker), AutoCAD/Civil 3D integration |
 | Python | 3.14, project virtual environment in `.venv` with `maturin`, `jupyterlab`, `ipykernel` | Python bindings, Jupyter |
 | Node.js | 26 LTS | Desktop app (Tauri 2), MCP Inspector (`npx @modelcontextprotocol/inspector`) |
 | VS Code | Extensions: `rust-lang.rust-analyzer`, `tamasfe.even-better-toml`, `ms-vscode.cpptools`, `ms-python.python`, `ms-toolsai.jupyter`, `ms-dotnettools.csdevkit`, `tauri-apps.tauri-vscode` | Editing |
