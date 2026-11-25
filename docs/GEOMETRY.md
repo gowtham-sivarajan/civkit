@@ -1,12 +1,12 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-25 18:37 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-25 19:00 IST
 
 > **Status: Accepted** (maintainer, 2026-11-25), after the review in
 > [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
 > [ADR 0010](../planning/decisions/0010-geometry-conventions.md).
-> A few details were settled while implementing. They are marked **(impl.)** below and listed in ADR 0010 for
-> confirmation.
+> A few details were settled while implementing. They are marked **(impl.)** below and listed in ADR 0010; the
+> maintainer confirmed them on 2026-11-25, adding the overflow rule for derived tolerances (§5).
 
 This document defines, before any implementation, every convention `civkit-geometry` follows:
 
@@ -187,11 +187,16 @@ zero-length in a large polyline and not in a small one. This is intended.
 
 **Explicit tolerance.** A caller may pass ε explicitly, for example an engineering tolerance in known units.
 
-- It must be finite and ≥ 0, otherwise it is an error.
+- It must be finite and ≥ 0, otherwise it is an error. It may be 0.
 - D and M are still computed. ε_A uses the explicit ε.
 - The precision-limited check (§8.9) does not depend on ε.
 
 **Area tolerance:** ε_A = ε × D.
+
+**Derived tolerances must be finite.** If ε × D overflows `f64`, the call fails with an overflow error (§8.1); it
+never returns an infinite tolerance or an orientation made "undefined" by one. This holds for every operation that
+computes a tolerance, including lengths and direction. With an explicit ε it can happen for any large ε; with the
+default (ε_A ≈ 10⁻⁹·D²) only for a size D above about 4 × 10¹⁵⁸.
 
 **Angles** are not compared with a tolerance. Every angular decision is made through lengths.
 
@@ -233,7 +238,7 @@ result (Rust only in 0.1, D3).
 
 | # | Case | Definition | Behaviour |
 |---|---|---|---|
-| 8.1 | Non-finite input or result | any coordinate, radius, bulge, angle, distance or explicit tolerance is NaN or ±∞; or a result overflows `f64` | **error** |
+| 8.1 | Non-finite input or result | any coordinate, radius, bulge, angle, distance or explicit tolerance is NaN or ±∞; or a result, or a derived tolerance (ε_A, §5), overflows `f64` | **error** |
 | 8.2 | Zero-length segment | straight segment with chord c ≤ ε; bulged segment with c ≤ ε and arc length s ≤ ε (§9). c = 0 exactly with b ≠ 0 has r = 0 and belongs here | contributes its computed length (≤ ε) and area (no rounding); **reported**, except the explicit closing duplicate (8.4) |
 | 8.2a | Ill-conditioned bulge | c ≤ ε < s: the radius would be set by a chord below tolerance | **error** |
 | 8.3 | Collinear vertices | perpendicular distance of the middle vertex from the line through its neighbours ≤ ε, **and** the middle vertex lies between them | **allowed**; no special handling (it changes nothing in length or area). A collinear vertex outside its neighbours folds the ring back (a spike) and is handled by 8.7 |

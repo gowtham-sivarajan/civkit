@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
 
 //! Tolerances (docs/GEOMETRY.md §5) and compensated summation (§9).
 
@@ -32,7 +32,8 @@ pub struct Tolerance {
 }
 
 impl Tolerance {
-    /// ε = max(10⁻⁹·D, 1024·ulp(M)), or the explicit value when one is given.
+    /// ε = max(10⁻⁹·D, 1024·ulp(M)), or the explicit value when one is given; ε_A = ε·D.
+    /// Either being non-finite is [`GeometryError::Overflow`] (§5).
     pub(crate) fn compute(
         size: f64,
         magnitude: f64,
@@ -43,9 +44,14 @@ impl Tolerance {
             Some(_) => return Err(GeometryError::InvalidTolerance),
             None => (1e-9 * size).max(1024.0 * ulp(magnitude)),
         };
+        // A derived tolerance that is not finite is an overflow error (§5, §8.1), never ±∞.
+        let area = linear * size;
+        if !(linear.is_finite() && area.is_finite()) {
+            return Err(GeometryError::Overflow);
+        }
         Ok(Self {
             linear,
-            area: linear * size,
+            area,
             size,
             magnitude,
             explicit: explicit.is_some(),

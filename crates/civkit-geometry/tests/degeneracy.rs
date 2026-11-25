@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
 
 //! One test per row of docs/GEOMETRY.md §8, plus the self-intersection cases of the review.
 
@@ -277,4 +277,42 @@ fn small_object_far_from_the_origin_is_precision_limited() {
     assert_eq!(a.notes, vec![Note::PrecisionLimited]);
     // The offsets 0.1 are themselves only representable to ulp(4e6) at this position.
     assert!((a.area - 0.005).abs() <= 1e-9);
+}
+
+#[test]
+fn derived_tolerance_that_overflows_is_an_error() {
+    // Maintainer's caveat on the explicit tolerance (ADR 0010, item 6): ε_A = ε × D must be finite.
+    let square = ring(&[(0.0, 0.0), (1e10, 0.0), (1e10, 1e10), (0.0, 1e10)]);
+    assert_eq!(
+        polygon_area(&square, Some(1e300)),
+        Err(GeometryError::Overflow)
+    );
+    assert_eq!(
+        polygon_centroid(&square, Some(1e300)),
+        Err(GeometryError::Overflow)
+    );
+    assert_eq!(
+        polyline_length(&square, true, Some(1e300)),
+        Err(GeometryError::Overflow)
+    );
+    // A huge but harmless explicit ε is still accepted: here ε_A = 1e300 × D stays finite.
+    let unit = ring(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]);
+    let l = polyline_length(&unit, true, Some(1e300)).expect("valid input");
+    exact(l.value, 4.0);
+    assert!(l.tolerance.area.is_finite());
+    // Every edge is shorter than ε, so as a polygon it collapses (§8.2, §8.5), not overflows.
+    assert_eq!(
+        polygon_area(&unit, Some(1e300)),
+        Err(GeometryError::TooFewVertices {
+            found: 0,
+            required: 3
+        })
+    );
+    // The default tolerance overflows the same way, but only for a size above about 4e158.
+    let vast = ring(&[(0.0, 0.0), (1e159, 0.0), (1e159, 1e159)]);
+    assert_eq!(polygon_area(&vast, None), Err(GeometryError::Overflow));
+    assert_eq!(
+        polyline_length(&vast, false, None),
+        Err(GeometryError::Overflow)
+    );
 }

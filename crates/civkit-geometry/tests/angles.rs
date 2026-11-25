@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
 
 //! Angle conventions, direction and components (docs/GEOMETRY.md §4, §7).
 //! Expected values are closed forms; nothing here is computed by the code under test.
@@ -220,4 +220,11 @@ fn explicit_tolerance_for_direction() {
         direction(Point::new(f64::NAN, 0.0), b, None),
         Err(GeometryError::NonFinite)
     );
+}
+
+#[test]
+fn direction_with_an_overflowing_derived_tolerance_is_an_error() {
+    // ε_A = ε × d overflows here, even though only ε is used for the coincident-point test (§5).
+    let r = direction(Point::new(0.0, 0.0), Point::new(1e10, 0.0), Some(1e300));
+    assert_eq!(r, Err(GeometryError::Overflow));
 }

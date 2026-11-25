@@ -1,9 +1,10 @@
 # ADR 0010 — Geometry conventions for 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
 
 - **Status:** Accepted (maintainer, 2026-11-25 18:10 IST: "everything is accepted"). The items under
-  "Settled during implementation" were added afterwards and **await confirmation**.
+  "Settled during implementation" were added afterwards and **confirmed** by the maintainer on 2026-11-25
+  (18:58 IST), item 6 with an added rule.
 - **Date:** 2026-11-25
 - **Decision ID:** D-22
 - **Relation to earlier decisions:**
@@ -32,7 +33,7 @@ more questions (D7–D9). The maintainer accepted all of the review's recommenda
 | D8 | Zero-area value | Return the computed area, not 0, with orientation "undefined" and a note (ENGINEERING_STANDARDS §3: no rounding inside the engine) |
 | D9 | Review corrections C-1 … C-25 | Applied to GEOMETRY.md and ARCHITECTURE.md §3.3. C-24 is applied as D3 describes. No API_DESIGN change, because no warning code is added |
 
-## Settled during implementation (awaiting confirmation)
+## Settled during implementation (confirmed 2026-11-25)
 
 Writing the code exposed points the accepted text did not settle. Each is marked **(impl.)** in GEOMETRY.md.
 
@@ -56,9 +57,13 @@ Writing the code exposed points the accepted text did not settle. Each is marked
    (8.5–8.7). Zero-length segments therefore keep their exact tiny contribution to length and area. This follows
    D8.
 6. **Explicit tolerance:**
-   - It must be finite and ≥ 0.
+   - It must be finite and ≥ 0 (0 is allowed).
    - D and M are still computed, and ε_A = ε·D.
    - The precision-limited check (8.9) does not depend on ε.
+   - **Added by the maintainer on confirmation:** a derived tolerance that is not finite is an overflow error
+     (8.1). A huge but finite explicit ε with a large geometry could otherwise produce an infinite ε_A and make
+     the orientation undefined. The rule applies to every tolerance computation, explicit or default; the
+     default overflows only for a size above about 4 × 10¹⁵⁸.
 7. **Centroid:** any non-zero bulge on any edge gives "not supported", including the bulge of a zero-length
    segment.
 8. **Open polylines:** the last vertex's bulge is not used, but it must be finite.

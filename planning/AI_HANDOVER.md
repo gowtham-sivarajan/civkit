@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 18:37 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 19:00 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -43,18 +43,18 @@
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
-## 3. Where things stand (snapshot 2026-11-25 18:37 IST)
+## 3. Where things stand (snapshot 2026-11-25 19:00 IST)
 
 **Phases**
 - Phase 0 (planning): ✅, tag `plan-v1.0`.
 - Phase 1 (workspace, `civkit-core` contract, CI): ✅, tag `phase-1-done`.
 - Phase 2 runs in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)).
-  - **2A (units)**: complete. The maintainer's Windows check of `6d3d16a` passed and it is pushed. CI on `6d3d16a`
-    was not yet visible to the AI session (the Actions page could not be read).
-  - **2B (geometry)**: specification **accepted** (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after the
-    [review](GEOMETRY_SPEC_REVIEW.md). `civkit-geometry` implemented and tested locally (64 tests).
-    **Open:** the maintainer confirms the eight items "settled during implementation" in ADR 0010
-    (marked **(impl.)** in GEOMETRY.md), and CI passes.
+  - **2A (units)**: ✅. `6d3d16a`, CI green ([run #4](https://github.com/gowtham-sivarajan/civkit/actions/runs/45598540213)).
+  - **2B (geometry)**: ✅. Specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after the
+    [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green
+    ([run #5](https://github.com/gowtham-sivarajan/civkit/actions/runs/45622288253)); the eight implementation items
+    confirmed by the maintainer. One follow-up (derived tolerances must be finite) is pending the maintainer's
+    check and CI.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
@@ -97,11 +97,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Maintainer:** confirm or change the eight items "settled during implementation" in
-   [ADR 0010](decisions/0010-geometry-conventions.md). The most important one is 8.6: a degenerate ring is now
-   defined geometrically, so a figure-8 whose lobes cancel is refused instead of reported as "zero area".
-2. **Maintainer:** Windows check of 2B (commands above), commit with `git commit -s -F _commit_msg.txt`, push,
-   confirm CI (including CI for `6d3d16a`).
+1. **Maintainer:** Windows check of the 2B follow-up (commands above), commit with `git commit -s -F _commit_msg.txt`,
+   push, confirm CI.
+2. Start 2C only on the maintainer's go-ahead.
 3. Then 2C, exactly as D-20 defines. Traverse decides for itself when a misclosure counts as zero before asking
    for its direction (GEOMETRY.md §7). Then 2D.
 4. Before 2C: collect one more openly licensed worked example for beam maximum shear and moment (D-20).
@@ -115,6 +113,17 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 19:00 IST — 2B confirmed; derived tolerances must be finite *(Claude Opus 5.5)*
+- Maintainer confirmed all eight implementation items of ADR 0010. Item 6 (explicit tolerance) was confirmed with
+  a caveat: ε_A = ε × D could overflow for a huge finite ε and large geometry, leaving an infinite tolerance and an
+  undefined orientation.
+- Fix: every tolerance computation now fails with `Overflow` when ε or ε_A is not finite (GEOMETRY.md §5, §8.1).
+  This also covers the default, which overflows only for D above about 4e158. Two tests were added first and
+  failed before the fix: polygon, centroid, polyline and direction cases.
+- Maintainer's Windows run passed on `8a93d58` (Rust 1.100). CI green on `8a93d58` (run #5) and `6d3d16a` (run #4),
+  including the Rust 1.98 MSRV jobs.
+- Local checks after the fix: fmt, clippy -D warnings, 127 tests, dependency rule. All clean.
 
 ### 2026-11-25 18:37 IST — 2B geometry: review, acceptance, implementation *(Claude Opus 5.5)*
 - Review-only task: [GEOMETRY_SPEC_REVIEW.md](GEOMETRY_SPEC_REVIEW.md). Every formula was re-derived in separate

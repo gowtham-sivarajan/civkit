@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 18:37 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 19:00 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -42,7 +42,7 @@ Order agreed 2026-11-25. The units parser is infrastructure: it is finished and 
 | Stage | Work | Exit condition | Status |
 |---|---|---|---|
 | 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | 🔄 2026-11-25: implemented and reviewed; CI green on `b4f37e2`. Follow-up enforces internal units in trace and messages (61 tests locally). Done when the maintainer's Windows check and CI on the follow-up pass |
-| 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | 🔄 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented and tested locally. Done when the maintainer confirms the items settled during implementation and CI passes |
+| 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ✅ 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green; implementation items confirmed. Follow-up (overflow rule for derived tolerances) pending the maintainer's check and CI |
 | 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | ⬜ |
 | 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | ⬜ |
 
