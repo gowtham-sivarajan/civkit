@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 11:01 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 16:11 IST
 >
 > **Status:** Phase 0 — Planning. No code is written until the Phase 0 exit criteria are met
 > ([planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
@@ -36,6 +36,7 @@ available in every interface with the same inputs, the same results and the same
 | | [`ACCESSIBILITY.md`](ACCESSIBILITY.md) | Accessibility commitments, known limits, reporting barriers. |
 | `docs/` — *how the software works and the rules it follows (changes slowly)* | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How is the system structured? |
 | | [`API_DESIGN.md`](docs/API_DESIGN.md) | Calculation contract, units format, FFI, Python and MCP surfaces. |
+| | [`GEOMETRY.md`](docs/GEOMETRY.md) | Geometry conventions: axes, angles, tolerances, degeneracy, length, area (proposed). |
 | | [`ENGINEERING_STANDARDS.md`](docs/ENGINEERING_STANDARDS.md) | What must every calculation meet to be trusted? |
 | | [`OFFLINE_POLICY.md`](docs/OFFLINE_POLICY.md) | What may and may not touch the network? |
 | | [`SECURITY.md`](docs/SECURITY.md) | Threat model, supply chain, reporting a vulnerability. |

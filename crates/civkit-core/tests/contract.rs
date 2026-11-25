@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 16:07 IST
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 
@@ -470,5 +470,56 @@ fn builtins_are_valid() {
     assert!(
         r.list().iter().all(|d| !d.id.starts_with("math.demo.")),
         "the demo must not be a built-in"
+    );
+}
+
+/// Writes its trace step in millimetres: a calculation bug the registry must catch.
+struct TraceInMillimetres(Descriptor);
+
+impl Calculation for TraceInMillimetres {
+    fn descriptor(&self) -> &Descriptor {
+        &self.0
+    }
+    fn compute(&self, inputs: &Inputs, ctx: &mut Context) -> Result<Outputs, CalcError> {
+        let l = inputs.require("length")?;
+        ctx.step("2L", 2000.0 * l, Some("mm"));
+        Ok(Outputs::new().with("double", 2.0 * l))
+    }
+}
+
+#[test]
+fn trace_steps_must_use_internal_units() {
+    let mut r = Registry::new();
+    r.register(Box::new(TraceInMillimetres(Doubler::new().0)))
+        .expect("valid");
+    let v = call(&r, length(json!(1), "m"));
+    assert_eq!(single_error_code(&v), "INTERNAL", "{v}");
+}
+
+#[test]
+fn messages_name_the_internal_unit() {
+    let mut calc = Doubler::new();
+    calc.0.validity.push(ValidityRule {
+        input: "length".into(),
+        range: Range::closed(0.0, 10.0),
+        on_breach: Breach::Warning,
+        reason: "test limit".into(),
+    });
+    let mut r = Registry::new();
+    r.register(Box::new(calc)).expect("valid");
+    // 20 ft = 6.096 m is inside; 50 ft = 15.24 m is outside, reported in metres
+    let inside = call(&r, length(json!(20), "ft"));
+    assert_eq!(inside["warnings"].as_array().map(Vec::len), Some(0));
+    let v = call(&r, length(json!(50), "ft"));
+    let msg = v["warnings"][0]["message"].as_str().expect("a warning");
+    assert!(
+        msg.contains("15.24") && msg.contains(" m ") && msg.contains("[0, 10] m"),
+        "{msg}"
+    );
+    let domain = call(&doubler(), length(json!(-2), "ft"));
+    let msg = domain["error"]["message"].as_str().expect("an error");
+    assert!(
+        msg.contains("-0.6096 m") && msg.contains("[0, ∞) m"),
+        "{msg}"
     );
 }

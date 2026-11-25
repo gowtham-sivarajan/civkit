@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 16:07 IST
 
 //! The calculation trait and the registry that validates requests and runs calculations.
 
@@ -82,7 +82,10 @@ pub struct Context {
 }
 
 impl Context {
-    /// Records one step of the trace. `unit` is the SI unit, or `None` when dimensionless.
+    /// Records one step of the trace.
+    ///
+    /// `unit` must be an internal unit: coherent SI without prefix (e.g. `m`, `Pa`, `m^3/s`), or `None` when
+    /// dimensionless. The registry rejects a response whose trace uses any other unit (`INTERNAL`).
     pub fn step(&mut self, expression: &str, value: f64, unit: Option<&str>) {
         self.trace.push(TraceStep {
             step: expression.to_owned(),
@@ -219,6 +222,7 @@ impl Registry {
         let computed = catch_unwind(AssertUnwindSafe(|| calc.compute(&inputs, &mut ctx)))
             .map_err(|_| ErrorEnvelope(vec![CalcError::internal(format!("'{}' panicked", d.id))]))?
             .map_err(|e| ErrorEnvelope(vec![e]))?;
+        check_trace_units(&d.id, &ctx.trace).map_err(|e| ErrorEnvelope(vec![e]))?;
 
         let mut outputs = BTreeMap::new();
         for spec in &d.outputs {
@@ -340,8 +344,11 @@ fn validate_inputs(
                     ErrorCode::OutOfDomain,
                     &spec.name,
                     format!(
-                        "'{}' = {v} (SI) is outside its domain {}",
-                        spec.name, spec.domain
+                        "'{}' = {v}{} is outside its domain {}{}",
+                        spec.name,
+                        unit_suffix(spec.si_unit.as_deref()),
+                        spec.domain,
+                        unit_suffix(spec.si_unit.as_deref())
                     ),
                 )),
                 Ok((v, note)) => {
@@ -474,9 +481,18 @@ fn apply_validity_rules(
         if rule.range.contains(value) {
             continue;
         }
+        let unit = d
+            .inputs
+            .iter()
+            .find(|i| i.name == rule.input)
+            .and_then(|i| i.si_unit.as_deref());
         let message = format!(
-            "'{}' = {value} is outside the method's validity range {}: {}",
-            rule.input, rule.range, rule.reason
+            "'{}' = {value}{} is outside the method's validity range {}{}: {}",
+            rule.input,
+            unit_suffix(unit),
+            rule.range,
+            unit_suffix(unit),
+            rule.reason
         );
         match rule.on_breach {
             Breach::Warning => ctx.warn(WarningCode::OutsideValidityRange, Level::Caution, message),
@@ -494,6 +510,42 @@ fn apply_validity_rules(
     } else {
         Err(errors)
     }
+}
+
+/// `" m"` for a unit, `""` for dimensionless: numbers in messages always name their internal unit.
+fn unit_suffix(unit: Option<&str>) -> String {
+    unit.map(|u| format!(" {u}")).unwrap_or_default()
+}
+
+/// Checks that every trace step is stated in an internal unit: coherent SI without prefix (§7.1.5).
+/// A step in another unit is a bug in the calculation, reported as `INTERNAL` rather than shown to users.
+fn check_trace_units(id: &str, trace: &[TraceStep]) -> Result<(), CalcError> {
+    for step in trace {
+        if !step.value.is_finite() {
+            return Err(CalcError::internal(format!(
+                "'{id}': trace step '{}' is not finite",
+                step.step
+            )));
+        }
+        if let Some(text) = &step.unit {
+            match Unit::parse(text) {
+                Ok(u) if (u.factor - 1.0).abs() <= f64::EPSILON => {}
+                Ok(_) => {
+                    return Err(CalcError::internal(format!(
+                        "'{id}': trace step '{}' uses '{text}', which is not an internal (coherent SI) unit",
+                        step.step
+                    )));
+                }
+                Err(e) => {
+                    return Err(CalcError::internal(format!(
+                        "'{id}': trace step '{}': {e}",
+                        step.step
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn known_list(known: &BTreeSet<&str>) -> String {

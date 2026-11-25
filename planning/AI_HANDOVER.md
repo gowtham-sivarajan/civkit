@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 15:59 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 16:11 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -43,40 +43,86 @@
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
-## 3. Where things stand
+## 3. Where things stand (snapshot 2026-11-25 16:11 IST)
 
-- Planning documents restructured into root / `docs/` / `planning/` (D-16, ADR 0003).
-- Accepted: D-1 name (CivKit), D-2 licence (Apache-2.0), D-3 … D-6 (scope, order, units, FFI — ADR 0005),
-  D-7 + D-18 (open sources only; 0.1 set driven by them — ADR 0006), D-12 drawing model, D-15 repository layout,
-  D-16 documentation structure, D-17 public repository from day one.
-- All P0 decisions accepted (D-1 … D-7, D-12, D-15 … D-18).
-- Maintainer's development machine: Windows 11, PowerShell 5.1. **Toolchain verified 2026-11-25:** Rust 1.100.0
-  (`stable-x86_64-pc-windows-msvc`, rustfmt 1.11.0, clippy), MSVC linker works (smoke test built and ran),
-  .NET SDK 11.0.100, SQLite 3.54.1, `.venv` with maturin 1.16.0 and JupyterLab 4.6.6, VS Code extensions.
-  Note for Phase 5: only the .NET **11** SDK is installed; it can build `net10.0` targets for AutoCAD 2027,
-  but pin the SDK with `global.json` (or add the .NET 10 SDK) if builds misbehave.
-  Required tools: [CONTRIBUTING.md §4](../CONTRIBUTING.md#4-development-setup-windows-all-free).
-  Use the project's `.venv` for Python, not any system-wide distribution.
-- Git tags: `plan-v0.1`. Public at github.com/gowtham-sivarajan/civkit (pushed 2026-11-25 ~00:47 IST);
-  private vulnerability reporting enabled. Dependency graph / Dependabot to be enabled in Phase 1.
+**Phases**
+- Phase 0 (planning): ✅, tag `plan-v1.0`.
+- Phase 1 (workspace, `civkit-core` contract, CI): ✅, tag `phase-1-done`.
+- Phase 2 runs in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)).
+  - **2A (units)** is complete pending the maintainer's Windows check and CI on the follow-up commit:
+    - CI was green on `b4f37e2` ([run 45596341445](https://github.com/gowtham-sivarajan/civkit/actions/runs/45596341445)).
+    - The follow-up adds unit-naming in messages and the trace-unit check.
+  - **2B (geometry)**: specification [docs/GEOMETRY.md](../docs/GEOMETRY.md) is **proposed, awaiting review**.
+    **No geometry code until it is accepted.**
+
+**Decisions**
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20.
+- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
+  See [DECISIONS.md](DECISIONS.md).
+
+**Engine state**
+- `civkit-units`: named units, the formal unit grammar (one `/`), DMS (whole minutes) and bearings, all per
+  [API_DESIGN.md §7.1](../docs/API_DESIGN.md).
+- `civkit-core`: contract with three unit roles (internal SI, default presentation, requested). Internal units are
+  enforced in values, trace and messages.
+- Only the template calculation `math.demo.weighted_mean` is registered in tests. No engineering calculation exists yet (2C).
+
+**Repository**
+- Public at github.com/gowtham-sivarajan/civkit; private vulnerability reporting on.
+- CI: fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable; clippy; dependency rule; cargo-deny; DCO.
+  Dependabot is weekly. Actions are pinned by SHA.
+- `planning/ui-concepts/` exists on the maintainer's machine, untracked. It was not created by an AI session; leave it alone.
+
+**Machine:** Windows 11, PowerShell 5.1, Rust 1.100.0 (MSRV 1.98), .NET SDK 11.0.100, `.venv` (maturin,
+JupyterLab). Details: [CONTRIBUTING.md §4](../CONTRIBUTING.md#4-development-setup-windows-all-free). Note for Phase 5:
+only the .NET 11 SDK is installed; pin with `global.json` if `net10.0` builds misbehave.
+
+**Verification commands** (all must pass before a stage is called done; the same checks run in CI):
+
+```powershell
+cd C:\Users\Gowtham\Documents\03_Projects\CivKit
+cargo fmt --all --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked --workspace
+python tools/check_dependency_rule.py
+cargo deny check          # if cargo-deny is installed locally; CI always runs it
+cargo doc --no-deps --workspace
+git status                # confirm planning/ui-concepts/ is not staged
+```
 
 ## 4. Next actions
 
-1. Phase 2 in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)). 2A (units) first and complete before any
-   calculation. 2C implements exactly D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)): **no bonus features in 0.1.**
-2. Review Dependabot pull requests as they arrive (each must pass CI).
-2. Later (maintainer has no AutoCAD 2027 licence yet): add an AutoCAD-written fixture once a licence that allows publishing exists.
+1. **Maintainer:** Windows check of the 2A follow-up (commands above), commit with `git commit -s -F _commit_msg.txt`, push, confirm CI.
+2. **Maintainer:** review [docs/GEOMETRY.md](../docs/GEOMETRY.md), especially the six open questions in §13.
+   - If question 3 (the `DEGENERATE_GEOMETRY` warning code) is accepted, API_DESIGN §5 is amended.
+   - If question 6 is accepted, ARCHITECTURE §3.3 is amended.
+3. After acceptance: implement 2B, tests first (GEOMETRY.md §12). Then 2C (exactly D-20), then 2D.
+4. Before 2C: collect one more openly licensed worked example for beam maximum shear and moment (D-20).
+5. Review Dependabot pull requests as they arrive (each must pass CI).
+6. Later: an AutoCAD-written DXF fixture once a licence that allows publishing exists.
 
 Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
 general prismoidal and soil phase relationships (later release).
 
-Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
-
----
-
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 16:11 IST — 2A verification; 2B geometry specification proposed *(Claude Opus 5.5)*
+- Maintainer approved whole-number DMS minutes (fractional seconds) and the three unit roles.
+- **Verified in the pushed commit, not the working copy:** cloned github.com/gowtham-sivarajan/civkit at `b4f37e2`.
+  - All five restored contract tests exist once each.
+  - Four are identical to `05b1637`, ignoring whitespace. The fifth (escalated validity) differs only as intended:
+    it now passes `4 m`/`20 m` through real units instead of a dimensionless workaround.
+  - The working copy matched the pushed commit before new edits. CI on `b4f37e2` was green.
+- Internal units enforced:
+  - domain and validity messages name the internal unit (`'length' = 15.24 m … [0, 10] m`)
+  - after `compute` the registry rejects trace steps in non-internal units or non-finite values (`INTERNAL`)
+  - two new tests; documented in API_DESIGN §7.1.5
+- Full local checks: fmt, clippy -D warnings, 61 tests, dependency rule, cargo-deny, docs. All clean (Linux, Rust 1.97).
+- 2B: [docs/GEOMETRY.md](../docs/GEOMETRY.md) drafted. Its formulas and figures were checked numerically before
+  hand-over; that caught a wrong bulge-area sentence, a wrong ulp figure and a too-coarse tolerance rule, all corrected.
+  No geometry code was written.
 
 ### 2026-11-25 15:59 IST — Maintainer review of the 2A rules applied *(Claude Opus 5.5)*
 - Approved: `ton_short`/`ton_long`; no spaces in unit strings (spaces stay allowed in human-readable bearings).

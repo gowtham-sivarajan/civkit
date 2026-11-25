@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 15:59 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 16:08 IST
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -314,7 +314,11 @@ Request processing:
 - Each input is converted from its given unit to the internal unit before domain checks, validity rules and `compute`.
 - Each output is converted from the internal unit to its presentation unit (requested, else default, else internal).
   The response states the unit with every value.
-- The trace always stays in internal units.
+- **Internal units throughout the calculation:**
+  - Values passed to `compute`, every trace step and every number in a warning or error message use the internal unit.
+  - Messages name the unit, e.g. `'length' = 15.24 m is outside the method's validity range [0, 10] m`.
+  - The registry checks every trace step after `compute`. A step in a non-internal unit (e.g. `mm`) or a non-finite
+    step is a calculation bug and returns `INTERNAL`, never a response.
 - Error mapping:
 
   | Condition | Code |
