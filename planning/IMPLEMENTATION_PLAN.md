@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 11:32 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -24,6 +24,9 @@
 Dependencies: 0.7 needs 0.6 (D-5, D-6). 0.8 needs D-7. Phase 1 needs 0.5–0.12.
 
 ## Phase 1 — Architecture and Rust core
+
+> Status 2026-11-25: steps 1–6 written and passing locally (fmt, clippy, 23 tests, dependency rule, cargo-deny).
+> Phase 1 completes when CI is green on all three operating systems; then tag `phase-1-done`.
 
 1. Create Cargo workspace and empty crates per [ARCHITECTURE.md §2](../docs/ARCHITECTURE.md).
 2. CI (GitHub Actions): build, test, `rustfmt`, `clippy` on Windows/macOS/Linux.

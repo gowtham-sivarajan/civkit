@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:32 IST
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -23,7 +23,8 @@
 
 ### Phase 1 — Architecture and Rust core
 - [ ] Cargo workspace builds in CI on Windows, macOS and Linux.
-- [ ] `civkit-core` registry and contract implemented; one dummy calculation runs end to end (request → response JSON).
+- [x] `civkit-core` registry and contract implemented; one dummy calculation runs end to end (request → response JSON).
+      *2026-11-25: `math.demo.weighted_mean` (template), 23 tests incl. reference-case harness; local run with Rust 1.97.*
 - [ ] Dependency rule checked in CI; `rustfmt` and `clippy` clean.
 - [ ] Tag `phase-1-done`.
 

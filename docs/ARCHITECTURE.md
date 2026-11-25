@@ -1,6 +1,6 @@
 # Architecture
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 01:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 11:32 IST
 
 > **Status:** Design — accepted parts are marked with their decision ID; the rest is proposed.
 > Contract and API details: [API_DESIGN.md](API_DESIGN.md).
@@ -45,6 +45,7 @@ CivKit/
 ├── apps/
 │   └── desktop/               # Tauri 2
 ├── tests/                     # cross-cutting: reference worked examples, parity tests, DXF fixtures
+├── tools/                     # repository scripts (e.g. the dependency-rule check)
 ├── docs/                      # stable design documents
 └── planning/                  # plans, decisions, handover
 ```
@@ -58,7 +59,10 @@ reverse. In particular, the engine has:
 - **no network dependency** — see [OFFLINE_POLICY.md](OFFLINE_POLICY.md);
 - **no AI dependency** — no model, AI service or MCP code; MCP lives only in `integrations/mcp`.
 
-Checked in review and, from Phase 1, in CI (`cargo-deny` bans for `crates/`: PyO3, MCP SDKs, HTTP/network crates).
+Checked in review and in CI:
+- `tools/check_dependency_rule.py`: no path dependency leaves `crates/`, and no engine crate reaches a Python, MCP, AI,
+  network, async-runtime or GUI crate, even transitively.
+- `cargo-deny` (`deny.toml`): network clients banned everywhere; PyO3, `rmcp` and Tauri allowed only in their own interface package.
 
 Further rules:
 - Domain calculations (geotech, structural, surveying, fluids, quantities, math) start as modules inside

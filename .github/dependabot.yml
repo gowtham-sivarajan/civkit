@@ -1,0 +1,17 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:25 IST · last edited 2026-11-25 11:25 IST
+# Weekly dependency update pull requests (docs/SECURITY.md). Each one still has to pass CI, including cargo-deny.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"

@@ -1,0 +1,25 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:10 IST · last edited 2026-11-25 11:10 IST",
+  "case": "demo-01",
+  "title": "Weighted mean, w = 0.25 (format demonstration)",
+  "source": {
+    "kind": "demo",
+    "citation": "Not a published source: demonstrates the reference-case format with the template calculation."
+  },
+  "request": {
+    "id": "math.demo.weighted_mean",
+    "version": 1,
+    "inputs": {
+      "a": { "value": 10 },
+      "b": { "value": 2 },
+      "w": { "value": 0.25 }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "mean": { "value": 4.0, "tolerance": { "relative": 1e-12 } }
+    },
+    "warnings": []
+  },
+  "verification": "Hand calculation: 0.25 × 10 + 0.75 × 2 = 2.5 + 1.5 = 4.0."
+}

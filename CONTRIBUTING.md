@@ -1,6 +1,6 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 11:32 IST
 
 > **Status:** Phase 0 — Planning. Code contributions are not open yet; feedback on the planning documents is
 > welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that
@@ -20,13 +20,23 @@
 
 Reference cases and reviews are often the most valuable contribution: they are how results earn trust.
 
-## 2. Adding a calculation (planned process)
+## 2. Adding a calculation
 
 1. Read [docs/ENGINEERING_STANDARDS.md](docs/ENGINEERING_STANDARDS.md) and [docs/API_DESIGN.md](docs/API_DESIGN.md).
-2. Copy the calculation template (created in Phase 1): one Rust file, one reference-case data file, one doc stub.
-3. Fill in the descriptor: ID, inputs with dimensions, outputs, references, assumptions, validity range.
-4. Add at least one reference case from a cited published worked example, plus edge cases.
-5. Open a pull request. It needs one code review **and** one engineering review.
+2. Copy the template [`crates/civkit-core/src/calcs/demo.rs`](crates/civkit-core/src/calcs/demo.rs) into the domain module
+   (e.g. `calcs/fluids/manning.rs`) and list it in `calcs::builtins()`.
+3. Fill in the descriptor:
+   - ID (`domain.topic.method`)
+   - inputs with dimensions and mathematical domains
+   - outputs
+   - references (edition and page)
+   - assumptions
+   - validity rules
+4. Write `compute`, recording every step in the trace. Inputs arrive already validated and in SI.
+5. Add at least one reference case from an openly licensed published worked example in `tests/reference/<id>/`
+   ([format](tests/reference/README.md)). Put edge cases and invalid inputs in unit tests next to the code.
+6. Run `cargo fmt --all`, `cargo clippy --workspace --all-targets -- -D warnings` and `cargo test --workspace`.
+7. Open a pull request (commits signed off with `-s`). It needs one code review **and** one engineering review.
 
 ## 3. Architecture rule you must not break
 
@@ -58,6 +68,16 @@ py -3.14 -m venv .venv
 ```
 
 If `npm` / `npx` report that running scripts is disabled, use `npm.cmd` / `npx.cmd`.
+
+Build and check everything (from the repository folder):
+
+```powershell
+cargo build --workspace
+cargo test --workspace
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+python tools/check_dependency_rule.py
+```
 
 ## 5. Working with git
 

@@ -1,0 +1,36 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-25 10:55 IST
+[workspace]
+resolver = "3"
+members = [
+    "crates/civkit-core",
+    "crates/civkit-units",
+    "crates/civkit-geometry",
+    "crates/civkit-drawing",
+    "crates/civkit-ffi",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98"           # D-10: latest stable (1.100) − 2
+license = "Apache-2.0"
+repository = "https://github.com/gowtham-sivarajan/civkit"
+authors = ["CivKit contributors"]
+publish = false                 # nothing is published to crates.io before 0.1
+
+[workspace.dependencies]
+civkit-core = { path = "crates/civkit-core" }
+civkit-units = { path = "crates/civkit-units" }
+civkit-geometry = { path = "crates/civkit-geometry" }
+civkit-drawing = { path = "crates/civkit-drawing" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"          # civkit-ffi overrides this to "deny" + local allows (Phase 5)
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+float_cmp = "warn"              # engineering code compares floats only with explicit tolerances
+unwrap_used = "warn"            # no panics on user input

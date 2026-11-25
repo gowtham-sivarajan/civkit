@@ -1,0 +1,24 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:10 IST · last edited 2026-11-25 11:10 IST",
+  "case": "demo-02-extreme-weight",
+  "title": "Weight outside the stated validity range gives a warning, not an error",
+  "source": {
+    "kind": "demo",
+    "citation": "Not a published source: demonstrates expected warnings."
+  },
+  "request": {
+    "id": "math.demo.weighted_mean",
+    "inputs": {
+      "a": { "value": 10 },
+      "b": { "value": 2 },
+      "w": { "value": 0.99 }
+    }
+  },
+  "expected": {
+    "outputs": {
+      "mean": { "value": 9.92, "tolerance": { "relative": 1e-12 } }
+    },
+    "warnings": ["OUTSIDE_VALIDITY_RANGE"]
+  },
+  "verification": "Hand calculation: 0.99 × 10 + 0.01 × 2 = 9.9 + 0.02 = 9.92."
+}

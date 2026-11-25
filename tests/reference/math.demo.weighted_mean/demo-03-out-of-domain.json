@@ -1,0 +1,21 @@
+{
+  "provenance": "Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:10 IST · last edited 2026-11-25 11:10 IST",
+  "case": "demo-03-out-of-domain",
+  "title": "Weight outside [0, 1] is an error",
+  "source": {
+    "kind": "demo",
+    "citation": "Not a published source: demonstrates expected errors."
+  },
+  "request": {
+    "id": "math.demo.weighted_mean",
+    "inputs": {
+      "a": { "value": 10 },
+      "b": { "value": 2 },
+      "w": { "value": -0.1 }
+    }
+  },
+  "expected": {
+    "errors": ["OUT_OF_DOMAIN"]
+  },
+  "verification": "w = -0.1 is outside the domain [0, 1] declared in the descriptor."
+}

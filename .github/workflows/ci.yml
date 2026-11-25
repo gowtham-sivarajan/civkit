@@ -1,0 +1,82 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:25 IST · last edited 2026-11-25 11:25 IST
+# Continuous integration (Phase 1, planning/ACCEPTANCE_CRITERIA.md): build and test on Windows, macOS and Linux
+# with the minimum supported Rust (1.98, D-10) and latest stable; formatting; clippy; cargo-deny; the engine
+# dependency rule; DCO sign-off (D-11). Actions are pinned to commit SHAs (docs/SECURITY.md).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install stable --profile minimal --component rustfmt && rustup default stable
+      - run: cargo fmt --all --check
+
+  test:
+    name: test (${{ matrix.os }}, ${{ matrix.rust }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: ["1.98", stable]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install ${{ matrix.rust }} --profile minimal --component clippy && rustup default ${{ matrix.rust }}
+      - run: cargo build --locked --workspace --all-targets
+      - run: cargo test --locked --workspace
+      - if: matrix.rust == 'stable'
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
+  dependencies:
+    name: dependency rule and cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Engine dependency rule (docs/ARCHITECTURE.md §2)
+        run: python3 tools/check_dependency_rule.py
+      - name: cargo-deny (advisories, licences, bans, sources)
+        uses: EmbarkStudios/cargo-deny-action@81891abc19297b21343b15ef67dc61e4aea74fda # v2.1.4
+        with:
+          command: check
+
+  dco:
+    name: DCO sign-off
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Every new commit has a Signed-off-by line (D-11)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "No previous commit to compare with; nothing to check."
+            exit 0
+          fi
+          missing=0
+          for c in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            if ! git log -1 --format=%B "$c" | grep -qE '^Signed-off-by: .+ <.+>[[:space:]]*$'; then
+              echo "::error::Commit $(git log -1 --format='%h %s' "$c") has no Signed-off-by line. Commit with 'git commit -s' (CONTRIBUTING.md §6)."
+              missing=1
+            fi
+          done
+          exit "$missing"

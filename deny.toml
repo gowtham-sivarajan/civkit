@@ -1,0 +1,50 @@
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:20 IST · last edited 2026-11-25 11:20 IST
+# cargo-deny configuration: licences, advisories, sources and banned crates (docs/SECURITY.md, docs/ARCHITECTURE.md).
+# The engine-specific dependency rule (nothing in crates/ may reach Python, MCP, network or AI crates, even
+# transitively) is checked by tools/check_dependency_rule.py; the bans below apply to the whole workspace.
+
+[graph]
+all-features = true
+
+[advisories]
+# Any RustSec vulnerability, unmaintained or yanked crate fails CI. Exceptions need an entry here with a reason.
+yanked = "deny"
+ignore = []
+
+[licenses]
+# Permissive licences compatible with Apache-2.0 distribution. Copyleft crates need a decision record.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.9
+unused-allowed-license = "allow"   # the list anticipates future dependencies
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true     # workspace path dependencies
+deny = [
+    # Network clients: CivKit makes no network calls (docs/OFFLINE_POLICY.md).
+    { crate = "reqwest", reason = "no network access (OFFLINE_POLICY)" },
+    { crate = "ureq", reason = "no network access (OFFLINE_POLICY)" },
+    { crate = "curl", reason = "no network access (OFFLINE_POLICY)" },
+    { crate = "isahc", reason = "no network access (OFFLINE_POLICY)" },
+    { crate = "attohttpc", reason = "no network access (OFFLINE_POLICY)" },
+    { crate = "surf", reason = "no network access (OFFLINE_POLICY)" },
+    # Interface crates: only their interface package may use them (ARCHITECTURE dependency rule).
+    { crate = "pyo3", wrappers = ["civkit-python"], reason = "Python only in bindings/python" },
+    { crate = "rmcp", wrappers = ["civkit-mcp"], reason = "MCP only in integrations/mcp" },
+    { crate = "tauri", wrappers = ["civkit-desktop"], reason = "Tauri only in apps/desktop" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

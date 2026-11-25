@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 10:52 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 11:32 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -58,8 +58,9 @@
 
 ## 4. Next actions
 
-1. Phase 1 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)): Cargo workspace, CI (files go to `_move_to_dot_github/workflows/`,
-   the maintainer moves them), dependency-rule check, DCO check, `civkit-core` skeleton, one dummy calculation.
+1. Maintainer: move `_move_to_dot_github/` contents into `.github/`, commit, push; watch the first CI run.
+   Fix anything CI finds on Windows/macOS or Rust 1.98 (only Linux + Rust 1.97 was available to the AI).
+2. When CI is green: tag `phase-1-done`, then Phase 2 (civkit-units, civkit-geometry, the five 0.1 calculations; C1–C9 → tests/reference).
 2. Later (maintainer has no AutoCAD 2027 licence yet): add an AutoCAD-written fixture once a licence that allows publishing exists.
 
 Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
@@ -72,6 +73,19 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 11:32 IST — Phase 1 code *(Claude Opus 5.5)*
+- Cargo workspace (2024 edition, MSRV 1.98, workspace lints: unsafe forbidden, missing docs warn), five crates.
+- `civkit-units`: `Dimension` only (angle separate). `civkit-core`: descriptor, registry, request/response, errors and
+  envelope, warnings, trace, validity rules (warn/escalate), domain checks, `MISSING_UNIT`, panic → `INTERNAL`, `call_json`.
+  Units given in requests return `UNKNOWN_UNIT` until Phase 2.
+- Template calculation `math.demo.weighted_mean` (never a built-in); reference-case format (`tests/reference/README.md`)
+  and harness; check that every registered calculation has a case.
+- CI: fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable; clippy -D warnings; dependency-rule script (proved to
+  catch a planted path dependency and a planted tokio); cargo-deny (passes locally with 0.22.1); DCO check (logic tested).
+  Actions pinned by SHA: checkout v7.0.1, cargo-deny-action v2.1.4. Dependabot weekly for cargo and actions.
+- Verified locally on Linux with Rust 1.97 using `--ignore-rust-version`. Rust 1.98+ and Windows/macOS untested until CI.
+- actionlint could not be run (downloading and running its binary was blocked); workflow YAML parsed and SHA pins checked instead.
 
 ### 2026-11-25 10:52 IST — Phase 0 complete; D-10, D-11 accepted *(Claude Opus 5.5)*
 - D-10 (2024 edition, MSRV 1.98) and D-11 (DCO, no CLA) accepted → ADR 0008; CONTRIBUTING updated.

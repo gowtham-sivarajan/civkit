@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 10:50 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 11:32 IST
 >
 > **Status:** Phase 0 — Planning. No code is written until the Phase 0 exit criteria are met
 > ([planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
@@ -59,18 +59,19 @@ available in every interface with the same inputs, the same results and the same
 ```
 CivKit/
 ├── README.md  ROADMAP.md  CONTRIBUTING.md  CODE_OF_CONDUCT.md  ACCESSIBILITY.md
-├── .github/         issue forms and pull request template
+├── .github/         CI workflows, Dependabot, issue forms, pull request template
 ├── docs/            stable design documents
 ├── planning/        plans, decisions, handover (decision records in planning/decisions/)
-├── tests/fixtures/  DXF sample drawings (Phase 0)
-│
-│   created from Phase 1 onward:
-├── Cargo.toml       Rust workspace
+├── Cargo.toml       Rust workspace (Phase 1)
 ├── crates/          the engine — never depends on anything outside crates/
+├── tests/           reference cases (tests/reference/), DXF fixtures (tests/fixtures/dxf/)
+├── tools/           repository scripts (dependency-rule check)
+│
+│   created in later phases:
 ├── bindings/        python/
 ├── integrations/    mcp/  autocad/  civil3d/  matlab/  jupyter/
 ├── apps/            desktop/
-└── tests/           reference worked examples, parity tests
+└── (parity tests join tests/ in Phase 3)
 ```
 
 Details and the dependency rule: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
