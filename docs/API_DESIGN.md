@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 10:03 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 15:59 IST
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -23,8 +23,8 @@ Each calculation registers a descriptor with:
 | `id` | Namespaced identifier, `domain.topic.method` (e.g. `fluids.open_channel.manning`) |
 | `version` | Integer, starts at 1 |
 | `title`, `summary` | Human-readable name and one-paragraph description |
-| `inputs` | Name → dimension, display unit, required/optional, allowed range, description. The display unit is for documentation and UIs only; it is never applied silently to a bare number (§7) |
-| `outputs` | Name → dimension, default unit, description |
+| `inputs` | Name → dimension, internal SI unit (`si_unit`), default presentation unit (`display_unit`, for docs and forms; never applied silently to a bare number), required/optional, default, domain, `accepts_bearing`, description (§7.1.5) |
+| `outputs` | Name → dimension, internal SI unit (`si_unit`), default presentation unit (`display_unit`), description (§7.1.5) |
 | `references` | Citations (book, edition, page/section; or code clause number) |
 | `assumptions` | Plain-language list |
 | `validity` | Machine-checkable input limits and what happens outside them (warning or error) |
@@ -76,9 +76,9 @@ Values in this example are rounded for display; the engine returns full `f64` pr
 - Python and MCP accept an omitted version. Typed Python functions pin the version they were generated for.
 
 **Resolved: output units.** A request may contain `"output_units": { "velocity": "ft/s" }`.
-- Outputs not listed are returned in SI (the descriptor's display unit).
+- Outputs not listed are returned in the descriptor's default presentation unit (§7.1.5), which may differ from the internal SI unit.
 - Naming an unknown output gives `UNKNOWN_OUTPUT`. A unit of the wrong dimension gives `UNIT_MISMATCH`.
-- The trace always stays in SI, so that it reads the same way for everyone.
+- The trace always stays in the internal SI units, so that it reads the same way for everyone.
 
 ## 4. IDs and versioning
 
@@ -172,6 +172,157 @@ is what lets an engineer — or an AI client — explain a result without recomp
 
 Second moment of area (`mm^4`, `in^4`), line load (`kN/m`, `kip/ft`), unit weight (`kN/m^3`, `lbf/ft^3`),
 moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
+
+### 7.1 Unit notation, angle notation and unit roles (Phase 2A, `civkit-units`)
+
+This section is the complete, formal definition of what the engine accepts in 0.1. **Users should never need
+to discover a rule from an error message**: if a spelling is not listed here, it is not accepted.
+Written 2026-11-25 by Claude Opus 5.5; reviewed by the maintainer the same day (decisions recorded in AI_HANDOVER.md).
+
+#### 7.1.1 Unit expressions (the `unit` field)
+
+Formal grammar (ISO/IEC 14977 EBNF). The whole string must match `unit`; nothing else is accepted.
+
+```ebnf
+unit         = percent | product , [ "/" , factor ] ;
+percent      = "%" ;
+product      = factor , { multiply , factor } ;
+multiply     = "*" | "·" ;                   (* U+002A or U+00B7 MIDDLE DOT; equivalent *)
+factor       = unit-name , [ "^" , exponent ] ;
+exponent     = [ "-" ] , nonzero-digit ;
+nonzero-digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+unit-name    = (* exactly one entry of table 7.1.2, matched case-sensitively *) ;
+```
+
+Meaning:
+- A `product` multiplies its factors. `name^e` raises the unit to the integer power `e` (−9 … 9, never 0).
+- **Division:** at most one `/`. It divides the product on its left by the **single factor** on its right.
+  - There is no operator precedence to remember: `kN*m/s^2` means (kN·m)/s².
+  - Anything with a second `/`, or with `*` after the `/`, is rejected.
+  - The canonical spelling for more than one factor below the line uses negative powers: **`W*m^-2*K^-1`**,
+    never `W/m^2*K`.
+- `%` stands alone (= 0.01, dimensionless). It cannot be combined.
+
+Not part of the grammar in 0.1 (rejected with `UNKNOWN_UNIT`): parentheses; whitespace anywhere in the string;
+numeric factors (`1000*m`, `1e3m`); `**` or `.` as operators; implicit multiplication (`kN m`); Unicode
+superscripts (`m²`, `s⁻¹`); SI prefixes on names not in table 7.1.2 (`mN`, `µm`, `Mm`); any name not in the table.
+Supporting SI prefixes and common Unicode notation later is proposed as D-21 (not 0.1).
+
+#### 7.1.2 Supported unit names (complete list, case-sensitive)
+
+| Quantity | Names | Definition |
+|---|---|---|
+| Length | `mm` `cm` `m` `km` | SI |
+| | `in` `ft` `yd` `mi` | 0.0254 m; 12 in; 3 ft; 5280 ft (international, 1959) |
+| | `ft_us` | US survey foot, 1200/3937 m |
+| Area | `ha` | 10 000 m² |
+| | `acre` | 43 560 ft² (international) |
+| Volume | `L` | 0.001 m³ (upper-case L only) |
+| | `gal_us` `gal_imp` | 231 in³; 4.546 09 L |
+| Mass | `g` `kg` `t` | SI (`t` = tonne, 1000 kg) |
+| | `lbm` `ton_short` `ton_long` | 0.453 592 37 kg; 2000 lbm; 2240 lbm |
+| Force | `N` `kN` `MN` | SI |
+| | `kgf` `lbf` `kip` | kg × 9.806 65 m/s²; lbm × 9.806 65 m/s²; 1000 lbf |
+| Pressure / stress | `Pa` `kPa` `MPa` `GPa` `bar` | SI; bar = 100 kPa |
+| | `psi` `ksi` `psf` `ksf` | lbf/in²; 1000 psi; lbf/ft²; 1000 psf |
+| Time | `s` `min` `h` `day` | 60 s; 60 min; 24 h |
+| Angle | `rad` `deg` `grad` | π/180 rad; π/200 rad |
+| Dimensionless | `%` | 0.01 |
+| Alias | `cumec` | m³/s |
+
+Rejected as ambiguous (`AMBIGUOUS_UNIT`), with the suggested replacement in the message:
+- `ton` → `t`, `ton_short` or `ton_long`
+- `gal` → `gal_us` or `gal_imp`
+- `lb` → `lbm` or `lbf`
+- `k` → `kip`
+- `cal` → none (energy units are not in 0.1)
+
+`dms` and `bearing` are not unit names. They mark structured angle values (7.1.3 and 7.1.4).
+
+Tests check every factor through its defining relation (e.g. 1 lbf = 1 lbm × 9.806 65 m/s²), not by restating
+the number. A deliberately wrong factor, even under 1 ppm, fails them.
+
+#### 7.1.3 DMS angles (`"unit": "dms"`)
+
+```ebnf
+dms-value    = "[" , degrees , "," , minutes , "," , seconds , "]" ;  (* a JSON array of three numbers *)
+negative     = "negative" , ":" , ( "true" | "false" ) ;              (* optional sibling of "value" *)
+```
+
+Canonical rules, so every angle has exactly one spelling:
+- **degrees:** a whole number ≥ 0. There is no upper limit; angles are not normalised, and the input's domain applies.
+- **minutes:** a whole number, 0 ≤ m ≤ 59. `[12, 60, 0]` is rejected; write `[13, 0, 0]`.
+- **seconds:** a real number, 0 ≤ s < 60.
+
+Negative angles:
+- The sign is carried **only** by `"negative": true`. Signs inside the array, including −0, are rejected, so a
+  negative degree with positive minutes cannot occur.
+- `"negative": true` with a zero angle gives zero.
+- `"negative"` with any unit other than `dms` is `INVALID_VALUE`.
+- `dms` is accepted only for inputs whose dimension is angle (otherwise `UNIT_MISMATCH`).
+
+#### 7.1.4 Quadrant bearings (`"unit": "bearing"`)
+
+```ebnf
+bearing      = ns , angle , ew ;          (* spaces may separate tokens (letters, numbers, marks), never split a number *)
+ns           = "N" | "S" ;
+ew           = "E" | "W" ;
+angle        = whole , degree-mark , [ whole , minute-mark , [ number , second-mark ] ] ;
+degree-mark  = "°" | "d" ;
+minute-mark  = "'" | "′" | "m" ;          (* apostrophe or U+2032 PRIME *)
+second-mark  = '"' | "″" | "s" ;          (* quotation mark or U+2033 DOUBLE PRIME *)
+whole        = digit , { digit } ;
+number       = whole , [ "." , digit , { digit } ] ;
+```
+
+Limits:
+- degrees 0–90 (whole)
+- minutes 0–59 (whole)
+- seconds 0 ≤ s < 60
+- **exactly 90° must have zero minutes and seconds**: `N 90°00'00" E` is valid; `N 90°00'00.001" E` is not.
+- Seconds may appear only after minutes.
+
+Letters and directions:
+- Letters are **upper case only**. Lower-case `n 3° e` is **rejected, not normalised**, so that what is
+  recorded is exactly what was entered.
+- Valid direction combinations are N…E, N…W, S…E and S…W only. `E 3° N`, `NE 3° E` and similar are rejected.
+
+Result:
+- An azimuth clockwise from north, 0 ≤ azimuth < 2π:
+  - N θ E = θ
+  - S θ E = 180° − θ
+  - S θ W = 180° + θ
+  - N θ W = 360° − θ
+- Each cardinal direction has two valid spellings giving the same azimuth: `N 0° E` = `N 0° W` = 0°; `N 90° E` = `S 90° E` = 90°; and so on.
+  Tests cover all four quadrants and all eight cardinal spellings.
+
+Where bearings are accepted:
+- Only inputs whose descriptor sets `accepts_bearing` (which must be angles); otherwise `UNIT_MISMATCH`.
+- Each conversion is a trace step: `<input>: bearing <text> → azimuth (clockwise from north)`, value in rad.
+
+#### 7.1.5 The three unit roles
+
+The contract keeps three units apart. They are often the same, but nothing assumes they are.
+
+| Role | Where | Rule |
+|---|---|---|
+| **Internal calculation unit** | descriptor `si_unit` (inputs and outputs) | Canonical coherent SI **without prefix**, wherever applicable: `m`, `m^2`, `m^3/s`, `Pa`, `N`, `N*m`, `rad`. It is the unit `compute` works in, the unit domains and validity ranges are stated in, and the unit of every trace step. `kg` is accepted as the SI base unit of mass. Required for every dimensional input and output; checked at registration (coherent, i.e. factor 1). |
+| **Default presentation unit** | descriptor `display_unit` | What the response uses when the request names no unit for that output, and what forms and docs show. May differ from `si_unit` (e.g. `mm` for a deflection, `kN` for a reaction). Must match the dimension. If absent, the response uses `si_unit`. |
+| **User-requested output unit** | request `output_units` | Overrides the default presentation unit for that output. Must match the dimension. |
+
+Request processing:
+- Each input is converted from its given unit to the internal unit before domain checks, validity rules and `compute`.
+- Each output is converted from the internal unit to its presentation unit (requested, else default, else internal).
+  The response states the unit with every value.
+- The trace always stays in internal units.
+- Error mapping:
+
+  | Condition | Code |
+  |---|---|
+  | Unknown name, grammar error, empty unit | `UNKNOWN_UNIT` |
+  | Ambiguous name | `AMBIGUOUS_UNIT` |
+  | Wrong dimension | `UNIT_MISMATCH` |
+  | Malformed DMS or bearing | `INVALID_VALUE` |
 
 ## 8. Python API (`bindings/python`)
 

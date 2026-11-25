@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
 
 //! **Template calculation.** Copy this file to start a new calculation (see `CONTRIBUTING.md` §2).
 //!
@@ -36,27 +36,33 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
             name: "a".into(),
             description: "First value".into(),
             dimension: Dimension::DIMENSIONLESS,
+            si_unit: None,
             display_unit: None,
             required: true,
             default: None,
+            accepts_bearing: false,
             domain: Range::UNBOUNDED,
         },
         InputSpec {
             name: "b".into(),
             description: "Second value".into(),
             dimension: Dimension::DIMENSIONLESS,
+            si_unit: None,
             display_unit: None,
             required: true,
             default: None,
+            accepts_bearing: false,
             domain: Range::UNBOUNDED,
         },
         InputSpec {
             name: "w".into(),
             description: "Weight given to a; b gets 1 − w".into(),
             dimension: Dimension::DIMENSIONLESS,
+            si_unit: None,
             display_unit: None,
             required: false,
             default: Some(0.5),
+            accepts_bearing: false,
             // Mathematical domain: outside [0, 1] it is no longer a mean → OUT_OF_DOMAIN error.
             domain: Range::closed(0.0, 1.0),
         },
@@ -65,6 +71,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         name: "mean".into(),
         description: "Weighted mean".into(),
         dimension: Dimension::DIMENSIONLESS,
+        si_unit: None,
         display_unit: None,
     }],
     references: vec!["Definition of the weighted arithmetic mean (demonstration only).".into()],

@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 10:54 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 15:34 IST
 [package]
 name = "civkit-units"
 description = "CivKit units: physical dimensions, unit registry and parsing"
@@ -18,3 +18,4 @@ workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+proptest = { version = "1", default-features = false, features = ["std"] }

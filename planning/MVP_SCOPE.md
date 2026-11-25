@@ -1,6 +1,6 @@
 # MVP Scope — CivKit 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:57 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 15:31 IST
 
 > **Status:** Accepted (D-3, D-7). Calculation set fixed 2026-11-25 after task 0.8: five calculations in, two deferred.
 
@@ -35,6 +35,10 @@ in 0.1 instead. The plugin then reuses that analysis (ADR 0002).
 | Geotechnical | Soil phase relationships | — | ❎ Deferred (later release) — no openly licensed worked example |
 
 Case IDs (C1 …) refer to [REFERENCE_CASES.md](REFERENCE_CASES.md); sources to [REFERENCE_SOURCES.md](REFERENCE_SOURCES.md).
+
+> **Implementation scope (D-20, [ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)):** this table is the accepted
+> destination and is left as decided. What 0.1 actually implements for each calculation, limited to what the worked
+> examples verify, is recorded in ADR 0009. Where the two differ, ADR 0009 records the narrowing.
 
 **Drawing analysis (DXF, read-only)**
 - Entity listing by layer; lengths and areas; drawing-unit consistency check; quantity schedule export (CSV/JSON).

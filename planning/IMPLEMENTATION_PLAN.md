@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 11:14 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-25 15:59 IST
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -37,10 +37,16 @@ Dependencies: 0.7 needs 0.6 (D-5, D-6). 0.8 needs D-7. Phase 1 needs 0.5–0.12.
 
 ## Phase 2 — Units, geometry, calculations
 
-1. `civkit-units`: quantity type, dimension algebra, unit registry and parser, ambiguity rejection, DMS.
-2. `civkit-geometry`: primitives and algorithms needed by 0.1.
-3. The 0.1 calculations, one at a time, each through the per-calculation checklist.
-4. Property tests.
+Order agreed 2026-11-25. The units parser is infrastructure: it is finished and tested before any calculation uses it.
+
+| Stage | Work | Exit condition | Status |
+|---|---|---|---|
+| 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | 🔄 2026-11-25: implemented; the maintainer's review of API_DESIGN §7.1 has been applied (formal grammars, DMS/bearing limits, three unit roles); 59 tests pass locally; awaiting CI |
+| 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ⬜ |
+| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | ⬜ |
+| 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | ⬜ |
+
+Before 2C: collect one more openly licensed worked example that numerically verifies beam maximum shear and maximum moment (D-20).
 
 ## Phase 3 — Python and MCP
 

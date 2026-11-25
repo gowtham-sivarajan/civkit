@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
 
 //! Calculation descriptors: how a calculation describes itself (`docs/API_DESIGN.md` §2).
 //! Every interface (Python, MCP, FFI, desktop forms, documentation) is generated from these.
@@ -40,7 +40,13 @@ pub struct InputSpec {
     pub description: String,
     /// Physical dimension. Dimensional inputs must always carry a unit (D-19).
     pub dimension: Dimension,
-    /// Unit shown in documentation and forms. Never applied silently to a bare number.
+    /// **Internal calculation unit**: the canonical coherent SI unit without prefix (e.g. `m`, `Pa`, `m^3/s`,
+    /// `rad`) in which `compute` receives the value and in which `domain` and validity ranges are stated.
+    /// `None` only for dimensionless inputs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub si_unit: Option<String>,
+    /// **Default presentation unit** for documentation and forms (may differ from `si_unit`, e.g. `kN`).
+    /// Never applied silently to a bare number.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_unit: Option<String>,
     /// Whether the request must contain it.
@@ -48,6 +54,10 @@ pub struct InputSpec {
     /// Value used when an optional input is omitted, in SI.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<f64>,
+    /// Whether this angle input also accepts a quadrant bearing (`"unit": "bearing"`), converted to an azimuth.
+    /// Only for surveying inputs; requires the angle dimension (`docs/API_DESIGN.md` §7).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_bearing: bool,
     /// Mathematical domain, in SI. A value outside it is an `OUT_OF_DOMAIN` error.
     #[serde(skip_serializing_if = "Range::is_unbounded")]
     pub domain: Range,
@@ -62,7 +72,12 @@ pub struct OutputSpec {
     pub description: String,
     /// Physical dimension.
     pub dimension: Dimension,
-    /// SI unit the output is reported in by default.
+    /// **Internal calculation unit**: canonical coherent SI without prefix. `compute` returns the value in it and
+    /// the trace uses it. `None` only for dimensionless outputs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub si_unit: Option<String>,
+    /// **Default presentation unit**: the unit the response uses when the request does not name one in
+    /// `output_units` (may differ from `si_unit`, e.g. `mm` for a deflection). `None` means present in `si_unit`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_unit: Option<String>,
 }

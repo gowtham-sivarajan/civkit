@@ -1,12 +1,13 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
 
 //! The calculation trait and the registry that validates requests and runs calculations.
 
 use crate::contract::{
     InputValue, Level, OutputValue, Request, Response, TraceStep, Warning, WarningCode,
 };
-use crate::descriptor::{Breach, Descriptor};
+use crate::descriptor::{Breach, Descriptor, InputSpec};
 use crate::error::{CalcError, ErrorCode, ErrorEnvelope};
+use civkit_units::{Dimension, Unit, UnitError, bearing_to_azimuth, dms_to_radians};
 use std::collections::{BTreeMap, BTreeSet};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
@@ -208,8 +209,11 @@ impl Registry {
             .map_err(|e| ErrorEnvelope(vec![e]))?;
         let d = calc.descriptor();
 
-        let inputs = validate_inputs(d, request).map_err(ErrorEnvelope)?;
-        let mut ctx = Context::default();
+        let (inputs, notes) = validate_inputs(d, request).map_err(ErrorEnvelope)?;
+        let mut ctx = Context {
+            trace: notes,
+            warnings: Vec::new(),
+        };
         apply_validity_rules(d, &inputs, &mut ctx).map_err(ErrorEnvelope)?;
 
         let computed = catch_unwind(AssertUnwindSafe(|| calc.compute(&inputs, &mut ctx)))
@@ -230,13 +234,24 @@ impl Registry {
                     d.id, spec.name
                 ))]));
             }
-            outputs.insert(
-                spec.name.clone(),
-                OutputValue {
-                    value,
-                    unit: spec.display_unit.clone(),
+            // Presentation unit: requested in the request, else the descriptor's default, else the SI unit.
+            let presentation = request
+                .output_units
+                .get(&spec.name)
+                .or(spec.display_unit.as_ref())
+                .or(spec.si_unit.as_ref());
+            let output = match presentation {
+                None => OutputValue { value, unit: None },
+                // Units were validated (request) or checked at registration (descriptor); parsing cannot fail.
+                Some(text) => match Unit::parse(text) {
+                    Ok(unit) => OutputValue {
+                        value: unit.from_si(value),
+                        unit: Some(text.clone()),
+                    },
+                    Err(e) => return Err(ErrorEnvelope(vec![CalcError::internal(e.to_string())])),
                 },
-            );
+            };
+            outputs.insert(spec.name.clone(), output);
         }
 
         Ok(Response {
@@ -270,9 +285,14 @@ impl Registry {
     }
 }
 
-/// Checks the request's inputs against the descriptor and returns them as SI values.
-fn validate_inputs(d: &Descriptor, request: &Request) -> Result<Inputs, Vec<CalcError>> {
+/// Checks the request's inputs against the descriptor and returns them as SI values, together with trace
+/// steps for conversions that must be visible (bearings to azimuths).
+fn validate_inputs(
+    d: &Descriptor,
+    request: &Request,
+) -> Result<(Inputs, Vec<TraceStep>), Vec<CalcError>> {
     let mut errors = Vec::new();
+    let mut notes = Vec::new();
     let known: BTreeSet<&str> = d.inputs.iter().map(|s| s.name.as_str()).collect();
 
     for name in request.inputs.keys() {
@@ -288,19 +308,17 @@ fn validate_inputs(d: &Descriptor, request: &Request) -> Result<Inputs, Vec<Calc
             ));
         }
     }
-    for name in request.output_units.keys() {
-        if !d.outputs.iter().any(|o| &o.name == name) {
-            errors.push(CalcError::new(
+    for (name, unit) in &request.output_units {
+        match d.outputs.iter().find(|o| &o.name == name) {
+            None => errors.push(CalcError::new(
                 ErrorCode::UnknownOutput,
                 format!("'{}' has no output '{name}'", d.id),
-            ));
-        } else {
-            errors.push(CalcError::new(
-                ErrorCode::UnknownUnit,
-                format!(
-                    "output units for '{name}': unit conversion arrives in Phase 2 (civkit-units)"
-                ),
-            ));
+            )),
+            Some(spec) => {
+                if let Err(e) = Unit::parse(unit).and_then(|u| u.expect(spec.dimension)) {
+                    errors.push(unit_error(&format!("output_units.{name}"), &e));
+                }
+            }
         }
     }
 
@@ -317,17 +335,18 @@ fn validate_inputs(d: &Descriptor, request: &Request) -> Result<Inputs, Vec<Calc
                     values.insert(spec.name.clone(), default);
                 }
             }
-            Some(given) => match to_si(&spec.name, spec.dimension.is_dimensionless(), given) {
-                Ok(v) if !spec.domain.contains(v) => errors.push(CalcError::for_input(
+            Some(given) => match to_si(spec, given) {
+                Ok((v, _)) if !spec.domain.contains(v) => errors.push(CalcError::for_input(
                     ErrorCode::OutOfDomain,
                     &spec.name,
                     format!(
-                        "'{}' = {v} is outside its domain {}",
+                        "'{}' = {v} (SI) is outside its domain {}",
                         spec.name, spec.domain
                     ),
                 )),
-                Ok(v) => {
+                Ok((v, note)) => {
                     values.insert(spec.name.clone(), v);
+                    notes.extend(note);
                 }
                 Err(e) => errors.push(e),
             },
@@ -335,39 +354,109 @@ fn validate_inputs(d: &Descriptor, request: &Request) -> Result<Inputs, Vec<Calc
     }
 
     if errors.is_empty() {
-        Ok(Inputs(values))
+        Ok((Inputs(values), notes))
     } else {
         Err(errors)
     }
 }
 
-/// Converts one input value to SI. Phase 1: dimensionless numbers only; units arrive in Phase 2.
-fn to_si(name: &str, dimensionless: bool, given: &InputValue) -> Result<f64, CalcError> {
-    let number = given
-        .value
-        .as_f64()
-        .filter(|v| v.is_finite())
-        .ok_or_else(|| {
-            CalcError::for_input(
-                ErrorCode::InvalidValue,
-                name,
-                format!("'{name}' must be a finite number"),
-            )
-        })?;
-    match (&given.unit, dimensionless) {
-        (None, true) => Ok(number),
-        (None, false) => Err(CalcError::for_input(
-            ErrorCode::MissingUnit,
-            name,
-            format!(
-                "'{name}' has a physical dimension, so it needs a unit; CivKit never assumes one"
-            ),
-        )),
-        (Some(unit), _) => Err(CalcError::for_input(
-            ErrorCode::UnknownUnit,
-            name,
-            format!("unit '{unit}': unit parsing arrives in Phase 2 (civkit-units)"),
-        )),
+/// Maps a unit error to the contract's error codes (`docs/API_DESIGN.md` §5).
+fn unit_error(input: &str, e: &UnitError) -> CalcError {
+    let code = match e {
+        UnitError::Ambiguous { .. } => ErrorCode::AmbiguousUnit,
+        UnitError::Mismatch { .. } => ErrorCode::UnitMismatch,
+        UnitError::InvalidValue(_) => ErrorCode::InvalidValue,
+        UnitError::Empty | UnitError::Unknown { .. } | UnitError::Syntax(_) => {
+            ErrorCode::UnknownUnit
+        }
+    };
+    CalcError::for_input(code, input, format!("'{input}': {e}"))
+}
+
+/// Converts one input value to SI (`docs/API_DESIGN.md` §7). Returns a trace step when the conversion must be
+/// visible in the trace (a bearing converted to an azimuth).
+fn to_si(spec: &InputSpec, given: &InputValue) -> Result<(f64, Option<TraceStep>), CalcError> {
+    let name = spec.name.as_str();
+    let invalid = |msg: String| CalcError::for_input(ErrorCode::InvalidValue, name, msg);
+    let unit = given.unit.as_deref();
+
+    if given.negative.is_some() && unit != Some("dms") {
+        return Err(invalid(format!(
+            "'{name}': \"negative\" is only used with \"unit\": \"dms\""
+        )));
+    }
+    match unit {
+        Some("dms") => {
+            if spec.dimension != Dimension::ANGLE {
+                return Err(unit_error(
+                    name,
+                    &UnitError::Mismatch {
+                        expected: spec.dimension,
+                        found: Dimension::ANGLE,
+                    },
+                ));
+            }
+            let parts: Option<Vec<f64>> = given
+                .value
+                .as_array()
+                .map(|a| a.iter().filter_map(serde_json::Value::as_f64).collect());
+            let parts = parts
+                .filter(|p| given.value.as_array().is_some_and(|a| a.len() == p.len()))
+                .ok_or_else(|| {
+                    invalid(format!(
+                        "'{name}': a DMS value is an array [degrees, minutes, seconds]"
+                    ))
+                })?;
+            let radians = dms_to_radians(&parts, given.negative.unwrap_or(false))
+                .map_err(|e| unit_error(name, &e))?;
+            Ok((radians, None))
+        }
+        Some("bearing") => {
+            if !spec.accepts_bearing {
+                return Err(CalcError::for_input(
+                    ErrorCode::UnitMismatch,
+                    name,
+                    format!("'{name}' does not accept a quadrant bearing"),
+                ));
+            }
+            let text = given.value.as_str().ok_or_else(|| {
+                invalid(format!(
+                    "'{name}': a bearing is a string such as \"N 3°45'00\\\" E\""
+                ))
+            })?;
+            let azimuth = bearing_to_azimuth(text).map_err(|e| unit_error(name, &e))?;
+            let note = TraceStep {
+                step: format!("{name}: bearing {text} → azimuth (clockwise from north)"),
+                value: azimuth,
+                unit: Some("rad".into()),
+                reference: None,
+            };
+            Ok((azimuth, Some(note)))
+        }
+        _ => {
+            let number = given
+                .value
+                .as_f64()
+                .filter(|v| v.is_finite())
+                .ok_or_else(|| invalid(format!("'{name}' must be a finite number")))?;
+            match unit {
+                None if spec.dimension.is_dimensionless() => Ok((number, None)),
+                None => Err(CalcError::for_input(
+                    ErrorCode::MissingUnit,
+                    name,
+                    format!(
+                        "'{name}' has dimension {}, so it needs a unit; CivKit never assumes one",
+                        spec.dimension
+                    ),
+                )),
+                Some(text) => {
+                    let unit = Unit::parse(text)
+                        .and_then(|u| u.expect(spec.dimension))
+                        .map_err(|e| unit_error(name, &e))?;
+                    Ok((unit.to_si(number), None))
+                }
+            }
+        }
     }
 }
 
@@ -460,6 +549,47 @@ pub fn check_descriptor(d: &Descriptor) -> Result<(), RegistryError> {
         {
             return err(format!(
                 "default of '{}' is outside its own domain",
+                input.name
+            ));
+        }
+    }
+    for (kind, name, dimension, si_unit, display_unit) in d
+        .inputs
+        .iter()
+        .map(|i| ("input", &i.name, i.dimension, &i.si_unit, &i.display_unit))
+        .chain(
+            d.outputs
+                .iter()
+                .map(|o| ("output", &o.name, o.dimension, &o.si_unit, &o.display_unit)),
+        )
+    {
+        match (si_unit, dimension.is_dimensionless()) {
+            (None, true) => {}
+            (None, false) => {
+                return err(format!(
+                    "{kind} '{name}' needs its internal SI unit (si_unit)"
+                ));
+            }
+            (Some(text), _) => match Unit::parse(text).and_then(|u| u.expect(dimension)) {
+                Ok(u) if (u.factor - 1.0).abs() <= f64::EPSILON => {}
+                Ok(_) => {
+                    return err(format!(
+                        "si_unit of {kind} '{name}' must be coherent SI without prefix"
+                    ));
+                }
+                Err(e) => return err(format!("si_unit of {kind} '{name}': {e}")),
+            },
+        }
+        if let Some(text) = display_unit
+            && let Err(e) = Unit::parse(text).and_then(|u| u.expect(dimension))
+        {
+            return err(format!("display_unit of {kind} '{name}': {e}"));
+        }
+    }
+    for input in &d.inputs {
+        if input.accepts_bearing && input.dimension != Dimension::ANGLE {
+            return err(format!(
+                "input '{}' accepts bearings but is not an angle",
                 input.name
             ));
         }

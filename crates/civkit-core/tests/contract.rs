@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 10:58 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 15:57 IST
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 
@@ -119,15 +119,18 @@ impl Doubler {
                 name: "length".into(),
                 description: "A length".into(),
                 dimension: Dimension::LENGTH,
+                si_unit: Some("m".into()),
                 display_unit: Some("m".into()),
                 required: true,
                 default: None,
+                accepts_bearing: false,
                 domain: Range::at_least(0.0),
             }],
             outputs: vec![OutputSpec {
                 name: "double".into(),
                 description: "Twice the length".into(),
                 dimension: Dimension::LENGTH,
+                si_unit: Some("m".into()),
                 display_unit: Some("m".into()),
             }],
             references: vec!["Test".into()],
@@ -164,15 +167,224 @@ fn dimensional_input_without_unit_is_missing_unit() {
     );
 }
 
-#[test]
-fn units_are_not_parsed_before_phase_2() {
+fn doubler() -> Registry {
     let mut r = Registry::new();
     r.register(Box::new(Doubler::new())).expect("valid");
+    r
+}
+
+fn length(value: Value, unit: &str) -> Value {
+    json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": value, "unit": unit } } })
+}
+
+#[test]
+fn units_convert_to_si_before_compute() {
+    let r = doubler();
+    // 3 ft = 0.9144 m; doubled = 1.8288 m, reported in SI
+    let v = call(&r, length(json!(3), "ft"));
+    assert!(
+        (v["outputs"]["double"]["value"].as_f64().expect("number") - 1.8288).abs() < 1e-12,
+        "{v}"
+    );
+    assert_eq!(v["outputs"]["double"]["unit"], "m");
+    // the trace is in SI
+    assert!((v["trace"][0]["value"].as_f64().expect("number") - 1.8288).abs() < 1e-12);
+    assert_eq!(v["trace"][0]["unit"], "m");
+}
+
+#[test]
+fn unit_errors_map_to_contract_codes() {
+    let r = doubler();
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "kN"))),
+        "UNIT_MISMATCH"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "Mm"))),
+        "UNKNOWN_UNIT"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "m^2^2"))),
+        "UNKNOWN_UNIT"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "lb"))),
+        "AMBIGUOUS_UNIT"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "deg"))),
+        "UNIT_MISMATCH"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!(3), "dms"))),
+        "UNIT_MISMATCH"
+    );
+    assert_eq!(
+        single_error_code(&call(&r, length(json!("N 3° E"), "bearing"))),
+        "UNIT_MISMATCH"
+    );
     let v = call(
         &r,
-        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 3, "unit": "m" } } }),
+        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 3, "unit": "m", "negative": true } } }),
     );
-    assert_eq!(single_error_code(&v), "UNKNOWN_UNIT");
+    assert_eq!(single_error_code(&v), "INVALID_VALUE");
+}
+
+#[test]
+fn domain_is_checked_after_conversion() {
+    let v = call(&doubler(), length(json!(-1), "mm"));
+    assert_eq!(single_error_code(&v), "OUT_OF_DOMAIN");
+}
+
+#[test]
+fn output_units_are_honoured() {
+    let r = doubler();
+    let v = call(
+        &r,
+        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 1, "unit": "m" } }, "output_units": { "double": "ft" } }),
+    );
+    let ft = v["outputs"]["double"]["value"].as_f64().expect("number");
+    assert!((ft - 2.0 / 0.3048).abs() < 1e-12, "{v}");
+    assert_eq!(v["outputs"]["double"]["unit"], "ft");
+    assert_eq!(v["trace"][0]["unit"], "m", "the trace stays SI");
+    let bad = call(
+        &r,
+        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 1, "unit": "m" } }, "output_units": { "double": "kg" } }),
+    );
+    assert_eq!(single_error_code(&bad), "UNIT_MISMATCH");
+}
+
+/// An angle calculation, to test DMS and bearings.
+struct Azimuth(Descriptor);
+
+impl Calculation for Azimuth {
+    fn descriptor(&self) -> &Descriptor {
+        &self.0
+    }
+    fn compute(&self, inputs: &Inputs, _: &mut Context) -> Result<Outputs, CalcError> {
+        Ok(Outputs::new().with("angle_out", inputs.require("angle")?))
+    }
+}
+
+fn azimuth_registry(accepts_bearing: bool) -> Registry {
+    let mut d = Doubler::new().0;
+    d.id = "surveying.test.echo_angle".into();
+    d.inputs[0].name = "angle".into();
+    d.inputs[0].dimension = Dimension::ANGLE;
+    d.inputs[0].si_unit = Some("rad".into());
+    d.inputs[0].display_unit = Some("deg".into());
+    d.inputs[0].domain = Range::UNBOUNDED;
+    d.inputs[0].accepts_bearing = accepts_bearing;
+    d.outputs[0].name = "angle_out".into();
+    d.outputs[0].dimension = Dimension::ANGLE;
+    d.outputs[0].si_unit = Some("rad".into());
+    d.outputs[0].display_unit = None;
+    let mut r = Registry::new();
+    r.register(Box::new(Azimuth(d))).expect("valid");
+    r
+}
+
+fn angle_out(v: &Value) -> f64 {
+    v["outputs"]["angle_out"]["value"]
+        .as_f64()
+        .unwrap_or_else(|| panic!("no output in {v}"))
+}
+
+#[test]
+fn dms_and_bearing_inputs() {
+    let r = azimuth_registry(true);
+    let dms = call(
+        &r,
+        json!({ "id": "surveying.test.echo_angle", "inputs": { "angle": { "value": [12, 30, 0], "unit": "dms", "negative": true } } }),
+    );
+    assert!((angle_out(&dms) + 12.5_f64.to_radians()).abs() < 1e-12);
+    let bad = call(
+        &r,
+        json!({ "id": "surveying.test.echo_angle", "inputs": { "angle": { "value": [-12, 30, 0], "unit": "dms" } } }),
+    );
+    assert_eq!(single_error_code(&bad), "INVALID_VALUE");
+
+    let b = call(
+        &r,
+        json!({ "id": "surveying.test.echo_angle", "inputs": { "angle": { "value": "S 32°40' W", "unit": "bearing" } } }),
+    );
+    let expected = (180.0 + 32.0 + 40.0 / 60.0_f64).to_radians();
+    assert!((angle_out(&b) - expected).abs() < 1e-12);
+    assert!(
+        b["trace"][0]["step"]
+            .as_str()
+            .expect("step")
+            .contains("S 32°40' W"),
+        "the conversion is in the trace: {b}"
+    );
+    let deg = call(
+        &r,
+        json!({ "id": "surveying.test.echo_angle", "inputs": { "angle": { "value": 90, "unit": "deg" } } }),
+    );
+    assert!((angle_out(&deg) - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
+
+    let not_accepted = azimuth_registry(false);
+    let v = call(
+        &not_accepted,
+        json!({ "id": "surveying.test.echo_angle", "inputs": { "angle": { "value": "N 3° E", "unit": "bearing" } } }),
+    );
+    assert_eq!(single_error_code(&v), "UNIT_MISMATCH");
+}
+
+#[test]
+fn descriptor_units_are_checked() {
+    let mut d = Doubler::new().0;
+    d.outputs[0].si_unit = Some("mm".into());
+    assert!(
+        check_descriptor(&d).is_err(),
+        "internal units must be coherent SI without prefix"
+    );
+    let mut d = Doubler::new().0;
+    d.outputs[0].si_unit = None;
+    assert!(
+        check_descriptor(&d).is_err(),
+        "dimensional outputs need an internal SI unit"
+    );
+    let mut d = Doubler::new().0;
+    d.inputs[0].display_unit = Some("kN".into());
+    assert!(
+        check_descriptor(&d).is_err(),
+        "display unit must match the dimension"
+    );
+    let mut d = Doubler::new().0;
+    d.inputs[0].accepts_bearing = true;
+    assert!(check_descriptor(&d).is_err(), "only angles accept bearings");
+    let mut d = Doubler::new().0;
+    d.outputs[0].display_unit = Some("mm".into());
+    assert!(
+        check_descriptor(&d).is_ok(),
+        "a prefixed presentation unit is fine"
+    );
+}
+
+#[test]
+fn three_unit_roles_are_distinct() {
+    // internal unit m, default presentation mm, user request ft
+    let mut d = Doubler::new().0;
+    d.outputs[0].display_unit = Some("mm".into());
+    let mut r = Registry::new();
+    r.register(Box::new(Doubler(d))).expect("valid");
+    let v = call(&r, length(json!(1), "m"));
+    assert_eq!(
+        v["outputs"]["double"]["unit"], "mm",
+        "default presentation unit"
+    );
+    assert!((v["outputs"]["double"]["value"].as_f64().expect("number") - 2000.0).abs() < 1e-9);
+    assert_eq!(v["trace"][0]["unit"], "m", "trace in the internal SI unit");
+    assert!((v["trace"][0]["value"].as_f64().expect("number") - 2.0).abs() < 1e-12);
+    let asked = call(
+        &r,
+        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 1, "unit": "m" } }, "output_units": { "double": "ft" } }),
+    );
+    assert_eq!(
+        asked["outputs"]["double"]["unit"], "ft",
+        "user-requested unit wins"
+    );
 }
 
 #[test]
@@ -198,8 +410,6 @@ fn panicking_calculation_becomes_internal_error() {
 #[test]
 fn escalated_validity_rule_is_an_error_and_needs_a_reason() {
     let mut calc = Doubler::new();
-    calc.0.inputs[0].dimension = Dimension::DIMENSIONLESS; // so the rule can run before civkit-units exists
-    calc.0.inputs[0].display_unit = None;
     calc.0.validity.push(ValidityRule {
         input: "length".into(),
         range: Range::closed(0.0, 10.0),
@@ -215,15 +425,9 @@ fn escalated_validity_rule_is_an_error_and_needs_a_reason() {
 
     let mut r = Registry::new();
     r.register(Box::new(calc)).expect("valid");
-    let inside = call(
-        &r,
-        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 4 } } }),
-    );
+    let inside = call(&r, length(json!(4), "m"));
     assert_eq!(inside["outputs"]["double"]["value"], 8.0);
-    let outside = call(
-        &r,
-        json!({ "id": "geometry.test.double_length", "inputs": { "length": { "value": 20 } } }),
-    );
+    let outside = call(&r, length(json!(20), "m"));
     assert_eq!(single_error_code(&outside), "OUTSIDE_VALIDITY_RANGE");
 }
 

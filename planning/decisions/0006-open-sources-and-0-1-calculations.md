@@ -1,6 +1,6 @@
 # ADR 0006 — Openly licensed reference sources and the 0.1 calculation set
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:04 IST · last edited 2026-11-25 09:04 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:04 IST · last edited 2026-11-25 15:31 IST
 
 - **Status:** Accepted
 - **Date:** 2026-11-25
@@ -33,6 +33,8 @@ depends on proprietary material.
 ## Consequences
 - The 0.1 list may shrink: as of 2026-11-25 only the average-end-area method has a confirmed open worked
   example; traverse/Bowditch and the prismoidal method have no complete open example yet.
+  *Superseded by events (note added 2026-11-25): task 0.8 found examples for five calculations (REFERENCE_CASES.md);
+  prismoidal (general) and soil phase relationships were deferred. Implementation scope: D-20, [ADR 0009](0009-implementation-scope-0-1-calculations.md).*
 - Engineers can contribute by finding open worked examples, which is now an explicit, valuable task.
 - Public-domain US manuals use US practice and often US units; unit handling (D-5) makes this harmless.
 - NC/ND-licensed sources are usable because only facts (numbers) and citations enter the repository.

@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 11:15 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-25 15:59 IST
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -29,9 +29,10 @@
 3. **Provenance on every write.** Every file an AI creates or edits carries, near the top, a provenance line
    with model name, model ID and timestamp in IST; update "last edited" on every edit. Use a comment line in
    non-Markdown files. Suggested commit messages include a `Co-Authored-By` trailer. (ADR 0003)
-   **Read the clock (`date`, or the time tool) immediately before writing any timestamp. Never estimate a time:**
+   **Generate every timestamp with the shell at the moment of writing** (`TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M IST'`
+   inside the same command that writes the file). **Never type or estimate a time:**
    a stamp must never be later than the moment the file is actually written. (Estimated stamps ran ahead of the
-   clock three times on 2026-11-25 and had to be corrected from file modification times.)
+   clock four times on 2026-11-25 and had to be corrected from file modification times.)
 4. **One home per fact.** Decisions → DECISIONS.md; tasks → IMPLEMENTATION_PLAN.md; exit criteria →
    ACCEPTANCE_CRITERIA.md. Link, don't copy.
 5. **Decisions** go Proposed → Accepted only when the maintainer says so; accepted ones get an ADR.
@@ -61,8 +62,8 @@
 
 ## 4. Next actions
 
-1. Phase 2: `civkit-units` (named units, compound parser, `MISSING_UNIT`/`AMBIGUOUS_UNIT`, DMS and bearings),
-   `civkit-geometry`, then the five 0.1 calculations with C1–C9 moved into `tests/reference/`.
+1. Phase 2 in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)). 2A (units) first and complete before any
+   calculation. 2C implements exactly D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)): **no bonus features in 0.1.**
 2. Review Dependabot pull requests as they arrive (each must pass CI).
 2. Later (maintainer has no AutoCAD 2027 licence yet): add an AutoCAD-written fixture once a licence that allows publishing exists.
 
@@ -76,6 +77,45 @@ Full Phase 0 task list: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-25 15:59 IST — Maintainer review of the 2A rules applied *(Claude Opus 5.5)*
+- Approved: `ton_short`/`ton_long`; no spaces in unit strings (spaces stay allowed in human-readable bearings).
+- Division: only one `/` with a single factor after it; canonical spelling `W*m^-2*K^-1`. The full grammar is now
+  written formally (EBNF) in API_DESIGN §7.1, including what is *not* supported (parentheses, prefixes, Unicode
+  superscripts), so users never learn rules from error messages.
+- Bearings:
+  - degrees 0–90, minutes 0–59, seconds 0 ≤ s < 60; 90° only with zero minutes and seconds
+  - N/S…E/W combinations only; lower case **rejected, not normalised**
+  - all four quadrants and all eight cardinal spellings tested
+  - fixed: spaces could split a number (`N 4 5° E` read as 45°); now rejected
+- DMS: canonical form; minutes are now whole numbers 0–59 (so `[12, 30.5, 0]` and `[12, 30, 30]` cannot both exist),
+  seconds 0 ≤ s < 60; sign only via `negative`; negative zero is zero.
+- Unit roles: descriptors now carry `si_unit` (internal, coherent SI without prefix) **and** `display_unit` (default
+  presentation, may be e.g. `mm`); requests may override with `output_units`. The trace stays in internal units.
+- D-21 proposed (after 0.1): general SI prefixes and Unicode notation. Exactly what 0.1 accepts is listed in §7.1.2.
+- Git: my earlier instruction listed two alternative `git add` commands as if consecutive. They are alternatives, and the
+  second does not unstage. Nothing had been pushed: `ui-concepts` is not on GitHub.
+- My own slip while editing: a slice removed five existing contract tests; caught by the test count and restored.
+- 59 tests pass (Linux, Rust 1.97); clippy, fmt, cargo-deny and the dependency rule are clean.
+
+### 2026-11-25 15:39 IST — D-20 accepted; Phase 2A units *(Claude Opus 5.5)*
+- Maintainer approved D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)): 0.1 implements only what
+  worked examples verify. The MVP_SCOPE table is unchanged and links to ADR 0009. Phase 2 runs in stages 2A → 2D.
+- 2A `civkit-units`:
+  - named-unit table from defining relations; compound parser (one `/`, single term after it)
+  - ambiguity rejection; DMS and quadrant bearings
+  - core integration: real unit conversion, `MISSING_UNIT`/`AMBIGUOUS_UNIT`/`UNIT_MISMATCH`, `output_units`,
+    bearing steps in the trace, descriptor unit checks
+- Tests:
+  - definition relations (mutation-checked: three planted factor errors all caught)
+  - rejections; angles (C3 bearings by hand)
+  - 7 property tests (2000 cases each); proptest added as a dev-dependency only
+  - 56 tests pass; clippy, fmt, cargo-deny and the dependency rule are clean (Linux, Rust 1.97)
+- Rules written into [API_DESIGN.md §7.1](../docs/API_DESIGN.md) for maintainer review. Includes one spec fix: `ton_short`/`ton_long`
+  added because the ambiguity message for `ton` names them.
+- Timestamp slip again: `civkit-units` files were stamped up to 7 minutes ahead and were corrected from file times.
+  Stamps are now generated by the shell at write time.
+- New folder `planning/ui-concepts/` (Figcraft/HTML/PDF) appeared on the device; it was not created by this session and was left untouched.
 
 ### 2026-11-25 11:15 IST — Phase 1 complete *(Claude Opus 5.5)*
 - Maintainer ran `cargo test --workspace` on Windows with Rust 1.100: 23/23 pass.
