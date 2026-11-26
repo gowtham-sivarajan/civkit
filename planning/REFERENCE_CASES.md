@@ -1,6 +1,6 @@
 # Reference Cases (Phase 0 collection)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-26 00:23 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 09:50 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Task 0.8. Worked examples collected from open sources ([REFERENCE_SOURCES.md](REFERENCE_SOURCES.md)),
 > each **re-derived independently** by script (Claude Opus 5.5, 2026-11-25). **Human engineering review: pending.**
@@ -136,7 +136,7 @@ Legend: ✅ re-derived, matches within tolerance · ⚠️ matches with a docume
 | Earthwork volume — average end area | C1, C2 | ✅ In 0.1 |
 | Earthwork volume — prismoidal (general Aₘ) | C2 (pyramid special case only) | ❎ Deferred to a later release (maintainer, 2026-11-25) — no open general example after two searches. The zero-end pyramid (V = AL/3) stays in 0.1 with the average-end-area module. |
 | Manning's equation | C5 (two examples) | ✅ In 0.1 |
-| Simply supported beam | C6, C7, C8 (two independent sources) | ✅ In 0.1 |
+| Simply supported beam | C6, C7, C8 (two independent sources) | ✅ In 0.1: reactions, deflection, end slope. Maximum shear and moment **deferred from 0.1** (D-25); the search for an open example continues |
 | Levelling reduction | C4, C9 | ✅ In 0.1 |
 | Traverse closure + compass (Bowditch) rule | C3 | ✅ In 0.1 (with documented source erratum) |
 | Soil phase relationships | none | ❎ Deferred to a later release (maintainer, 2026-11-25) — no openly licensed worked example after two searches |

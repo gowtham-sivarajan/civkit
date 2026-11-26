@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Structural calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -76,7 +76,7 @@ static BEAM: LazyLock<Descriptor> = LazyLock::new(|| {
               full span and a point load P at distance a from the left support A. Returns both support reactions, \
               the deflection at a requested distance x from A, and the slope at A. Loads act downward; deflection \
               and slope are measured upward and counter-clockwise, so a downward load gives negative values, as in \
-              the cited sources. Maximum shear and moment are not part of this version (D-20)."
+              the cited sources. Maximum shear and moment are not part of this version: they are deferred from 0.1 while an \n              openly licensed worked example is sought (D-20, D-25)."
         .into(),
     inputs: vec![
         input(In {
@@ -184,6 +184,7 @@ static BEAM: LazyLock<Descriptor> = LazyLock::new(|| {
             .into(),
         "Simple supports (pin at A, roller at B) at the beam ends; loads act vertically downward.".into(),
         "The UDL and the point load are combined by superposition.".into(),
+        super::NO_VALIDITY_RANGE.into(),
     ],
     validity: Vec::new(),
     examples: vec![

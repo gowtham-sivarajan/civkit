@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 What gets built, in what order. Task breakdown: [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md).
 Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
@@ -11,8 +11,8 @@ Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTA
 |---|---|---|---|
 | **0** | Planning *(done — tag `plan-v1.0`)* | Decisions, API design, engineering standards, reference worked examples | — |
 | **1** | Architecture and Rust core *(done — tag `phase-1-done`)* | Cargo workspace, `civkit-core` registry and contract, CI on Windows/macOS/Linux | — |
-| **2** | Units, geometry, calculations, validation *(in progress: 2A–2C done, 2D review)* | `civkit-units`, `civkit-geometry`, the 0.1 calculation set with reference tests | — |
-| **3** | Python bindings + local MCP server | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
+| **2** | Units, geometry, calculations, validation *(done 2026-11-26; tag `phase-2-done`, local)* | `civkit-units`, `civkit-geometry`, the 0.1 calculation set with reference tests | — |
+| **3** | Python bindings + local MCP server *(next)* | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
 | **4** | Drawing model + DXF analysis | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
 | **5** | AutoCAD / Civil 3D integration | `civkit-ffi`, AutoCAD 2027 plugin (read-only), Civil 3D extension | **0.2** |
 | **6** | Standalone desktop app | Tauri 2 app with forms generated from the registry; SQLite history | 0.3 |

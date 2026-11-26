@@ -1,6 +1,6 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 09:48 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 
@@ -11,7 +11,10 @@
 - **No silent results.** Every result carries its units, the steps used, the reference it came from, and any warnings.
 - **No silent changes.** A calculation's formula never changes under the same ID and version ([API_DESIGN.md §4](API_DESIGN.md#4-ids-and-versioning)).
 - **Fail loudly on units.** Dimensionally inconsistent input is an error, never a guess.
-- **Validity ranges are part of the calculation.** Inputs outside a method's stated range produce a warning or an error.
+- **Validity ranges are part of the calculation, when there is a basis for them** (D-24, ADR 0012). Mathematical domain
+  checks always apply. A method's validity range is stated only when a reliable source gives it, and inputs outside it
+  produce a warning or an error. When no reliable basis is established, the calculation says so explicitly; a range is
+  never invented to fill the field.
 - **AI calls, it does not compute.** Through MCP, an AI client gets the numbers and the explanation from CivKit.
 
 ## 2. What every calculation must ship with
@@ -21,7 +24,7 @@
 | 1 | A descriptor with ID, version, inputs/outputs with dimensions ([API_DESIGN.md §2](API_DESIGN.md#2-calculation-descriptor)) |
 | 2 | **References** — book (title, edition, page/section) or code clause number. Cited, not copied. |
 | 3 | **Assumptions** in plain language |
-| 4 | **Validity limits**, enforced as warnings or errors |
+| 4 | **Validity limits**, enforced as warnings or errors, each citing its basis; or, when no reliable basis is established, an explicit statement that none is stated (D-24). Mathematical domain checks always apply. |
 | 5 | **≥1 reference case** in `tests/reference/`: known input, documented method and assumptions, cited source, stated tolerance, and an expected result that is **independently verified** — re-derived by hand or confirmed by a second source, not just copied from the book (textbooks have errata) |
 | 6 | **Edge-case tests**: zero, limits of validity range, invalid inputs, unit variations |
 | 7 | A generated **doc page**: formula, symbols, references, assumptions, limits, example |

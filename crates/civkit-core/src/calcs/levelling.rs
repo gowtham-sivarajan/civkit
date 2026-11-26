@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:09 IST · last edited 2026-11-26 00:12 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:09 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Levelling calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -300,7 +300,12 @@ static HI_DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         groups: vec![setups_group()],
         outputs,
         references: vec![SOURCE.into()],
-        assumptions: ASSUMPTIONS_REDUCTION.iter().map(|s| (*s).to_owned()).collect(),
+        assumptions: ASSUMPTIONS_REDUCTION
+            .iter()
+            .copied()
+            .chain([super::NO_VALIDITY_RANGE])
+            .map(str::to_owned)
+            .collect(),
         validity: Vec::new(),
         examples: vec![
             "tests/reference/surveying.levelling.height_of_instrument/navedtra-14069-fig14-14.json".into(),
@@ -387,7 +392,12 @@ static RF_DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
              they are not independent validation of this method by a source (D-20 condition 2)."
                 .into(),
         ],
-        assumptions: ASSUMPTIONS_REDUCTION.iter().map(|s| (*s).to_owned()).collect(),
+        assumptions: ASSUMPTIONS_REDUCTION
+            .iter()
+            .copied()
+            .chain([super::NO_VALIDITY_RANGE])
+            .map(str::to_owned)
+            .collect(),
         validity: Vec::new(),
         examples: vec![
             "tests/reference/surveying.levelling.rise_and_fall/navedtra-14069-fig14-14.json".into(),
@@ -503,6 +513,7 @@ static ADJ_DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
         "No permissible-closure test is applied: the allowable misclosure depends on the class of work and is not \
          part of this calculation."
             .into(),
+        super::NO_VALIDITY_RANGE.into(),
     ],
     validity: Vec::new(),
     examples: vec![

@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 19:15 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Fluids calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -115,6 +115,7 @@ static MANNING: LazyLock<Descriptor> = LazyLock::new(|| {
         "SI form of Manning's equation (k = 1). n is the SI coefficient, entered as a plain number; \
          inputs in other length units are converted to metres first, so the result does not depend on them."
             .into(),
+        super::NO_VALIDITY_RANGE.into(),
     ],
     validity: Vec::new(),
     examples: vec![

@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-25 23:56 IST · last edited 2026-11-26 00:00 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-25 23:56 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Surveying calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -148,6 +148,7 @@ static TRAVERSE: LazyLock<Descriptor> = LazyLock::new(|| {
         "The compass rule shares the misclosure out in proportion to leg length; it does not model the sources \
          of error."
             .into(),
+        super::NO_VALIDITY_RANGE.into(),
     ],
     validity: Vec::new(),
     examples: vec![

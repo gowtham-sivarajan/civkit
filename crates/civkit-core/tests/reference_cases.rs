@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Runs every reference case in `tests/reference/` (repository root) against the engine.
 //! Format: `tests/reference/README.md`. A case that fails to parse is a test failure, not a skip.
@@ -551,6 +551,39 @@ fn every_reference_case_records_how_it_was_verified() {
         "{} problem(s):\n{}",
         problems.len(),
         problems.join("\n")
+    );
+}
+
+/// D-24 (ADR 0012): a validity range is documented only with a reliable basis; without one, the calculation says so.
+/// The two are exclusive: a calculation with rules must not also claim to have none.
+#[test]
+fn every_calculation_states_its_validity_basis() {
+    const NONE_STATED: &str = "Validity range: none is stated";
+    let registry = registry();
+    let mut problems = Vec::new();
+    for d in registry.list() {
+        let says_none = d.assumptions.iter().any(|a| a.starts_with(NONE_STATED));
+        match (d.validity.is_empty(), says_none) {
+            (true, false) => problems.push(format!(
+                "{}: no validity rule, and the assumptions do not say \"{NONE_STATED} …\" (D-24)",
+                d.id
+            )),
+            (false, true) => problems.push(format!(
+                "{}: has validity rules but also says none is stated",
+                d.id
+            )),
+            _ => {}
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "{} problem(s):
+{}",
+        problems.len(),
+        problems.join(
+            "
+"
+        )
     );
 }
 

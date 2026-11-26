@@ -1,11 +1,17 @@
 # Phase 2D review: integration and regression
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Review record, 2026-11-26. **It does not close Phase 2.** The exit condition in
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2D) includes *cross-platform CI pass*, and the newest commits have not
 > been pushed (the maintainer paused pushing on 2026-11-26), so that part cannot be shown. Everything below is **local**
 > evidence on Windows with Rust 1.100.0 unless it says "CI". The tag `phase-2-done` is the maintainer's to create.
+>
+> **Update, 2026-11-26:** the maintainer pushed `948a49a`. CI run 45685894322 finished green on **all nine jobs**:
+> rustfmt; tests on Windows, macOS and Linux with Rust 1.98 and stable; dependency rule and cargo-deny; DCO sign-off.
+> **F1 and F10 are resolved.**
+>
+> **Decided, 2026-11-26 20:56 IST:** D3 → **D-24** and D4 → **D-25**, both in [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md). D1: the tag `phase-2-done` goes on the commit that records them, created locally by the maintainer and **not pushed** (pushing is paused). D2, D5 and D6 stay open.
 
 ## 1. The checks
 
@@ -53,16 +59,16 @@ Each finding says what it was, how it was found, and what was done. "Fixed" mean
 
 | # | Finding | How found | Status |
 |---|---|---|---|
-| **F1** | **CI evidence ends at `47a5f25`.** The D-23 implementation and the five calculations have not run on macOS, Linux or Rust 1.98. | Read-only GitHub query; `git status -sb` showed `ahead 4` | **Open.** Blocked by the pause on pushing. Re-run CI when pushing resumes, before tagging. |
+| **F1** | **CI evidence ends at `47a5f25`.** The D-23 implementation and the five calculations have not run on macOS, Linux or Rust 1.98. | Read-only GitHub query; `git status -sb` showed `ahead 4` | **Resolved 2026-11-26:** pushed as `948a49a`; CI green on all nine jobs (run 45685894322). |
 | **F2** | **Trace tests proved too little.** The registry accepts any *valid* internal unit for a trace step, not the right one. A planted `m^2` label on a volume total survived the earthwork tests; the beam test `trace_is_in_internal_units` asserted only `trace.len() == 7`; Manning's tests only counted steps. | Mutation check | **Fixed** in all seven: every numeric trace step's unit is asserted, and (Manning, beam) its value against the output. Two planted unit errors are now caught. |
 | **F3** | **Manning's unit tests used y = 1**, where `(B + z·y)·y` and `(B + z)·y` are equal. The planted error was caught only by the reference case. | Mutation check | **Fixed:** a test with B = 2, z = 2, y = 0.5 from independent geometry (top width, trapezoid area, side length). |
 | **F4** | **The demo template's descriptor listed one of its three reference cases.** | New integrity test | **Fixed**, and the test now guards every descriptor: each `examples` path exists, is in its own folder, and every case file on disk is listed. |
 | **F5** | **Stale status text:** README said "Phase 0 — Planning"; the ROADMAP said Phase 2 "(next)"; the plan said Phase 0 "(current)"; the 2A and 2B rows were "pending"; the Phase 1 tag box was unticked although the tag exists. | Review | **Fixed.** `CONTRIBUTING.md` line 5 still says "Phase 0 — Planning. Code contributions are not open yet": **left alone**, because it states a contribution policy, which is the maintainer's call (D2). |
-| **F6** | **No calculation has a validity rule.** ENGINEERING_STANDARDS §1 and §2 item 4 say "validity limits, enforced as warnings or errors". For traverse, levelling and earthwork the maintainer's accepted answers (Q-C of the traverse and levelling proposals, Q-E of the earthwork proposal) record why none exists: no source states a limit. For Manning and the beam it was never stated. | Review | **Open, wording question** (D3). Mathematical domains *are* enforced (positive depth, positions within the span, and so on). |
+| **F6** | **No calculation has a validity rule.** ENGINEERING_STANDARDS §1 and §2 item 4 say "validity limits, enforced as warnings or errors". For traverse, levelling and earthwork the maintainer's accepted answers (Q-C of the traverse and levelling proposals, Q-E of the earthwork proposal) record why none exists: no source states a limit. For Manning and the beam it was never stated. | Review | **Open, wording question** (D3). Mathematical domains *are* enforced (positive depth, positions within the span, and so on). **Decided: D-24** (ADR 0012). All seven descriptors now state that no range is established; a test enforces it. |
 | **F7** | **No test pushed a list or choice calculation through `call_json`**, the single path Python, MCP, the C ABI and the desktop app will use. | Review | **Fixed:** `tests/json_surface.rs` (8 tests) pins the JSON shapes: arrays with one unit, structured trace items, the choice step, `index` on element errors only, descriptor JSON for forms and tools, byte-identical repeat calls. |
 | **F8** | **Descriptor text and verification records were not machine-checked.** | Review | **Fixed:** two guards. Every descriptor has a title, summary, references, assumptions, examples and a description for every input and output. Every reference case has a title, a provenance line naming a model, and a `verification` text. |
-| **F9** | **The beam's maximum shear and moment are still missing.** D-20 allows them only with one more openly licensed worked example, and it allows moving them to a later release if none is found. | Known since 2C | **Open** (D4). |
-| **F10** | **`cargo-deny` is not installed locally**, so advisories (RustSec) were not checked here. The licence and ban rules were checked by script against the lockfile. | Review | **Open, optional** (D5). One legacy licence spelling, `MIT/Apache-2.0` (`core_detect`), is how `cargo-deny` itself would read "MIT or Apache-2.0", but it was not run. |
+| **F9** | **The beam's maximum shear and moment are still missing.** D-20 allows them only with one more openly licensed worked example, and it allows moving them to a later release if none is found. | Known since 2C | **Open** (D4). **Decided: D-25** (ADR 0012): deferred from 0.1; the search continues. |
+| **F10** | **`cargo-deny` is not installed locally**, so advisories (RustSec) were not checked here. The licence and ban rules were checked by script against the lockfile. | Review | **Resolved by CI** (cargo-deny job green on `948a49a`); a local install stays optional (D5). One legacy licence spelling, `MIT/Apache-2.0` (`core_detect`), is how `cargo-deny` itself would read "MIT or Apache-2.0", but it was not run. |
 | **F11** | **All code and tests were written by an AI model, with the same model family doing the review.** The independence in this project comes from outside computations (exact rational and 70-digit arithmetic, mutation checks), not from a second reader. | Review | **Open** (D6): a human code review is still missing, as §3 requires. |
 
 ## 4. Not verified in 2D
@@ -79,10 +85,10 @@ Each finding says what it was, how it was found, and what was done. "Fixed" mean
 
 | # | Question | Recommendation |
 |---|---|---|
-| **D1** | When to create the tag `phase-2-done`? | After CI is green on the pushed commits and D3, D4 are settled. The exit condition names CI. If you would rather tag on local evidence, label the tag message "local evidence only". |
+| **D1** | When to create the tag `phase-2-done`? | After CI is green on the pushed commits and D3, D4 are settled. The exit condition names CI. If you would rather tag on local evidence, label the tag message "local evidence only". **Decided 2026-11-26:** tag the commit that records D-24 and D-25, locally; not pushed. |
 | **D2** | `CONTRIBUTING.md` still says "Phase 0 — Planning. Code contributions are not open yet." Update the phase name, the policy, or both? | Your call; the policy sentence is yours. |
-| **D3** | Validity rules (F6): accept "no stated range, so no rule" as the standard, and say so in ENGINEERING_STANDARDS §1 and ACCEPTANCE §3, or require one per calculation (for example a Manning's n range with a cited source)? | Accept the first, in writing. Inventing ranges would be unverified engineering content. |
-| **D4** | Beam maximum shear and moment (F9): keep searching for an open example, or move them explicitly to a later release now? | Move them explicitly, and keep searching in the background. The five families are otherwise complete. |
+| **D3** | Validity rules (F6): accept "no stated range, so no rule" as the standard, and say so in ENGINEERING_STANDARDS §1 and ACCEPTANCE §3, or require one per calculation (for example a Manning's n range with a cited source)? | Accept the first, in writing. Inventing ranges would be unverified engineering content. **Decided 2026-11-26: D-24.** |
+| **D4** | Beam maximum shear and moment (F9): keep searching for an open example, or move them explicitly to a later release now? | Move them explicitly, and keep searching in the background. The five families are otherwise complete. **Decided 2026-11-26: D-25.** |
 | **D5** | Install `cargo-deny` locally (`cargo install cargo-deny --locked`, a free tool, needs the network once)? | Optional. CI already runs it; it matters most while pushing is paused. |
 | **D6** | Human code review (F11): who and when? | Before 0.1. A first pass over the contract (`registry.rs`, about 1 250 lines, much of it tests) and one calculation (`levelling.rs`, about 650 lines with tests) would cover the most. |
 

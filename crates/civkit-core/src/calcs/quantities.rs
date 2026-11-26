@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:18 IST · last edited 2026-11-26 00:23 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-26 00:18 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities calculations for 0.1 (D-20, ADR 0009).
 //!
@@ -271,6 +271,7 @@ static DESCRIPTOR: LazyLock<Descriptor> = LazyLock::new(|| {
             .into(),
         "No shrink or swell, no curvature correction, and no prismoidal correction (not in 0.1).".into(),
         "Cut and fill are not netted within a station.".into(),
+        super::NO_VALIDITY_RANGE.into(),
     ],
     validity: Vec::new(),
     examples: vec![

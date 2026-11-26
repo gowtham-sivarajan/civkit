@@ -2,11 +2,11 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 00:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
-> **Status:** Phase 2 — units, geometry and calculations (review stage 2D). Phases 0 and 1 are done. The engine has
-> `civkit-core`, `civkit-units`, `civkit-geometry` and seven registered calculations; there is no release yet (0.1 comes
-> after Phase 4). Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
+> **Status:** Phase 2 (units, geometry, calculations) is complete: five calculation families, seven registered
+> calculations, all with reference cases. Next is Phase 3 (Python and MCP). There is no release yet (0.1 comes after
+> Phase 4). Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
 > [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
 
 CivKit is a free, open-source, offline-first engineering toolkit. It brings reliable civil-engineering

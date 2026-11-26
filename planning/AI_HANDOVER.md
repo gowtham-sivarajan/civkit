@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 00:55 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,8 +8,8 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 2 — Units, geometry, calculations (stage 2D: reviewed locally, closes when CI is green; see [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md))
-**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C, complete except the beam's maximum shear and moment)
+**Current phase:** 2 complete (2026-11-26; tag `phase-2-done` created locally by the maintainer). **Next: Phase 3** (Python and MCP).
+**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C complete; the beam's maximum shear and moment are deferred from 0.1, D-25)
 
 ---
 
@@ -39,9 +39,9 @@
 6. **Git:** the maintainer runs git commands; AI tools cannot write inside `.git`. After changes, give the
    maintainer the exact commands. Put the commit message in the git-ignored `_commit_msg.txt` and have the maintainer
    run `git commit -s -F _commit_msg.txt` (pasted multi-part `-m` lines get cut off; `-s` is the D-11 sign-off). Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
-   **GitHub pushes:** the maintainer paused them on 2026-11-26 and lifted the pause the same day by asking for push
-   steps. The AI never runs `git push` itself; it gives the exact commands. CI runs only on pushed commits, so say
-   "local evidence only" for anything newer than the last push until the maintainer reports the CI result.
+   **GitHub pushes are PAUSED** (the maintainer, 2026-11-26 20:56 IST: "i dont want any files pushed for now; i'll say
+   so when i need to"). Never run or suggest `git push`, **tags included**. CI runs only on pushed commits, so anything
+   after `948a49a` has local evidence only; say so.
 7. Never present unverified engineering content as fact; flag it for engineering review.
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
@@ -61,15 +61,14 @@
   - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
     is accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)).
-    **`surveying.traverse.compass_rule` (C3) is implemented and committed** (`ddecbfb`). **The three levelling
-    calculations (C4, C9) and `quantities.earthwork.average_end_area` (C1, C2) are implemented and green locally but
-    uncommitted** (256 tests; see the 2026-11-26 00:40 log entry). **With earthwork, the five D-20 calculation
-    families are all implemented.** Remaining in 2C: the beam's maximum shear and moment, still without a qualifying
-    open example. Next: 2D (integration and regression).
+    **`surveying.traverse.compass_rule` (C3) is implemented and committed** (`ddecbfb`). Levelling and earthwork are
+    committed and pushed (`948a49a`, CI green on all nine jobs). **The five D-20 calculation families are complete.**
+    The beam's maximum shear and moment are deferred from 0.1 (D-25). 2D review done; D-24 and D-25 decided
+    ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)).
 
 **Decisions**
-- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22.
-- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1); **D-23 (list and choice inputs, blocks 2C)**.
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22 … D-25.
+- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
   See [DECISIONS.md](DECISIONS.md).
 
 **Engine state**
@@ -112,20 +111,19 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next:** Windows check and commit of levelling, earthwork and the 2D changes (see the 00:25, 00:40 and 00:55
-   entries; stage exactly the listed files, never `planning/ui-concepts/`). Then the maintainer answers **D1 … D6 in
-   [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)**. Phase 2 closes (tag `phase-2-done`) when CI is green on the pushed
-   commits, which waits for the push pause to end. Meanwhile the next buildable work is Phase 3 design (Python and MCP
-   over `Registry::call_json`), or the search for an open example for the beam's maximum shear and moment.
+1. **Next: Phase 3 design.** The Python package (`bindings/python`, PyO3) and the local MCP server (`integrations/mcp`,
+   `rmcp`, stdio) over `Registry::call_json`, each surface proposed for review before code. Re-read D-13 against the MCP
+   specification revision 2026-07-28 (COMPETITIVE_LANDSCAPE §9.5). Still open from 2D: D2 (the `CONTRIBUTING.md` status
+   line), D5 (optional local `cargo-deny`), D6 (a human code review before 0.1).
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
-3. **Maintainer:** Windows check, commit with `git commit -s -F _commit_msg.txt`, push to `origin/main`, then report
-   the CI result (nothing after `47a5f25` has run in CI yet). The step-by-step push was given on 2026-11-26.
+3. **Maintainer:** for each change, Windows check, then commit with `git commit -s -F _commit_msg.txt`. **No push**
+   (paused since 2026-11-26 20:56 IST, until the maintainer says otherwise).
 4. Done: D-23 (ADR 0011, API_DESIGN text, contract extension) and traverse, levelling and earthwork, each with its
    descriptor proposed and accepted first (D-20 condition 4). The traverse omits the misclosure direction (Q-B of its
    proposal), so the GEOMETRY.md §7 question of when a misclosure counts as zero did not arise.
-5. Beam maximum shear and moment: still need an openly licensed example with a full-span UDL and one point load
-   (S4 ch. 7 and one statics text checked; none fits).
+5. Beam maximum shear and moment: **deferred from 0.1** (D-25). Keep searching for an openly licensed example with a
+   full-span UDL and one point load (S4 ch. 7 and one statics text checked; none fits); it returns as new outputs.
 6. **AI sessions:** the output mirror is a network mount that does not update file times on in-place edits, so
    cargo can reuse stale builds. Build from a content-synced local copy.
 5. Review Dependabot pull requests as they arrive (each must pass CI).
@@ -138,6 +136,30 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 20:58 IST — D-24 and D-25 decided; Phase 2 closed; pushing paused again *(Claude Sonnet 5.5)*
+- The maintainer answered D3 and D4 of PHASE_2D_REVIEW.md and asked for D1's tag. Recorded as **D-24** and **D-25** in
+  [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) (register and index in DECISIONS.md):
+  - **D-24:** mathematical domain checks always apply; a validity range is documented only with a reliable basis (a cited
+    source); otherwise the calculation says so; nothing is invented. ENGINEERING_STANDARDS §1 and §2 item 4 and
+    ACCEPTANCE_CRITERIA §3 reworded. All seven descriptors now carry the statement through one constant,
+    `calcs::NO_VALIDITY_RANGE`; the new test `every_calculation_states_its_validity_basis` was red for exactly those
+    seven before the change. No result changed, so no version changed.
+  - **D-25:** the beam's maximum shear and moment are deferred from 0.1; the search continues; they return as new outputs.
+    The beam's summary cites it. MVP_SCOPE and ADR 0009 are not edited (ADR 0009 already foresaw this; ADR 0012 records it).
+- ACCEPTANCE_CRITERIA Phase 2: "every calculation meets §3" ticked **with three recorded exceptions** (doc pages in
+  Phase 3; code review D6; engineering review deferred by the maintainer), as the maintainer chose to close Phase 2.
+  The tag box stays unticked until the tag exists.
+- **Pushing is paused again** (20:56 IST). Memory and working rule 6 updated; no push or tag push in any instruction.
+- Checks: fmt, clippy `-D warnings`, all tests, `cargo doc`, dependency rule (local only; CI last ran on `948a49a`).
+- Commit and the local tag: the maintainer runs them from the commands given in the session.
+
+### 2026-11-26 20:51 IST — Pushed; CI green on everything *(Claude Sonnet 5.5)*
+- The maintainer committed the levelling, earthwork and 2D work as `948a49a` and pushed (the push pause was lifted the
+  same day). CI run 45685894322: **all nine jobs green**: rustfmt; tests on Windows, macOS, Linux × Rust 1.98 and stable;
+  dependency rule and cargo-deny; DCO. Findings F1 (no CI evidence) and F10 (advisories unchecked) are resolved.
+- Remaining before `phase-2-done`: the maintainer's decisions D1 … D6 in PHASE_2D_REVIEW.md. Working tree clean apart
+  from the untracked `planning/ui-concepts/`.
 
 ### 2026-11-26 00:55 IST — Phase 2D review done locally; new rule: no GitHub push *(Claude Sonnet 5.5)*
 - **New maintainer rule: no push to GitHub for a while.** Saved as a memory and written into working rule 6 above. CI
