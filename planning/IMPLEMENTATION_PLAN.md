@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -69,7 +69,10 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
   inputs; units; trace fields; error `index`. Plus the planned notebooks and generated documentation pages (task 4 and
   ACCEPTANCE_CRITERIA §3).
 
-1. `bindings/python`: PyO3 + maturin; generic `call`, `list`, `describe`; generated typed functions.
+1. `bindings/python`: PyO3 + maturin; generic `call`, `list`, `describe`; generated typed functions. **Code done
+   (2026-11-27); gates pending CI:** 38 Python tests (API, P3 parity incl. error envelopes, P4, P5, stub drift) pass
+   locally against an offline-installed Windows wheel; P1 on all five targets and P2 on 3.11–3.15 need the new
+   `Python` workflow (`.github/workflows/python.yml`) to run green.
 2. `integrations/mcp`: `rmcp` server, stdio, tools generated from descriptors, read-only annotations.
 3. Parity tests across Rust, Python and MCP.
 4. Example notebooks in `integrations/jupyter`.

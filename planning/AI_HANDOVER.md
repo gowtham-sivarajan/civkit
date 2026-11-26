@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -113,7 +113,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 4. Next actions
 
 1. **Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md): `rmcp` `=3.12.0`, both protocol eras, tool names and the result mapping, gates G1–G3) and D-26 ([ADR 0014](decisions/0014-python-package.md): CPython 3.11–3.15, PyO3 0.30.1 abi3 wheels for five targets, the thin binding layer, gates P1–P5). D-26 was the last open precondition.
-2. **Phase 3 implementation:** build Python and MCP as thin interfaces over Registry::call_json; add parity tests, offline wheel checks, real stdio MCP checks, notebooks and generated documentation.
+2. **Phase 3 implementation:** Python package code is done (`bindings/python`, see the log); **its gates P1–P5 are
+   met only when the `Python` workflow is green on GitHub.** Next: the MCP server (`integrations/mcp`, ADR 0013,
+   G1–G3, tests first), then parity tests across Rust, Python and MCP, notebooks and generated documentation.
 3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
 4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
 5. D5 (local cargo-deny) is optional; CI already checks it.
@@ -124,6 +126,33 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 00:02 IST — Phase 3: the Python package (`bindings/python`), tests first *(Claude Sonnet 5.5)*
+- **Tests first** (red before any package existed), `unittest` only: `tests/test_api.py` (discovery, the input
+  forms, results, `.to()`, typed functions), `tests/test_gates.py` (P3 every reference case + error envelopes field
+  by field, P4, P5 socket-blocked subprocess), `tests/test_stub.py` (Q-E drift). 38 tests.
+- **Rust layer:** `src/lib.rs`, exactly `call_json`, `list_json`, `describe_json`, `version` over a `LazyLock`
+  registry. Builds under `unsafe_code = "forbid"` (PyO3 0.30.1 macros are compatible). Its own Cargo workspace,
+  excluded from the root (`exclude` in the root Cargo.toml), so root CI never builds PyO3; own `Cargo.lock`.
+- **Python layer** (`python/civkit/`): `Q`, `Result`, `CivKitError`, `call`/`list`/`describe`, typed functions as
+  `civkit.<domain>.<topic>.<method>` with keyword-only signatures (inputs + `output_units`) and docstrings from the
+  descriptor. It only reshapes; the engine validates. A list of `Q` in mixed units is refused with `ValueError`
+  (the one Python-side check: the contract has one unit per list). `Q.to()` reruns the request with
+  `output_units`; a hand-made `Q` cannot convert. Stub `__init__.pyi` from `tools/gen_stub.py`.
+- **Mutation check** (16 mutants of the Python layer): 13 killed at first; the 3 survivors exposed gaps (warnings,
+  `.to()` beyond index 0, tuple values in the request), tests added, now 16/16.
+- **Defect fixed in the engine:** `calcs::NO_VALIDITY_RANGE` held a literal `
+` and five spaces (a broken line
+  continuation), so every descriptor's D-24 statement differed from ADR 0012's sentence. The validity-basis test now
+  checks the exact sentence (red first, then fixed). Root workspace: fmt, clippy and 270 tests green.
+- **P1 locally (Windows x86-64 only):** release abi3 wheel built, installed with `pip --no-index` into a fresh venv,
+  offline check and all 38 tests pass against the installed copy.
+- **CI:** `python.yml` written to `_move_to_dot_github/workflows/` for the maintainer to move (AI tools cannot write
+  `.github/`): fmt/clippy/MSRV and cargo-deny for `bindings/python` (closing the cargo-deny gap), and 13 wheel jobs
+  (5 targets; 3.11–3.15 on Linux x86-64, 3.11 and 3.15 elsewhere): build, offline install (Linux in a network
+  namespace), offline check, full test suite. New pins: setup-python v7.1.0 `6d4fd22b`, maturin-action v1.51.0
+  `e83996d1` (resolved with `git ls-remote`). **Unverified until it runs:** runner labels `macos-15-intel` and
+  `ubuntu-24.04-arm`; that current stable Rust still builds for manylinux2014 (glibc 2.17); `sudo unshare --net`.
 
 ### 2026-11-26 23:44 IST — D-26 accepted (ADR 0014); Phase 3 preconditions settled *(Claude Sonnet 5.5)*
 - The maintainer accepted Q-A … Q-G of PYTHON_BINDINGS_PROPOSAL.md with two clarifications, both applied:

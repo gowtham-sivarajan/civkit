@@ -1,0 +1,33 @@
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# The Python extension (D-26, ADR 0014). Its own workspace, excluded from the root one, so the root CI jobs do not
+# build PyO3 (which needs a Python >= 3.11 to build). Built with maturin; see pyproject.toml.
+[workspace]
+
+[package]
+name = "civkit-python"
+description = "CivKit for Python: the thin Rust layer (civkit._civkit)"
+version = "0.0.0"                # equals the engine's version; civkit.__version__ comes from civkit-core
+edition = "2024"
+rust-version = "1.98"
+license = "Apache-2.0"
+repository = "https://github.com/gowtham-sivarajan/civkit"
+authors = ["CivKit contributors"]
+publish = false
+
+[lib]
+name = "_civkit"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+civkit-core = { path = "../../crates/civkit-core" }
+pyo3 = { version = "=0.30.1", features = ["abi3-py311"] }
+serde_json = "1"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+unwrap_used = "warn"

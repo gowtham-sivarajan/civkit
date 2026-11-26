@@ -1,0 +1,28 @@
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# The Python package (D-26, ADR 0014): CPython 3.11-3.15, one abi3 wheel per target, no runtime dependencies.
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project]
+name = "civkit"
+description = "Offline, traceable civil-engineering calculations"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dynamic = ["version"]
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Rust",
+]
+
+[tool.maturin]
+module-name = "civkit._civkit"
+python-source = "python"
+features = ["pyo3/abi3-py311"]

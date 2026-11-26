@@ -1,0 +1,95 @@
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# The Python package (D-26, planning/decisions/0014-python-package.md): gates P1-P5 in CI.
+#   P1  each of the five targets builds its abi3 wheel, installs it offline and runs a calculation
+#   P2  the test suite on CPython 3.11-3.15 (all five on Linux x86-64; the lowest and highest elsewhere)
+#   P3-P5 and the stub drift check (Q-E) are tests in bindings/python/tests, run on every target and version
+# Also: rustfmt, clippy, the MSRV build and cargo-deny for bindings/python, which is its own Cargo workspace and so is
+# not covered by ci.yml. Actions are pinned to commit SHAs (docs/SECURITY.md).
+name: Python
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: bindings/python (rustfmt, clippy, MSRV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - run: rustup toolchain install 1.98 --profile minimal
+      - run: rustup toolchain install stable --profile minimal --component rustfmt,clippy && rustup default stable
+      - run: cargo fmt --manifest-path bindings/python/Cargo.toml --check
+      - run: cargo clippy --manifest-path bindings/python/Cargo.toml --locked --all-targets -- -D warnings
+      - run: cargo +1.98 check --manifest-path bindings/python/Cargo.toml --locked
+
+  deny:
+    name: bindings/python (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@81891abc19297b21343b15ef67dc61e4aea74fda # v2.1.4
+        with:
+          command: check
+          manifest-path: bindings/python/Cargo.toml
+
+  wheel:
+    name: P1/P2 (${{ matrix.name }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64, manylinux: "2014", python: "3.11" }
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64, manylinux: "2014", python: "3.12" }
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64, manylinux: "2014", python: "3.13" }
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64, manylinux: "2014", python: "3.14" }
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64, manylinux: "2014", python: "3.15" }
+          - { name: linux-aarch64, os: ubuntu-24.04-arm, target: aarch64, manylinux: "2014", python: "3.11" }
+          - { name: linux-aarch64, os: ubuntu-24.04-arm, target: aarch64, manylinux: "2014", python: "3.15" }
+          - { name: macos-x86_64, os: macos-15-intel, target: x86_64, manylinux: "off", python: "3.11" }
+          - { name: macos-x86_64, os: macos-15-intel, target: x86_64, manylinux: "off", python: "3.15" }
+          - { name: macos-arm64, os: macos-latest, target: aarch64, manylinux: "off", python: "3.11" }
+          - { name: macos-arm64, os: macos-latest, target: aarch64, manylinux: "off", python: "3.15" }
+          - { name: windows-x86_64, os: windows-latest, target: x64, manylinux: "off", python: "3.11" }
+          - { name: windows-x86_64, os: windows-latest, target: x64, manylinux: "off", python: "3.15" }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build the abi3 wheel
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          maturin-version: v1.16.0
+          working-directory: bindings/python
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          args: --release --locked --out dist
+      - name: P1 - offline install and a calculation
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          if [ "$RUNNER_OS" = "Windows" ]; then VPY="$RUNNER_TEMP/venv/Scripts/python.exe"; else VPY="$RUNNER_TEMP/venv/bin/python"; fi
+          echo "VPY=$VPY" >> "$GITHUB_ENV"
+          # Linux: a network namespace with no interfaces. Elsewhere: pip's --no-index, and the check refuses sockets.
+          if [ "$RUNNER_OS" = "Linux" ]; then OFFLINE="sudo unshare --net --"; else OFFLINE=""; fi
+          $OFFLINE "$VPY" -m pip install --no-index --find-links bindings/python/dist civkit
+          $OFFLINE "$VPY" bindings/python/tools/offline_check.py
+      - name: P2-P5 and the stub check - the test suite against the installed wheel
+        shell: bash
+        run: '"$VPY" -m unittest discover -s bindings/python/tests -v'

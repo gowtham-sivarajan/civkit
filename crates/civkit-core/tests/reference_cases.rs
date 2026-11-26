@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Runs every reference case in `tests/reference/` (repository root) against the engine.
 //! Format: `tests/reference/README.md`. A case that fails to parse is a test failure, not a skip.
@@ -559,10 +559,20 @@ fn every_reference_case_records_how_it_was_verified() {
 #[test]
 fn every_calculation_states_its_validity_basis() {
     const NONE_STATED: &str = "Validity range: none is stated";
+    const STATEMENT: &str = "Validity range: none is stated, because no reliable source for one has been established. The mathematical domain of every input is still enforced.";
     let registry = registry();
     let mut problems = Vec::new();
     for d in registry.list() {
         let says_none = d.assumptions.iter().any(|a| a.starts_with(NONE_STATED));
+        // The statement is ADR 0012's sentence exactly, on one line.
+        for a in d.assumptions.iter().filter(|a| a.starts_with(NONE_STATED)) {
+            if a != STATEMENT {
+                problems.push(format!(
+                    "{}: the D-24 statement differs from ADR 0012's: {a:?}",
+                    d.id
+                ));
+            }
+        }
         match (d.validity.is_empty(), says_none) {
             (true, false) => problems.push(format!(
                 "{}: no validity rule, and the assumptions do not say \"{NONE_STATED} …\" (D-24)",
