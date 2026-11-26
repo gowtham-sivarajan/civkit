@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 22:55 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -50,9 +50,8 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
 
 ## Phase 3 — Python and MCP
 
-**Before any Phase 3 code** (order agreed 2026-11-26):
+**Before Phase 3 code:** settle and approve the interface decisions below. The D6 code review and human engineering review are bulk review gates after Phase 4 and before 0.1; they do not block Phase 3 coding.
 
-- **First, the D6 human code review** of `registry.rs` and `levelling.rs` ([CODE_REVIEW_D6.md](CODE_REVIEW_D6.md)).
 - **D-13 stays Proposed** until the SDK is chosen and pinned. Recheck the MCP specification revision 2026-07-28
   (https://modelcontextprotocol.io/specification/2026-07-28) and the official Rust SDK `rmcp`
   (https://github.com/modelcontextprotocol/rust-sdk); record the choice and the pinned version in a decision record.
@@ -83,7 +82,7 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).
 4. Fuzzing; DXF fixtures; expose via Python and MCP.
-5. Release 0.1.
+5. Bulk human review before 0.1: complete D6, the separate C1–C9 engineering review, Phase 4 DXF results and fixtures, and generated documentation review; record each outcome. Then release 0.1.
 
 ## Phase 5 — AutoCAD / Civil 3D → 0.2
 

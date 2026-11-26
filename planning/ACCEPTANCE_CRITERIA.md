@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 22:54 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -29,9 +29,9 @@
 - [x] Tag `phase-1-done`. *Exists locally (checked 2026-11-26).*
 
 ### Phase 2 — Units, geometry, calculations
-- [x] Every 0.1 calculation meets §3 below, **with three recorded exceptions**: the generated doc page (built in Phase 3), the independent code review (D6, before 0.1) and the human engineering review (deferred by the maintainer until the product is complete). *2026-11-26: the technical items are verified for all seven calculations ([PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)); validity per D-24, beam scope per D-25 ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). The maintainer chose to close Phase 2 on this basis.*
+- [x] Every 0.1 calculation meets §3 below, with three recorded exceptions: generated documentation is Phase 3 work; D6 code review and the human engineering review are scheduled as a bulk review after Phase 4 implementation and before 0.1. They remain separate approvals. Technical items for all seven calculations were verified in [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md); validity and beam scope follow D-24 and D-25 ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)).
 - [x] Property tests for units and geometry pass. *7 in `civkit-units`, 6 in `civkit-geometry`; CI green on `6d3d16a` and `bc06cb1` (2026-11-25); traverse, levelling and earthwork add property tests of their own (2026-11-26, local).*
-- [ ] Tag `phase-2-done`. *Held until CI has checked the latest commit (the green run on `948a49a` predates D-24 and D-25), which waits for pushing to resume (the maintainer, 2026-11-26).*
+- [x] Tag phase-2-done. CI run #11 passed on commit 87fa3d2; the tag is present on GitHub (2026-11-26).
 
 ### Phase 3 — Python + MCP
 - [ ] `pip install` of the built wheel works offline on Windows, macOS, Linux.

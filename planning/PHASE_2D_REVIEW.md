@@ -1,17 +1,13 @@
 # Phase 2D review: integration and regression
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 22:56 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
-> **Status:** Review record, 2026-11-26. **It does not close Phase 2.** The exit condition in
-> [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2D) includes *cross-platform CI pass*, and the newest commits have not
-> been pushed (the maintainer paused pushing on 2026-11-26), so that part cannot be shown. Everything below is **local**
-> evidence on Windows with Rust 1.100.0 unless it says "CI". The tag `phase-2-done` is the maintainer's to create.
+> **Status:** Phase 2 review record, updated 2026-11-26. CI run #11 passed on commit 87fa3d2; the phase-2-done tag is on GitHub. Phase 2 technical work is complete. Human code review D6 and human engineering review C1–C9 remain open and are scheduled after Phase 4 implementation, before 0.1.
 >
-> **Update, 2026-11-26:** the maintainer pushed `948a49a`. CI run 45685894322 finished green on **all nine jobs**:
-> rustfmt; tests on Windows, macOS and Linux with Rust 1.98 and stable; dependency rule and cargo-deny; DCO sign-off.
-> **F1 and F10 are resolved.**
+> **Evidence boundary:** The checks in this report are local Windows evidence unless marked CI. CI run #11 verifies the latest pushed commit; earlier run details are retained below as history.
 >
-> **Decided, 2026-11-26 20:56 IST:** D3 → **D-24** and D4 → **D-25**, both in [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md). D1 (revised the same day): the tag `phase-2-done` is **held until CI has checked the latest commit**, which waits for pushing to resume. D2: the phase label in `CONTRIBUTING.md` is updated and its policy sentence kept. D5 and D6 stay open.
+> **Decision status:** D-24 and D-25 are recorded in ADR 0012. D1 (the Phase 2 tag) is complete; D2 is recorded in CONTRIBUTING; D5 remains optional; D6 is deferred to the bulk review.
+>
 
 ## 1. The checks
 
@@ -85,12 +81,12 @@ Each finding says what it was, how it was found, and what was done. "Fixed" mean
 
 | # | Question | Recommendation |
 |---|---|---|
-| **D1** | When to create the tag `phase-2-done`? | After CI is green on the pushed commits and D3, D4 are settled. The exit condition names CI. If you would rather tag on local evidence, label the tag message "local evidence only". **Decided 2026-11-26:** tag the commit that records D-24 and D-25, locally; not pushed. **Revised:** the tag waits until CI has checked the latest commit; pushing is paused. |
+| **D1** | When to create the phase-2-done tag? | **Completed 2026-11-26:** CI run #11 passed on 87fa3d2 and the phase-2-done tag is present on GitHub. |
 | **D2** | `CONTRIBUTING.md` still says "Phase 0 — Planning. Code contributions are not open yet." Update the phase name, the policy, or both? | Your call; the policy sentence is yours. **Decided 2026-11-26:** the phase label is updated; the policy sentence is kept as written. |
 | **D3** | Validity rules (F6): accept "no stated range, so no rule" as the standard, and say so in ENGINEERING_STANDARDS §1 and ACCEPTANCE §3, or require one per calculation (for example a Manning's n range with a cited source)? | Accept the first, in writing. Inventing ranges would be unverified engineering content. **Decided 2026-11-26: D-24.** |
 | **D4** | Beam maximum shear and moment (F9): keep searching for an open example, or move them explicitly to a later release now? | Move them explicitly, and keep searching in the background. The five families are otherwise complete. **Decided 2026-11-26: D-25.** |
-| **D5** | Install `cargo-deny` locally (`cargo install cargo-deny --locked`, a free tool, needs the network once)? | Optional. CI already runs it; it matters most while pushing is paused. |
-| **D6** | Human code review (F11): who and when? | Before 0.1. A first pass over the contract (`registry.rs`, about 1 250 lines, much of it tests) and one calculation (`levelling.rs`, about 650 lines with tests) would cover the most. **Guide and record:** [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md) (2026-11-26); open until a human reviewer signs it off. |
+| **D5** | Install cargo-deny locally? | Optional; CI runs cargo-deny, so local installation is not a blocker. |
+| **D6** | Human code review (F11): who and when? | Before 0.1, bundled at the end of Phase 4 with the separate C1–C9 human engineering review. The reviewer uses [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md); D6 stays open until a human signs it off. |
 
 ## 6. What changed in the working tree for 2D
 

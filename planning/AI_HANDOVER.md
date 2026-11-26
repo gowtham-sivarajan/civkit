@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:56 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,7 +8,7 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 2: work complete (2026-11-26); the tag `phase-2-done` is held until CI has checked the latest commit (the green run on `948a49a` predates D-24 and D-25), which waits for pushing to resume (the maintainer, 2026-11-26). **Next: Phase 3** (Python and MCP).
+**Current phase:** Phase 2 is complete; CI run #11 passed on 87fa3d2 and the phase-2-done tag is on GitHub. **Next: Phase 3** (Python and MCP). D6 and engineering review remain open for the bulk review before 0.1.
 **Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C complete; the beam's maximum shear and moment are deferred from 0.1, D-25)
 
 ---
@@ -47,7 +47,7 @@
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
-## 3. Where things stand (snapshot 2026-11-25 19:00 IST)
+## 3. Where things stand (snapshot 2026-11-26)
 
 **Phases**
 - Phase 0 (planning): ✅, tag `plan-v1.0`.
@@ -59,7 +59,7 @@
     ([run #5](https://github.com/gowtham-sivarajan/civkit/actions/runs/45622288253)); the eight implementation items
     confirmed by the maintainer. The follow-up (derived tolerances must be finite) passed the maintainer's Windows
     check; it is committed together with 2C part 1.
-  - **2C (calculations)**: 🔄. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
+  - **2C (calculations)**: ✅ complete. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
     `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
     is accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)).
     **`surveying.traverse.compass_rule` (C3) is implemented and committed** (`ddecbfb`). Levelling and earthwork are
@@ -112,35 +112,23 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next, in this order** (agreed 2026-11-26):
-   1. **D6:** a human reviewer works through [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md) (`registry.rs`, `levelling.rs`)
-      and signs it off. An AI session may help prepare, but must not fill in the record.
-   2. **Phase 3 preconditions** in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 3: D-13 stays Proposed until
-      the MCP SDK is chosen and pinned against the 2026-07-28 specification; settle Python versions and wheels, MCP tool
-      names and schemas, and how responses keep the contract; propose each before code.
-   3. Push resumed 2026-11-26: once CI is green on the pushed `main`, create and push the annotated tag `phase-2-done`.
-   D5 (local `cargo-deny`) stays optional.
-2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
-   (beam `point_load_position`) stay in prose; Phase 3 task recorded.
-3. **Maintainer:** for each change, Windows check, commit with `git commit -s -F _commit_msg.txt`, push to `origin/main`,
-   then report the CI result.
-4. Done: D-23 (ADR 0011, API_DESIGN text, contract extension) and traverse, levelling and earthwork, each with its
-   descriptor proposed and accepted first (D-20 condition 4). The traverse omits the misclosure direction (Q-B of its
-   proposal), so the GEOMETRY.md §7 question of when a misclosure counts as zero did not arise.
-5. Beam maximum shear and moment: **deferred from 0.1** (D-25). Keep searching for an openly licensed example with a
-   full-span UDL and one point load (S4 ch. 7 and one statics text checked; none fits); it returns as new outputs.
-6. **AI sessions:** the output mirror is a network mount that does not update file times on in-place edits, so
-   cargo can reuse stale builds. Build from a content-synced local copy.
-5. Review Dependabot pull requests as they arrive (each must pass CI).
-6. Later: an AutoCAD-written DXF fixture once a licence that allows publishing exists. Phase 4 inherits the
-   geometry tasks listed in IMPLEMENTATION_PLAN (transformations, OCS, contract representation of geometry notes).
-
-Deferred by the maintainer: human engineering review of C1–C9 (until the product is complete);
-general prismoidal and soil phase relationships (later release).
+1. **Phase 3 preconditions:** settle D-13 by rechecking the MCP specification and choosing and pinning the official Rust SDK. Settle the Python version and wheel plan, MCP tool names and schemas, and success/error response mapping before implementation. Each interface proposal is reviewed before its code.
+2. **Phase 3 implementation:** build Python and MCP as thin interfaces over Registry::call_json; add parity tests, offline wheel checks, real stdio MCP checks, notebooks and generated documentation.
+3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
+4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
+5. D5 (local cargo-deny) is optional; CI already checks it.
+6. Beam maximum shear and moment remain deferred from 0.1 (D-25); continue looking for a suitable open worked example. General prismoidal and soil phase relationships remain later-release work.
+7. The phase-2-done tag and CI gate are complete: run #11 passed on 87fa3d2 and the tag is on GitHub. Pushing is resumed; the maintainer runs Git commands and reports CI.
+8. Preserve planning/ui-concepts/; it is maintainer-owned and untracked.
 
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 22:56 IST — Review timing moved to the 0.1 bulk gate *(OpenAI Codex; GPT-6, runtime model ID unavailable)*
+- The maintainer will complete Phase 3 and Phase 4 code before the human review session. D6 code review and the separate C1–C9 engineering review are bundled after Phase 4 and before 0.1; generated documentation and Phase 4 DXF outputs are included.
+- Phase 3 begins with the D-13 and interface preconditions; D6 no longer blocks Phase 3 coding. D6 remains open until a human signs the review record.
+- CI run #11 is green on 87fa3d2 and the phase-2-done tag is on GitHub. Other code still needed for 0.1 is in Phase 4.
 
 ### 2026-11-26 22:34 IST — Pushing resumed *(Claude Sonnet 5.5)*
 - The maintainer committed the D6 guide as `9eb22a3` and resumed pushing: "actually this time we are gonna commit to
