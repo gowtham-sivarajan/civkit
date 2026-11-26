@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -39,9 +39,10 @@
 6. **Git:** the maintainer runs git commands; AI tools cannot write inside `.git`. After changes, give the
    maintainer the exact commands. Put the commit message in the git-ignored `_commit_msg.txt` and have the maintainer
    run `git commit -s -F _commit_msg.txt` (pasted multi-part `-m` lines get cut off; `-s` is the D-11 sign-off). Commands reference: [CONTRIBUTING.md §5](../CONTRIBUTING.md#5-working-with-git).
-   **GitHub pushes are PAUSED** (the maintainer, 2026-11-26 20:56 IST: "i dont want any files pushed for now; i'll say
-   so when i need to"). Never run or suggest `git push`, **tags included**. CI runs only on pushed commits, so anything
-   after `948a49a` has local evidence only; say so.
+   **GitHub pushes: allowed again** (resumed by the maintainer on 2026-11-26 after a pause). The AI never runs
+   `git push` itself; it gives the exact commands after `git fetch` and `git status -sb` checks. CI runs only on pushed
+   commits, so tags and phase gates that name CI wait for the maintainer to report the CI result. The maintainer can
+   pause pushing again at any time; if so, record it here.
 7. Never present unverified engineering content as fact; flag it for engineering review.
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
@@ -117,12 +118,12 @@ git status                # confirm planning/ui-concepts/ is not staged
    2. **Phase 3 preconditions** in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 3: D-13 stays Proposed until
       the MCP SDK is chosen and pinned against the 2026-07-28 specification; settle Python versions and wheels, MCP tool
       names and schemas, and how responses keep the contract; propose each before code.
-   3. When pushing resumes: push, confirm CI on the latest commit, then create the annotated tag `phase-2-done`.
+   3. Push resumed 2026-11-26: once CI is green on the pushed `main`, create and push the annotated tag `phase-2-done`.
    D5 (local `cargo-deny`) stays optional.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
-3. **Maintainer:** for each change, Windows check, then commit with `git commit -s -F _commit_msg.txt`. **No push**
-   (paused since 2026-11-26 20:56 IST, until the maintainer says otherwise).
+3. **Maintainer:** for each change, Windows check, commit with `git commit -s -F _commit_msg.txt`, push to `origin/main`,
+   then report the CI result.
 4. Done: D-23 (ADR 0011, API_DESIGN text, contract extension) and traverse, levelling and earthwork, each with its
    descriptor proposed and accepted first (D-20 condition 4). The traverse omits the misclosure direction (Q-B of its
    proposal), so the GEOMETRY.md §7 question of when a misclosure counts as zero did not arise.
@@ -140,6 +141,13 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 22:34 IST — Pushing resumed *(Claude Sonnet 5.5)*
+- The maintainer committed the D6 guide as `9eb22a3` and resumed pushing: "actually this time we are gonna commit to
+  github". Working rule 6 and the next actions updated; `762c70d`, `ed3d20f`, `9eb22a3` and this note go up together.
+- After CI is green on the pushed `main`: create and push the annotated tag `phase-2-done` (held until now for CI).
+- Unchanged order of work: D6 human review first ([CODE_REVIEW_D6.md](CODE_REVIEW_D6.md)), then the Phase 3
+  preconditions starting with D-13, which stays Proposed until the MCP SDK is pinned.
 
 ### 2026-11-26 22:24 IST — D6 review guide written; Phase 3 preconditions recorded *(Claude Sonnet 5.5)*
 - The maintainer committed `ed3d20f` (D2, tag held); `main` is two commits ahead of `origin/main`; pushing stays paused.
