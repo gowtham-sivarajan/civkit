@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:56 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -124,6 +124,21 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 23:05 IST — D-13 proposal written; still Proposed *(Claude Sonnet 5.5)*
+- Checked first: `813b26b` (the maintainer's plan update: D6 and the engineering review move to a bulk review after
+  Phase 4, before 0.1) and `87fa3d2` are pushed; CI #11 and #12 green on all nine jobs (including macOS stable);
+  `phase-2-done` is on GitHub at `87fa3d2`.
+- [MCP_SDK_PROPOSAL.md](MCP_SDK_PROPOSAL.md) for D-13, from the MCP specification 2026-07-28 pages and the `rmcp`
+  manifests and releases (and `cargo info rmcp`; nothing added to the workspace):
+  - `rmcp` 3.12.0 (released 2026-11-26), Apache-2.0, MSRV 1.88; HTTP features optional and off by default.
+  - Recommended: `=3.12.0`, `default-features = false`, `server` + `transport-io`, no `macros` (tools are generated at
+    run time from the registry).
+  - **Finding:** the 2026-07-28 revision removed the `initialize` handshake; a modern-only server fails with
+    2025-11-25 clients. Recommend dual-era support, tested with one client of each era.
+  - CivKit IDs are valid MCP tool names as they are (dots allowed). Mapping: full contract response as
+    `structuredContent` plus text; contract errors as `isError: true` with the envelope; `outputSchema` = `oneOf`.
+  - Seven questions, Q-A … Q-G. D-13 row in DECISIONS.md points to the proposal and stays Proposed.
 
 ### 2026-11-26 22:56 IST — Review timing moved to the 0.1 bulk gate *(OpenAI Codex; GPT-6, runtime model ID unavailable)*
 - The maintainer will complete Phase 3 and Phase 4 code before the human review session. D6 code review and the separate C1–C9 engineering review are bundled after Phase 4 and before 0.1; generated documentation and Phase 4 DXF outputs are included.
