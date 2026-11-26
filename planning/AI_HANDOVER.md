@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,7 +8,7 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** 2 complete (2026-11-26; tag `phase-2-done` created locally by the maintainer). **Next: Phase 3** (Python and MCP).
+**Current phase:** 2: work complete (2026-11-26); the tag `phase-2-done` is held until CI has checked the latest commit (the green run on `948a49a` predates D-24 and D-25), which waits for pushing to resume (the maintainer, 2026-11-26). **Next: Phase 3** (Python and MCP).
 **Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C complete; the beam's maximum shear and moment are deferred from 0.1, D-25)
 
 ---
@@ -113,8 +113,8 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 1. **Next: Phase 3 design.** The Python package (`bindings/python`, PyO3) and the local MCP server (`integrations/mcp`,
    `rmcp`, stdio) over `Registry::call_json`, each surface proposed for review before code. Re-read D-13 against the MCP
-   specification revision 2026-07-28 (COMPETITIVE_LANDSCAPE §9.5). Still open from 2D: D2 (the `CONTRIBUTING.md` status
-   line), D5 (optional local `cargo-deny`), D6 (a human code review before 0.1).
+   specification revision 2026-07-28 (COMPETITIVE_LANDSCAPE §9.5). Still open from 2D: D5 (optional local `cargo-deny`) and D6 (a human code review of `registry.rs` and `levelling.rs` before
+   0.1). When pushing resumes: push, confirm CI on the latest commit, then create the annotated tag `phase-2-done`.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** for each change, Windows check, then commit with `git commit -s -F _commit_msg.txt`. **No push**
@@ -136,6 +136,15 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 21:09 IST — D2 settled; the phase tag waits for CI *(Claude Sonnet 5.5)*
+- The maintainer committed D-24 and D-25 as `762c70d` (`main` is one commit ahead of `origin/main`) and **did not create
+  the tag**: `phase-2-done` is held until CI has checked the latest commit, because the green run on `948a49a` predates
+  D-24 and D-25. Pushing stays paused. ACCEPTANCE_CRITERIA, IMPLEMENTATION_PLAN, ROADMAP and PHASE_2D_REVIEW updated.
+- **D2:** `CONTRIBUTING.md` now says Phase 2 is complete and Phase 3 is next; the policy sentence ("Code contributions are
+  not open yet; …") is kept exactly as written.
+- Maintainer's order of work: commit locally (no push); hold the tag; arrange the human code review of `registry.rs` and
+  `levelling.rs` before 0.1 (D6); `cargo-deny` locally is optional (D5); then Phase 3 planning, starting with D-13.
 
 ### 2026-11-26 20:58 IST — D-24 and D-25 decided; Phase 2 closed; pushing paused again *(Claude Sonnet 5.5)*
 - The maintainer answered D3 and D4 of PHASE_2D_REVIEW.md and asked for D1's tag. Recorded as **D-24** and **D-25** in

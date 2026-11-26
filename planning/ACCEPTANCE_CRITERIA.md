@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -31,7 +31,7 @@
 ### Phase 2 — Units, geometry, calculations
 - [x] Every 0.1 calculation meets §3 below, **with three recorded exceptions**: the generated doc page (built in Phase 3), the independent code review (D6, before 0.1) and the human engineering review (deferred by the maintainer until the product is complete). *2026-11-26: the technical items are verified for all seven calculations ([PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)); validity per D-24, beam scope per D-25 ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). The maintainer chose to close Phase 2 on this basis.*
 - [x] Property tests for units and geometry pass. *7 in `civkit-units`, 6 in `civkit-geometry`; CI green on `6d3d16a` and `bc06cb1` (2026-11-25); traverse, levelling and earthwork add property tests of their own (2026-11-26, local).*
-- [ ] Tag `phase-2-done`. *To be created locally by the maintainer on the commit that records D-24 and D-25 (commands given 2026-11-26); not pushed while pushing is paused. Tick when it exists.*
+- [ ] Tag `phase-2-done`. *Held until CI has checked the latest commit (the green run on `948a49a` predates D-24 and D-25), which waits for pushing to resume (the maintainer, 2026-11-26).*
 
 ### Phase 3 — Python + MCP
 - [ ] `pip install` of the built wheel works offline on Windows, macOS, Linux.
