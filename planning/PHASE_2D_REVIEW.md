@@ -1,6 +1,6 @@
 # Phase 2D review: integration and regression
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 00:52 IST · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Review record, 2026-11-26. **It does not close Phase 2.** The exit condition in
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2D) includes *cross-platform CI pass*, and the newest commits have not
@@ -90,7 +90,7 @@ Each finding says what it was, how it was found, and what was done. "Fixed" mean
 | **D3** | Validity rules (F6): accept "no stated range, so no rule" as the standard, and say so in ENGINEERING_STANDARDS §1 and ACCEPTANCE §3, or require one per calculation (for example a Manning's n range with a cited source)? | Accept the first, in writing. Inventing ranges would be unverified engineering content. **Decided 2026-11-26: D-24.** |
 | **D4** | Beam maximum shear and moment (F9): keep searching for an open example, or move them explicitly to a later release now? | Move them explicitly, and keep searching in the background. The five families are otherwise complete. **Decided 2026-11-26: D-25.** |
 | **D5** | Install `cargo-deny` locally (`cargo install cargo-deny --locked`, a free tool, needs the network once)? | Optional. CI already runs it; it matters most while pushing is paused. |
-| **D6** | Human code review (F11): who and when? | Before 0.1. A first pass over the contract (`registry.rs`, about 1 250 lines, much of it tests) and one calculation (`levelling.rs`, about 650 lines with tests) would cover the most. |
+| **D6** | Human code review (F11): who and when? | Before 0.1. A first pass over the contract (`registry.rs`, about 1 250 lines, much of it tests) and one calculation (`levelling.rs`, about 650 lines with tests) would cover the most. **Guide and record:** [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md) (2026-11-26); open until a human reviewer signs it off. |
 
 ## 6. What changed in the working tree for 2D
 

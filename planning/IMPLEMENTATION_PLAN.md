@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -49,6 +49,23 @@ Order agreed 2026-11-25. The units parser is infrastructure: it is finished and 
 Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). The search for an openly licensed worked example that numerically verifies them continues (D-20 condition 1); when one is accepted they return as new outputs, a pure addition, in a later release. Searched 2026-11-25 (S4 ch. 7, an openly licensed statics text): none fits a full-span UDL with one point load.
 
 ## Phase 3 — Python and MCP
+
+**Before any Phase 3 code** (order agreed 2026-11-26):
+
+- **First, the D6 human code review** of `registry.rs` and `levelling.rs` ([CODE_REVIEW_D6.md](CODE_REVIEW_D6.md)).
+- **D-13 stays Proposed** until the SDK is chosen and pinned. Recheck the MCP specification revision 2026-07-28
+  (https://modelcontextprotocol.io/specification/2026-07-28) and the official Rust SDK `rmcp`
+  (https://github.com/modelcontextprotocol/rust-sdk); record the choice and the pinned version in a decision record.
+- **Thin interfaces:** Python and MCP both go through the existing JSON contract (`Registry::call_json`), with parity
+  checks against it. Nothing re-implements validation, units or the trace.
+- **As API_DESIGN already says:** PyO3 and maturin for Python; MCP over stdio only and read-only; per-calculation and
+  generic tools (`--tools both`, §10).
+- **Settle and propose before coding:** the Python versions supported and the wheel approach; MCP tool names and their
+  input and output schemas; how success and error responses keep the CivKit contract intact (for MCP: structured
+  content and `isError`).
+- **Checks to build:** wheels that install offline on Windows, macOS and Linux; real stdio MCP calls; list and choice
+  inputs; units; trace fields; error `index`. Plus the planned notebooks and generated documentation pages (task 4 and
+  ACCEPTANCE_CRITERIA §3).
 
 1. `bindings/python`: PyO3 + maturin; generic `call`, `list`, `describe`; generated typed functions.
 2. `integrations/mcp`: `rmcp` server, stdio, tools generated from descriptors, read-only annotations.

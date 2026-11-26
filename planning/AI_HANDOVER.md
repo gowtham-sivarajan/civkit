@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -111,10 +111,14 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Next: Phase 3 design.** The Python package (`bindings/python`, PyO3) and the local MCP server (`integrations/mcp`,
-   `rmcp`, stdio) over `Registry::call_json`, each surface proposed for review before code. Re-read D-13 against the MCP
-   specification revision 2026-07-28 (COMPETITIVE_LANDSCAPE §9.5). Still open from 2D: D5 (optional local `cargo-deny`) and D6 (a human code review of `registry.rs` and `levelling.rs` before
-   0.1). When pushing resumes: push, confirm CI on the latest commit, then create the annotated tag `phase-2-done`.
+1. **Next, in this order** (agreed 2026-11-26):
+   1. **D6:** a human reviewer works through [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md) (`registry.rs`, `levelling.rs`)
+      and signs it off. An AI session may help prepare, but must not fill in the record.
+   2. **Phase 3 preconditions** in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 3: D-13 stays Proposed until
+      the MCP SDK is chosen and pinned against the 2026-07-28 specification; settle Python versions and wheels, MCP tool
+      names and schemas, and how responses keep the contract; propose each before code.
+   3. When pushing resumes: push, confirm CI on the latest commit, then create the annotated tag `phase-2-done`.
+   D5 (local `cargo-deny`) stays optional.
 2. Manning and beam descriptors: reviewed by the maintainer, no mismatch with D-20. Conditional requirements
    (beam `point_load_position`) stay in prose; Phase 3 task recorded.
 3. **Maintainer:** for each change, Windows check, then commit with `git commit -s -F _commit_msg.txt`. **No push**
@@ -136,6 +140,17 @@ general prismoidal and soil phase relationships (later release).
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 22:24 IST — D6 review guide written; Phase 3 preconditions recorded *(Claude Sonnet 5.5)*
+- The maintainer committed `ed3d20f` (D2, tag held); `main` is two commits ahead of `origin/main`; pushing stays paused.
+- The maintainer supplied the D6 review plan and the Phase 3 approach. Recorded:
+  - [CODE_REVIEW_D6.md](CODE_REVIEW_D6.md): reading order, `registry.rs` and `levelling.rs` sections with line anchors at
+    `ed3d20f`, five specific questions (non-finite values from unit conversion; whether the 10 000 limit applies before
+    list processing; descriptor name validation; errors reported together; request-triggered panics), a severity scale, a
+    findings table and a sign-off block. The review itself is not done: D6 is open until a human signs it.
+  - IMPLEMENTATION_PLAN Phase 3 gains a "before any Phase 3 code" list (D6 first; D-13 stays Proposed until the SDK is
+    pinned against MCP 2026-07-28; thin interfaces over `Registry::call_json`; what to settle and propose; checks to build).
+- Documentation only; no code changed.
 
 ### 2026-11-26 21:09 IST — D2 settled; the phase tag waits for CI *(Claude Sonnet 5.5)*
 - The maintainer committed D-24 and D-25 as `762c70d` (`main` is one commit ahead of `origin/main`) and **did not create

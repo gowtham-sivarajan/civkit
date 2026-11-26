@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 22:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 2 (units, geometry, calculations) is complete: five calculation families, seven registered
 > calculations, all with reference cases. Next is Phase 3 (Python and MCP). There is no release yet (0.1 comes after
@@ -49,6 +49,7 @@ available in every interface with the same inputs, the same results and the same
 | | [`REFERENCE_SOURCES.md`](planning/REFERENCE_SOURCES.md) | Openly licensed sources for reference cases. |
 | | [`REFERENCE_CASES.md`](planning/REFERENCE_CASES.md) | Collected worked examples, re-derivations, source errata, 0.1 coverage. |
 | | [`PHASE_2D_REVIEW.md`](planning/PHASE_2D_REVIEW.md) | Phase 2 integration and regression review: checks, findings, decisions needed (2026-11-26). |
+| | [`CODE_REVIEW_D6.md`](planning/CODE_REVIEW_D6.md) | Guide and record for the first human code review (`registry.rs`, `levelling.rs`); open. |
 | | [`EARTHWORK_DESCRIPTOR_PROPOSAL.md`](planning/EARTHWORK_DESCRIPTOR_PROPOSAL.md) | The earthwork calculation's descriptor, proposed for review before any code (D-20). |
 | | [`LEVELLING_DESCRIPTOR_PROPOSAL.md`](planning/LEVELLING_DESCRIPTOR_PROPOSAL.md) | The levelling calculations' descriptors, proposed for review before any code (D-20). |
 | | [`TRAVERSE_DESCRIPTOR_PROPOSAL.md`](planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md) | The traverse calculation's descriptor, proposed for review before any code (D-20). |
