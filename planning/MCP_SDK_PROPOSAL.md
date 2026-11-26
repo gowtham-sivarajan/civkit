@@ -1,10 +1,8 @@
 # Proposal: the MCP SDK and server surface (D-13)
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 23:05 IST · last edited 2026-11-26 23:05 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 23:05 IST · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
-> **Status:** **Proposed, for the maintainer's review. D-13 stays Proposed** until the maintainer accepts a choice and a
-> pinned version (IMPLEMENTATION_PLAN Phase 3). **No code has been written and no dependency has been added.** Section 6
-> lists seven questions with recommendations.
+> **Status:** **Accepted by the maintainer, 2026-11-26: yes to Q-A through Q-G**, with two implementation gates added (both protocol eras tested; MCP tool-name rules enforced). Recorded as [ADR 0013](decisions/0013-mcp-sdk-and-surface.md), which is the source of truth; the text below is unchanged from the proposal.
 >
 > Facts checked on 2026-11-26 against the MCP specification revision 2026-07-28
 > (https://modelcontextprotocol.io/specification/2026-07-28, pages: tools, transports, stdio, lifecycle, schema) and the

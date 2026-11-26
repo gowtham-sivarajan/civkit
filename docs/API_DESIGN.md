@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -439,6 +439,19 @@ Request processing:
 - Tool results return the full contract response (outputs, trace, warnings, references) so the AI client
   explains CivKit's numbers instead of computing its own.
 - Drawing tools accept file paths only within locations the user configures (see [SECURITY.md](SECURITY.md)).
+
+### 10.1 SDK and result mapping (D-13, [ADR 0013](../planning/decisions/0013-mcp-sdk-and-surface.md))
+
+- SDK: `rmcp` pinned to `=3.12.0`, `default-features = false`, features `server` and `transport-io`; no HTTP features.
+  Crate `civkit-mcp` in `integrations/mcp`; stdout carries only MCP messages, logging goes to stderr.
+- Protocol: both eras are served: 2026-07-28 (per-request version, `server/discover`) and 2025-11-25 (`initialize`).
+- Tool name = calculation ID, verbatim (MCP allows `.`; at most 128 characters: `check_descriptor` will enforce this, ADR 0013 gate G2).
+- Success: `structuredContent` is the response exactly as `Registry::call_json` returns it; the same JSON is repeated
+  as a text block for older clients.
+- Contract error (any code in §5): a result with `isError: true` and the error envelope (`code`, `input`, `index`,
+  `message`) as `structuredContent` and as text. Unknown tools and malformed requests are JSON-RPC protocol errors.
+- `outputSchema`: an object schema with `oneOf` [response, error envelope]. Annotations: `readOnlyHint: true`,
+  `openWorldHint: false`.
 
 ## 11. Compatibility policy
 

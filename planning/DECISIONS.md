@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-26 23:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -34,7 +34,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-10 | P1 | Rust edition / minimum Rust version? | 2024 edition; latest stable at Phase 1 start; MSRV "latest stable − 2" → `rust-version = "1.98"` (stable 1.100.0 at Phase 1 start). | **Accepted** 2026-11-25 · [ADR 0008](decisions/0008-rust-edition-and-sign-off.md) |
 | D-11 | P1 | Contribution sign-off? | DCO (`git commit -s`), no CLA. | **Accepted** 2026-11-25 · [ADR 0008](decisions/0008-rust-edition-and-sign-off.md) |
 | D-12 | P0 | Neutral drawing model + DXF reader in Rust? | Yes. | **Accepted** 2026-11-25 · [ADR 0002](decisions/0002-neutral-drawing-model.md) |
-| D-13 | P1 | MCP SDK? | Official `rmcp` crate, stdio only. **Proposal 2026-11-26:** pin `=3.12.0`, `default-features = false`, features `server` + `transport-io`, dual-era (2026-07-28 and 2025-11-25 clients) tested; see [MCP_SDK_PROPOSAL.md](MCP_SDK_PROPOSAL.md). | Proposed |
+| D-13 | P1 | MCP SDK? | `rmcp` pinned `=3.12.0`, `default-features = false`, `server` + `transport-io`; both protocol eras (2026-07-28 and 2025-11-25); tool name = calculation ID; full contract response as `structuredContent` plus text; contract errors as `isError` with the envelope. Gates G1–G3 before the server counts as done. | **Accepted** 2026-11-26 · [ADR 0013](decisions/0013-mcp-sdk-and-surface.md) |
 | D-14 | P1 | When does SQLite enter? | Phase 6 (desktop history). | Proposed |
 | D-15 | P0 | Repository layout? | Monorepo: `crates/` · `bindings/` · `integrations/` · `apps/` · `tests/`; engine never depends outside `crates/`. | **Accepted** 2026-11-25 · [ADR 0001](decisions/0001-monorepo-layout.md) |
 | D-16 | P0 | Documentation structure and AI provenance? | Root README/ROADMAP/CONTRIBUTING · `docs/` (stable design) · `planning/` (plans, decisions, handover); provenance line on every AI-written file. | **Accepted** 2026-11-25 · [ADR 0003](decisions/0003-documentation-structure.md) |
@@ -64,6 +64,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0010](decisions/0010-geometry-conventions.md) | Geometry conventions for 0.1 | D-22 |
 | [0011](decisions/0011-list-and-choice-inputs.md) | List and choice inputs in the calculation contract | D-23 |
 | [0012](decisions/0012-validity-basis-and-beam-scope.md) | Validity ranges need a reliable basis; beam maximum shear and moment deferred from 0.1 | D-24, D-25 |
+| [0013](decisions/0013-mcp-sdk-and-surface.md) | MCP SDK, pinned version and how the contract maps onto MCP | D-13 |
 
 ## Template for a new decision record
 

@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -68,8 +68,8 @@
     ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)).
 
 **Decisions**
-- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-12, D-15 … D-20, D-22 … D-25.
-- Proposed: D-8, D-9, D-13, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-25.
+- Proposed: D-8, D-9, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
   See [DECISIONS.md](DECISIONS.md).
 
 **Engine state**
@@ -124,6 +124,16 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 23:15 IST — D-13 accepted (ADR 0013) *(Claude Sonnet 5.5)*
+- The maintainer answered "yes to Q-A through Q-G" of MCP_SDK_PROPOSAL.md and added two implementation gates. Recorded
+  as [ADR 0013](decisions/0013-mcp-sdk-and-surface.md): `rmcp` `=3.12.0`, `default-features = false`, `server` +
+  `transport-io`; both protocol eras; tool name = calculation ID; full response as `structuredContent` plus text;
+  contract errors as `isError` with the envelope; `civkit-mcp` in `integrations/mcp`.
+- Gates (the server is not done until all pass in CI): **G1** both eras over real stdio; **G2** `check_descriptor`
+  enforces MCP tool-name rules (128 characters, allowed set), tests first; **G3** round trip equal to `call_json`,
+  errors included, in both eras. Written into API_DESIGN §10.1, IMPLEMENTATION_PLAN Phase 3, ACCEPTANCE_CRITERIA Phase 3.
+- Next Phase 3 precondition: propose the Python side (supported versions, wheel approach) before any code.
 
 ### 2026-11-26 23:05 IST — D-13 proposal written; still Proposed *(Claude Sonnet 5.5)*
 - Checked first: `813b26b` (the maintainer's plan update: D6 and the engineering review move to a bulk review after

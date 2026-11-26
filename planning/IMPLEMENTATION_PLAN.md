@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 22:55 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -52,9 +52,10 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
 
 **Before Phase 3 code:** settle and approve the interface decisions below. The D6 code review and human engineering review are bulk review gates after Phase 4 and before 0.1; they do not block Phase 3 coding.
 
-- **D-13 stays Proposed** until the SDK is chosen and pinned. Recheck the MCP specification revision 2026-07-28
-  (https://modelcontextprotocol.io/specification/2026-07-28) and the official Rust SDK `rmcp`
-  (https://github.com/modelcontextprotocol/rust-sdk); record the choice and the pinned version in a decision record.
+- **D-13 accepted** (2026-11-26, [ADR 0013](decisions/0013-mcp-sdk-and-surface.md)): `rmcp` `=3.12.0`, stdio, both protocol eras. The MCP server is done only
+  when its three gates pass in CI: **G1** real stdio calls from a 2026-07-28 client and a 2025-11-25 client; **G2**
+  `check_descriptor` enforces MCP's tool-name rules (at most 128 characters, allowed set), tests first; **G3** in both
+  eras, `structuredContent` equals `Registry::call_json`'s output and contract errors keep `isError` and their envelope.
 - **Thin interfaces:** Python and MCP both go through the existing JSON contract (`Registry::call_json`), with parity
   checks against it. Nothing re-implements validation, units or the trace.
 - **As API_DESIGN already says:** PyO3 and maturin for Python; MCP over stdio only and read-only; per-calculation and
