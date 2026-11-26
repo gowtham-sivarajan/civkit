@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -50,7 +50,7 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
 
 ## Phase 3 — Python and MCP
 
-**Before Phase 3 code:** settle and approve the interface decisions below. The D6 code review and human engineering review are bulk review gates after Phase 4 and before 0.1; they do not block Phase 3 coding.
+**Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md)) and D-26 ([ADR 0014](decisions/0014-python-package.md)) are accepted; D-26 was the last open one. Phase 3 code can start, tests first. The D6 code review and human engineering review are bulk review gates after Phase 4 and before 0.1; they do not block Phase 3 coding.
 
 - **D-13 accepted** (2026-11-26, [ADR 0013](decisions/0013-mcp-sdk-and-surface.md)): `rmcp` `=3.12.0`, stdio, both protocol eras. The MCP server is done only
   when its three gates pass in CI: **G1** real stdio calls from a 2026-07-28 client and a 2025-11-25 client; **G2**
@@ -60,9 +60,11 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
   checks against it. Nothing re-implements validation, units or the trace.
 - **As API_DESIGN already says:** PyO3 and maturin for Python; MCP over stdio only and read-only; per-calculation and
   generic tools (`--tools both`, §10).
-- **Settle and propose before coding:** the Python versions supported and the wheel approach; MCP tool names and their
-  input and output schemas; how success and error responses keep the CivKit contract intact (for MCP: structured
-  content and `isError`).
+- **D-26 accepted** (2026-11-26, [ADR 0014](decisions/0014-python-package.md)): CPython 3.11–3.15; PyO3 `=0.30.1` with `abi3-py311`; maturin 1.16.0;
+  five abi3 wheels (Windows x86-64, macOS x86-64 and ARM64, Linux x86-64 and ARM64, manylinux2014); thin Rust layer
+  (`call_json`, `list_json`, `describe_json`, `version`). The Python package is done only when **P1** offline install
+  and a call on all five targets, **P2** tests on 3.11–3.15, **P3** parity (success: `to_dict()` equals `call_json`;
+  error: `CivKitError` fields and `.errors` equal the envelope), **P4** error details and **P5** no network pass in CI.
 - **Checks to build:** wheels that install offline on Windows, macOS and Linux; real stdio MCP calls; list and choice
   inputs; units; trace fields; error `index`. Plus the planned notebooks and generated documentation pages (task 4 and
   ACCEPTANCE_CRITERIA §3).

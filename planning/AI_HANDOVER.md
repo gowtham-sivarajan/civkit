@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -68,7 +68,7 @@
     ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)).
 
 **Decisions**
-- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-25.
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-26.
 - Proposed: D-8, D-9, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
   See [DECISIONS.md](DECISIONS.md).
 
@@ -112,7 +112,7 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 ## 4. Next actions
 
-1. **Phase 3 preconditions:** settle D-13 by rechecking the MCP specification and choosing and pinning the official Rust SDK. Settle the Python version and wheel plan, MCP tool names and schemas, and success/error response mapping before implementation. Each interface proposal is reviewed before its code.
+1. **Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md): `rmcp` `=3.12.0`, both protocol eras, tool names and the result mapping, gates G1–G3) and D-26 ([ADR 0014](decisions/0014-python-package.md): CPython 3.11–3.15, PyO3 0.30.1 abi3 wheels for five targets, the thin binding layer, gates P1–P5). D-26 was the last open precondition.
 2. **Phase 3 implementation:** build Python and MCP as thin interfaces over Registry::call_json; add parity tests, offline wheel checks, real stdio MCP checks, notebooks and generated documentation.
 3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
 4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
@@ -124,6 +124,31 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-26 23:44 IST — D-26 accepted (ADR 0014); Phase 3 preconditions settled *(Claude Sonnet 5.5)*
+- The maintainer accepted Q-A … Q-G of PYTHON_BINDINGS_PROPOSAL.md with two clarifications, both applied:
+  - **Q-F:** the package makes no network calls and no intentional file writes; Python's own bytecode caches (`.pyc`)
+    are excluded, and no zero-write test is required.
+  - **P3:** success results compare `Result.to_dict()` with `call_json`; errors compare `CivKitError`'s fields and full
+    `.errors` list with the parsed envelope (P4 covers the details).
+- Facts now marked verified, citing the official pages the maintainer supplied: Python 3.10 end of life 2026-10-01 and
+  3.15 stable (devguide versions page); `abi3-py311` targets the stable ABI from 3.11, free-threaded uses `abi3t`
+  (PyO3 0.30.1 feature guide).
+- Recorded: [ADR 0014](decisions/0014-python-package.md); DECISIONS (D-26 Accepted, index); API_DESIGN §8.1; IMPLEMENTATION_PLAN and
+  ACCEPTANCE_CRITERIA Phase 3 (gates P1–P5).
+- **Stale text fixed at the maintainer's request:** the plan and this handover no longer say D-13 or the MCP schemas
+  need settling. Phase 3 preconditions are complete; Phase 3 code is next, tests first.
+
+### 2026-11-26 23:34 IST — Python package proposal (D-26), still Proposed *(Claude Sonnet 5.5)*
+- The maintainer gave the baseline: CPython 3.11–3.15; PyO3 0.30.1 with `abi3-py311`; maturin 1.16.0; five abi3
+  wheels (Windows x86-64, macOS x86-64 and ARM64, Linux x86-64 and ARM64); manylinux2014; free-threaded, PyPy and GraalPy
+  deferred; tests across 3.11–3.15 plus offline install and a call on each target; no offline promise from the sdist.
+- Checked: PyO3 0.30.1 is the latest (MIT OR Apache-2.0, MSRV 1.85), `abi3-py311` exists and the chain reaches
+  `abi3-py315`; `abi3t-py315` exists for a later free-threaded wheel; maturin 1.16.0 and Python 3.14.10 are in `.venv`.
+- [PYTHON_BINDINGS_PROPOSAL.md](PYTHON_BINDINGS_PROPOSAL.md) adds: a thin Rust layer (`call_json`, `list_json`,
+  `describe_json`, `version` only; everything else plain Python, so parity is structural); `CivKitError` with
+  `code`/`input`/`index`/`errors`; typed functions generated at import plus a drift-checked `.pyi`; no runtime
+  dependencies; CI build and test matrices; gates P1–P5. Seven questions, Q-A … Q-G. D-26 row added as Proposed.
 
 ### 2026-11-26 23:15 IST — D-13 accepted (ADR 0013) *(Claude Sonnet 5.5)*
 - The maintainer answered "yes to Q-A through Q-G" of MCP_SDK_PROPOSAL.md and added two implementation gates. Recorded

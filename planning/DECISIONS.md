@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -46,6 +46,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-23 | P0 | List and choice inputs in the calculation contract (traverse, levelling, earthwork; the pyramid method input)? | Direction decided 2026-11-25: parallel lists with one unit per list (option A), required choice inputs recorded in the trace, API_DESIGN §8 wording clarified. Full design (groups, list-output lengths, item numbering, `index` in errors, `choice` trace steps) in [CONTRACT_LISTS_PROPOSAL.md](CONTRACT_LISTS_PROPOSAL.md) §3. | **Accepted** 2026-11-25 · [ADR 0011](decisions/0011-list-and-choice-inputs.md) |
 | D-24 | P1 | When does a calculation carry a validity range? | Mathematical domain checks always apply. A validity range only with a reliable basis (a cited source stating it); otherwise the descriptor says so explicitly; never invent one. Adding a rule later bumps the version. | **Accepted** 2026-11-26 · [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) |
 | D-25 | P1 | Beam maximum shear and moment in 0.1? | **Deferred from 0.1.** The beam ships with reactions, deflection and end slope; the search for an open worked example continues; they return as new outputs (a pure addition) in a later release. | **Accepted** 2026-11-26 · [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) |
+| D-26 | P1 | Python package: versions, ABI, wheels, API layer? | CPython 3.11–3.15; PyO3 `=0.30.1` with `abi3-py311`; maturin 1.16.0; five abi3 wheels (manylinux2014 on Linux); thin Rust layer over `call_json`; `CivKitError`; no network calls or intentional writes (bytecode caches excluded); gates P1–P5. | **Accepted** 2026-11-26 · [ADR 0014](decisions/0014-python-package.md) |
 | D-21 | P2 | Accept SI prefixes generally (`mN`, `µm`) and common Unicode notation (`m²`, `s⁻¹`) in unit strings? | Maintainer would eventually support both. **Not in 0.1**: [API_DESIGN.md §7.1](../docs/API_DESIGN.md) lists exactly what 0.1 accepts. Needs a grammar extension that stays unambiguous (e.g. `mm` vs milli-metre, `m` vs milli). | Proposed (after 0.1) |
 
 ## Decision record index
@@ -65,6 +66,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0011](decisions/0011-list-and-choice-inputs.md) | List and choice inputs in the calculation contract | D-23 |
 | [0012](decisions/0012-validity-basis-and-beam-scope.md) | Validity ranges need a reliable basis; beam maximum shear and moment deferred from 0.1 | D-24, D-25 |
 | [0013](decisions/0013-mcp-sdk-and-surface.md) | MCP SDK, pinned version and how the contract maps onto MCP | D-13 |
+| [0014](decisions/0014-python-package.md) | Python package: versions, wheels and the binding layer | D-26 |
 
 ## Template for a new decision record
 

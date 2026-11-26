@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-26 23:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -412,6 +412,17 @@ Request processing:
   Batch (vectorised) calls, meaning one calculation applied to many independent input sets, are out of scope for 0.1.
   This is different from a list that is part of one calculation's input (§2.1, `kind: list`), which Python passes as a
   list of numbers with one `civkit.Q` unit, or as a list of `Q` of one dimension. List outputs come back as lists of `Q`.
+
+### 8.1 Versions, wheels and the binding layer (D-26, [ADR 0014](../planning/decisions/0014-python-package.md))
+
+- CPython 3.11–3.15. PyO3 `=0.30.1` with `abi3-py311`, built with maturin 1.16.0: one abi3 wheel per target (Windows
+  x86-64; macOS x86-64 and ARM64; Linux x86-64 and ARM64, manylinux2014). Free-threaded CPython, PyPy and GraalPy are
+  not supported in 0.1. Offline installation is promised for wheels, not for the source archive.
+- The Rust extension `civkit._civkit` exposes only `call_json`, `list_json`, `describe_json` and `version`; everything
+  else is plain Python and does no validation of its own.
+- Contract errors raise `civkit.CivKitError` with `.code`, `.input`, `.index`, `.message` and `.errors`.
+- The package has no runtime dependencies, makes no network calls and no intentional file writes (Python's own
+  bytecode caches excepted).
 
 ## 9. FFI (`crates/civkit-ffi`)
 
