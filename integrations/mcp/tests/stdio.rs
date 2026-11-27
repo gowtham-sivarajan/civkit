@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0013 gates G1 and G3 over real stdio: the built `civkit-mcp` binary is spawned and spoken to as a
 //! 2025-11-25 client (`initialize` handshake) and as a 2026-07-28 client (per-request `_meta`, `server/discover`).
@@ -311,6 +311,32 @@ fn g1_both_eras_list_every_tool_with_annotations_and_schemas() {
         assert_eq!(
             earthwork["inputSchema"]["properties"]["method"]["properties"]["value"]["enum"],
             json!(["average_end_area", "pyramid_at_zero_end"])
+        );
+        // A conditional requirement (prose, D-23 §3.9) is prominent: in the tool description and leading the input's.
+        let beam = tools
+            .iter()
+            .find(|t| t["name"] == "structural.beam.simply_supported")
+            .expect("beam");
+        let description = beam["description"].as_str().expect("description");
+        assert!(
+            description.contains(
+                "Conditional requirements: point_load_position is required when point_load > 0."
+            ),
+            "{era:?}: {description}"
+        );
+        let position = beam["inputSchema"]["properties"]["point_load_position"]["description"]
+            .as_str()
+            .expect("description");
+        assert!(
+            position.starts_with("Required when point_load > 0. "),
+            "{era:?}: {position}"
+        );
+        assert!(
+            !manning["description"]
+                .as_str()
+                .expect("d")
+                .contains("Conditional"),
+            "{era:?}"
         );
         let traverse = tools
             .iter()

@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! MCP tool definitions generated from the descriptors (ADR 0013; MCP_SDK_PROPOSAL §5).
 //!
@@ -88,6 +88,19 @@ fn either(success: Value) -> Value {
     json!({ "type": "object", "oneOf": [success, error_envelope_schema()] })
 }
 
+/// For an optional input that is required under a condition, the condition. Conditions stay in prose in 0.1
+/// (D-23 §3.9), written at the end of the description as "…; required when <condition>"; the Python typed functions
+/// read the same convention (`civkit._typed.condition`).
+fn condition(spec: &InputSpec) -> Option<&str> {
+    const MARK: &str = "required when ";
+    if spec.required {
+        return None;
+    }
+    let at = spec.description.to_lowercase().rfind(MARK)?;
+    let rest = spec.description.get(at + MARK.len()..)?;
+    Some(rest.trim().trim_end_matches('.'))
+}
+
 fn unit_hint(spec: &InputSpec) -> Option<&str> {
     spec.display_unit.as_deref().or(spec.si_unit.as_deref())
 }
@@ -120,7 +133,10 @@ fn input_schema(d: &Descriptor, spec: &InputSpec) -> Value {
     };
     let mut properties = json!({ "value": value });
     let mut required = vec!["value"];
-    let mut description = spec.description.clone();
+    let mut description = match condition(spec) {
+        Some(when) => format!("Required when {when}. {}", spec.description),
+        None => spec.description.clone(),
+    };
     if !spec.dimension.is_dimensionless() {
         let mut unit = format!("Unit of {}", spec.name);
         if let Some(hint) = unit_hint(spec) {
@@ -173,10 +189,22 @@ pub fn per_calculation(d: &Descriptor) -> Tool {
         "required": required,
         "additionalProperties": false
     });
+    let conditions: Vec<String> = d
+        .inputs
+        .iter()
+        .filter_map(|i| condition(i).map(|when| format!("{} is required when {when}", i.name)))
+        .collect();
+    let mut description = d.summary.clone();
+    if !conditions.is_empty() {
+        description.push_str(&format!(
+            " Conditional requirements: {}.",
+            conditions.join("; ")
+        ));
+    }
     tool(
         &d.id,
         &d.title,
-        &d.summary,
+        &description,
         input,
         either(response_schema(Some(&d.id))),
     )

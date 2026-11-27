@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 
@@ -617,4 +617,35 @@ fn json_numbers_are_parsed_exactly() {
         let back: f64 = serde_json::from_str(&text).expect("number");
         assert_eq!(back.to_bits(), v.to_bits(), "{text}");
     }
+}
+
+/// Descriptor text is shown as written by every interface (docstrings, MCP tool descriptions, generated docs), so it
+/// has no line breaks or doubled spaces. A broken Rust line continuation (`\n` and indentation inside a string)
+/// slipped into two descriptors before this test existed.
+#[test]
+fn descriptor_text_is_one_clean_line() {
+    fn walk(v: &Value, path: &str, problems: &mut Vec<String>) {
+        match v {
+            Value::String(s) if s.contains('\n') || s.contains("  ") => {
+                problems.push(format!("{path}: {s:?}"));
+            }
+            Value::Array(items) => {
+                for (i, x) in items.iter().enumerate() {
+                    walk(x, &format!("{path}[{i}]"), problems);
+                }
+            }
+            Value::Object(map) => {
+                for (k, x) in map {
+                    walk(x, &format!("{path}.{k}"), problems);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut problems = Vec::new();
+    for d in Registry::with_builtins().list() {
+        let value = serde_json::to_value(d).expect("descriptor");
+        walk(&value, &d.id, &mut problems);
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
 }

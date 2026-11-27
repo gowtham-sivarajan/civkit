@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """The Python API of API_DESIGN §8 and ADR 0014 (D-26): discovery, the input forms, results, typed functions."""
 
 import inspect
@@ -221,6 +221,21 @@ class TypedFunctions(unittest.TestCase):
         self.assertIn(d["title"], doc)
         self.assertIn("bottom_width", doc)
         self.assertIn("Validity range: none is stated", doc)
+
+    def test_the_docstring_writes_dimensions_as_the_engine_does(self):
+        doc = civkit.fluids.open_channel.manning_trapezoidal.__doc__
+        self.assertIn("bottom_width [L, e.g. m]", doc)
+        self.assertIn("discharge [L^3*T^-1, e.g. m^3/s]", doc)
+        self.assertIn("side_slope [dimensionless]", doc)
+        self.assertNotIn("'length'", doc)
+
+    def test_a_conditional_requirement_is_prominent(self):
+        """IMPLEMENTATION_PLAN Phase 3 task 5: conditions stay in prose (D-23 §3.9), but are shown prominently."""
+        doc = civkit.structural.beam.simply_supported.__doc__
+        self.assertIn("point_load_position [L, e.g. m, optional; REQUIRED WHEN point_load > 0]", doc)
+        self.assertIn("Conditional requirements:\n    - point_load_position is required when point_load > 0", doc)
+        manning = civkit.fluids.open_channel.manning_trapezoidal.__doc__
+        self.assertNotIn("Conditional requirements", manning)
 
     def test_the_typed_function_sends_its_descriptor_version(self):
         r = civkit.structural.beam.simply_supported(

@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 2 (units, geometry, calculations) is complete: five calculation families, seven registered
 > calculations, all with reference cases. Next is Phase 3 (Python and MCP). There is no release yet (0.1 comes after
@@ -42,6 +42,9 @@ available in every interface with the same inputs, the same results and the same
 | | [`ENGINEERING_STANDARDS.md`](docs/ENGINEERING_STANDARDS.md) | What must every calculation meet to be trusted? |
 | | [`OFFLINE_POLICY.md`](docs/OFFLINE_POLICY.md) | What may and may not touch the network? |
 | | [`SECURITY.md`](docs/SECURITY.md) | Threat model, supply chain, reporting a vulnerability. |
+| | [`calculations/`](docs/calculations/README.md) | One generated page per calculation: inputs, method, limits, references, worked example. |
+| `integrations/` — *interfaces* | [`mcp/`](integrations/mcp/README.md) | The MCP server: tools, protocol versions, client set-up. |
+| | [`jupyter/`](integrations/jupyter/README.md) | Example notebooks for the Python package. |
 | `planning/` — *how we get there (changes often)* | [`MVP_SCOPE.md`](planning/MVP_SCOPE.md) | What is in and out of 0.1? |
 | | [`IMPLEMENTATION_PLAN.md`](planning/IMPLEMENTATION_PLAN.md) | Tasks per phase, dependencies, risks. |
 | | [`ACCEPTANCE_CRITERIA.md`](planning/ACCEPTANCE_CRITERIA.md) | When is a phase, release or calculation "done"? |

@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """ADR 0014 Q-E: the type stub matches the installed calculations, and agrees with the generated functions."""
 
 import ast
@@ -34,6 +34,10 @@ class Stub(unittest.TestCase):
             domain, topic, method = d["id"].split(".")
             fn = getattr(getattr(getattr(civkit, domain), topic), method)
             self.assertEqual(stubs[(f"_{domain}_{topic}", method)], list(inspect.signature(fn).parameters), d["id"])
+
+    def test_a_conditional_requirement_is_in_the_stub(self):
+        text = gen_stub.STUB.read_text(encoding="utf-8")
+        self.assertIn("point_load_position is required when point_load > 0", text)
 
     def test_the_public_names_are_in_the_stub(self):
         text = gen_stub.STUB.read_text(encoding="utf-8")

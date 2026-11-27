@@ -66,7 +66,11 @@ class _quantities:
 class _structural_beam:
     @staticmethod
     def simply_supported(*, span: Input, udl: Input | None = None, point_load: Input | None = None, point_load_position: Input | None = None, elastic_modulus: Input, second_moment: Input, position: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Simply supported beam: reactions, deflection and end slope (structural.beam.simply_supported, version 1)."""
+        """Simply supported beam: reactions, deflection and end slope (structural.beam.simply_supported, version 1).
+
+        Conditional requirements:
+        - point_load_position is required when point_load > 0
+        """
 
 class _structural:
     beam: _structural_beam

@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """Typed functions, generated at import from the installed descriptors (ADR 0014 point 6):
 ``civkit.fluids.open_channel.manning_trapezoidal(bottom_width="1.5 m", ...)``."""
 
@@ -21,12 +21,43 @@ class Namespace:
         return f"<civkit namespace {self._path}>"
 
 
+_DIMENSION_SYMBOLS = [
+    ("length", "L"), ("mass", "M"), ("time", "T"), ("temperature", "Θ"), ("amount", "N"), ("current", "I"),
+    ("luminous_intensity", "J"), ("angle", "angle"),
+]
+
+# A conditional requirement stays in prose in 0.1 (D-23 §3.9), written as "...; required when <condition>" at the end of
+# an optional input's description. Interfaces show it prominently (IMPLEMENTATION_PLAN Phase 3 task 5).
+_CONDITION_MARK = "required when "
+
+
+def dimension_text(dimension: dict[str, int]) -> str:
+    """A dimension as the engine writes it in messages: `L`, `L^3*T^-1`, `1` for dimensionless."""
+    parts = []
+    for key, symbol in _DIMENSION_SYMBOLS:
+        exponent = dimension.get(key, 0)
+        if exponent:
+            parts.append(symbol if exponent == 1 else f"{symbol}^{exponent}")
+    return "*".join(parts) or "1"
+
+
+def condition(spec: dict[str, Any]) -> str | None:
+    """For an optional input that is required under a condition, the condition ("point_load > 0")."""
+    if spec.get("required", True):
+        return None
+    text = spec.get("description", "")
+    at = text.lower().rfind(_CONDITION_MARK)
+    if at < 0:
+        return None
+    return text[at + len(_CONDITION_MARK):].strip().rstrip(".")
+
+
 def unit_text(spec: dict[str, Any]) -> str:
     """How an input or output is given: its dimension and a unit, a list, or the allowed choices."""
     if spec.get("kind") == "choice":
         return "one of: " + ", ".join(spec["choices"])
     unit = spec.get("display_unit") or spec.get("si_unit")
-    text = f"{spec['dimension']}, e.g. {unit}" if unit else "dimensionless"
+    text = f"{dimension_text(spec['dimension'])}, e.g. {unit}" if unit else "dimensionless"
     if spec.get("kind") == "list":
         text = f"list, {text}"
     if spec.get("accepts_bearing"):
@@ -34,12 +65,22 @@ def unit_text(spec: dict[str, Any]) -> str:
     return text
 
 
+def requirement_text(spec: dict[str, Any]) -> str:
+    """'' for a required input, ', optional', or ', optional; REQUIRED WHEN <condition>'."""
+    if spec["required"]:
+        return ""
+    when = condition(spec)
+    return f", optional; REQUIRED WHEN {when}" if when else ", optional"
+
+
 def docstring(d: dict[str, Any]) -> str:
     """The typed function's docstring, from the descriptor."""
     lines = [d["title"], "", d["summary"], "", "Inputs (keyword-only):"]
     for i in d["inputs"]:
-        optional = "" if i["required"] else ", optional"
-        lines.append(f"    {i['name']} [{unit_text(i)}{optional}]: {i['description']}")
+        lines.append(f"    {i['name']} [{unit_text(i)}{requirement_text(i)}]: {i['description']}")
+    conditional = [(i["name"], condition(i)) for i in d["inputs"] if condition(i)]
+    if conditional:
+        lines += ["", "Conditional requirements:"] + [f"    - {n} is required when {c}" for n, c in conditional]
     lines += ["", "Outputs:"]
     for o in d["outputs"]:
         lines.append(f"    {o['name']} [{unit_text(o)}]: {o['description']}")

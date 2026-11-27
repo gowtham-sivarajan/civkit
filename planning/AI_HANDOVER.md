@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 10:51 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -116,9 +116,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 2. **Phase 3 implementation:** Python package code is done (`bindings/python`, see the log); **its gates P1–P5 are
    met only when the `Python` workflow is green on GitHub.** The MCP server (`integrations/mcp`) is written, its G1–G3
    tests pass locally, and MCP Inspector and the Python MCP SDK agree with the engine in both eras. G1–G3 are met
-   when `ci.yml` is green: **met** (CI #17 and Python #2 green on `0013681`). Parity test written (`tests/parity`),
-   met when its CI job is green. Next: notebooks and generated documentation, then `phase-3-done` (tag only after
-   green CI), then Phase 4.
+   when `ci.yml` is green: **met** (CI #17 and Python #2 green on `0013681`). Parity: **met** (Python #3 green on
+   `972e085`). Notebooks, generated pages and conditional requirements: written, met when CI is green on their
+   commit. Then `phase-3-done` (tag only after green CI), then Phase 4.
 3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
 4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
 5. D5 (local cargo-deny) is optional; CI already checks it.
@@ -130,6 +130,32 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
 
+### 2026-11-27 11:21 IST — Phase 3: notebooks, generated calculation pages, conditional requirements *(Claude Sonnet 5.5)*
+- `972e085` (parity) pushed; CI #18 and Python #3 green (https://github.com/gowtham-sivarajan/civkit/actions/runs/45947335314). Ticked: parity, offline wheel install (P1),
+  Inspector + client (local check). Wording corrected at the maintainer's request: `0.013` is not exactly
+  representable; it parses to the correctly rounded `f64`; the bug showed when the longer velocity was parsed.
+- The maintainer asked to merge the parity job into the existing workflow without replacing its jobs: confirmed the
+  diff of `python.yml` (`0013681..972e085`) removes only the provenance line; `rust`, `deny`, `wheel` unchanged.
+- **"Forms"** are the Phase 6 desktop app's (ACCEPTANCE_CRITERIA Phase 6). Phase 3's part (plan task 5) is that
+  typed functions and docs show conditional requirements prominently; done with one convention, "...; required
+  when <condition>" at the end of an optional input's description (only the beam's `point_load_position` today):
+  Python docstring (`REQUIRED WHEN`, and a "Conditional requirements" section), `.pyi` stub, MCP tool description
+  and input description ("Required when ... ." first), generated page (table cell and a callout). Tests first.
+- **Generated pages** `docs/calculations/` (8 files) by `tools/gen_calc_docs.py` from the descriptor, the
+  calculation's own reference case and its trace: inputs (dimension, units, required/conditional, domain), outputs
+  (shape), method (trace steps, per-item steps once), validity and limits, assumptions, references, worked example
+  (source value vs CivKit, 6 significant figures, so pages do not depend on last-bit platform differences), Python
+  and MCP use, disclaimer. `test_docs.py` checks drift and content in every Python CI job.
+- **Notebooks** `integrations/jupyter/` (3): getting started; surveying (traverse, HI vs rise-and-fall, closure);
+  beam (with the conditional input) and earthwork (both methods). Published reference inputs; disclaimer first;
+  stored without outputs. `test_notebooks.py` runs every code cell. Also executed with `jupyter nbconvert`
+  locally; results match the sources (traverse 2.2869 ft, 1 : 1143; beam reactions 13 kip).
+- **Defects found and fixed, tests first:** (1) Python docstrings printed the descriptor's dimension dict; now `L`,
+  `L^3*T^-1` as the engine writes them. (2) The beam summary had the same broken line continuation as the D-24
+  statement (a literal newline and spaces inside the string); `descriptor_text_is_one_clean_line` now checks every
+  descriptor string for line breaks and double spaces.
+- Rust 282 tests, Python 50 (docs and notebook tests included), parity 4; notebooks executed in Jupyter; fmt and clippy clean.
+
 ### 2026-11-27 10:51 IST — Phase 3: cross-interface parity (Rust, Python, MCP) *(Claude Sonnet 5.5)*
 - `0013681` (MCP server) was pushed by the maintainer, with the `.pdb` untracked; CI #17 and Python #2 both green
   (https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436704, https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436666). The maintainer set the order: parity only after both pass. Acceptance items for gates G1–G3 and
@@ -138,8 +164,9 @@ Newest first. One short entry per session: what changed, what was decided, what 
   through Rust `Registry::call_json` (new `crates/civkit-core/examples/call_json.rs`, JSON lines in and out), the
   installed Python package, and `civkit-mcp` in both eras via its own tool and `civkit_call` (a minimal stdio
   JSON-RPC client, no SDK). Separate processes; every answer read with Python's `json` (correctly rounding).
-- **The 0.013 regression:** `0.013` itself parses correctly with either serde_json parser (short decimals take an
-  exact path); the bug was the output: with n = 0.013 the velocity is `1.8276944379471094`, which MCP re-read and
+- **The 0.013 regression:** `0.013` is not exactly representable in binary; both serde_json parsers read it as the
+  correctly rounded `f64` (short decimals take a correctly rounded fast path). The bug showed when the longer output
+  value was parsed: with n = 0.013 the velocity is `1.8276944379471094`, which MCP re-read and
   emitted as `…096`. Cases: that Manning call (SI and ft/s), plus a 17-digit input that must come back bit-exact
   (`sum_backsights` of `[1.8276944379471094, 0.0]`, exact on every platform).
 - **Shown to catch it:** with `float_roundtrip` removed from both workspaces and all three interfaces rebuilt, parity

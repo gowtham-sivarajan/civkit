@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """Writes, or checks, the type stub python/civkit/__init__.pyi from the installed calculations (ADR 0014 Q-E).
 
     python tools/gen_stub.py           # write the stub
@@ -80,6 +80,8 @@ def _param(spec: dict) -> str:
 
 def render(descriptors: list[dict]) -> str:
     """The stub text for these descriptors."""
+    from civkit._typed import condition  # the same rule as the typed functions' docstrings
+
     tree: dict = {}
     for d in sorted(descriptors, key=lambda d: d["id"]):
         *path, method = d["id"].split(".")
@@ -100,7 +102,13 @@ def render(descriptors: list[dict]) -> str:
                 params = ", ".join([_param(i) for i in child["inputs"]] + ["output_units: Mapping[str, str] | None = None"])
                 out.append("    @staticmethod")
                 out.append(f"    def {name}(*, {params}) -> Result:")
-                out.append(f'        """{child["title"]} ({child["id"]}, version {child["version"]})."""')
+                doc = f'{child["title"]} ({child["id"]}, version {child["version"]}).'
+                conditional = [(i["name"], condition(i)) for i in child["inputs"] if condition(i)]
+                if conditional:
+                    doc += "\n\n        Conditional requirements:\n" + "\n".join(
+                        f"        - {n} is required when {c}" for n, c in conditional
+                    ) + "\n        "
+                out.append(f'        """{doc}"""')
             else:
                 out.append(f"    {name}: {_class_name(path + [name])}")
 
