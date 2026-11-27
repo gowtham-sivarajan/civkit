@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 23:49 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 What gets built, in what order. Task breakdown: [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md).
 Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
@@ -28,7 +28,7 @@ Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTA
      out), drawing units, and the unit check;
    - done, in `civkit-drawing`: the JSON drawing report and the CSV schedule;
    - done: the report from Python (`civkit.drawing`) and MCP (`drawing.analyze`), with parity tests;
-   - next: the measured heap check and fuzzing of read + analyse.
+   - done: the measured heap check (A4) and fuzzing of read + analyse (A9); every analysis gate closed.
 2. Fuzz the DXF reader for 8 hours in total (the running total is in
    [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md)).
 3. Bulk human review: the D6 code review and, separately, the engineering review of the calculations; the DXF results

@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:39 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -111,32 +111,24 @@ acceptance item is ticked with its evidence.
    amended (maintainer): X2 is strict on the fixtures and a curated well-formed corpus (`tests/well_formed/`) and
    reports-and-triages the fuzz corpus (triage log kept locally). Fuzz time: recorded in
    [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
-3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
-   **Decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md) (all of
-   [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended): the versioned `drawing.analyze` report,
-   streaming expansion in the shared budget, `Affine2` / `region_area` / the §8.7 sweep prefilter in `civkit-geometry`,
-   gates A1–A9. The three items below are settled by it.
-   **Code, tests first (from 2026-11-27):** `Affine2` (with `InsertPlacement`) and `region_area` written in
-   `civkit-geometry`, with `tests/transforms.rs` and `tests/regions.rs` (26 tests; three planted faults caught). Then
-   the §8.7 sweep prefilter and `WorkLimit` (`src/sweep.rs`, `tests/sweep.rs`: 12 tests; six planted faults caught),
-   completing A7. Then polygon cleaning made linear (it was O(n²)), and bounded block and MINSERT expansion in
-   `civkit-drawing` (`src/expand.rs`, `tests/expansion.rs`: 11 tests; six planted faults caught). Then quantities
-   by layer, drawing units and the unit check (`src/measure.rs`, `tests/quantities.rs` 14 and `tests/unit_check.rs`
-   6; fifteen planted faults caught). Next: A4's measured heap check and A9's fuzzing of read + analyse, then the
-   CSV and JSON schedules and the drawing report, then Python and MCP (A8).
-   **Report and schedule written (2026-11-27):** `src/report.rs` (`Analysis`, `analyze`, `analyze_dxf`, `to_json`,
-   `to_csv`), with `tests/report.rs` (11; seven planted faults caught). Then Python (`civkit.drawing`) and MCP
-   (`drawing.analyze` behind `--drawing-root`), with parity for every DXF fixture and path-restriction tests (A8,
-   complete once its checks pass in CI: done, CI #34 and Python #19). Then A4 (`tests/analysis_memory.rs`: it found and
-   fixed three budget escapes) and A9 (the fuzz target runs read + analyse + report + schedule). Next: close A5 and A6
-   against ADR 0016, then the remaining fuzz hours and the 0.1 release checklist.
-   - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
-   - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
-     unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).
-   - Expansion (block instances, MINSERT arrays, transformed geometry) reserves from the **same combined budget** as
-     the parsed drawing (ADR 0015), not a separate one; the task 3 proposal fixes its details within that rule.
-4. Fuzzing; DXF fixtures; expose via Python and MCP.
-5. Bulk human review before 0.1: complete D6, the separate C1–C9 engineering review, Phase 4 DXF results and fixtures, and generated documentation review; record each outcome. Then release 0.1.
+3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON). **Decided** (2026-11-27): D-28,
+   [ADR 0016](decisions/0016-drawing-analysis.md) (all of [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as
+   recommended; seven implementation details confirmed), gates A1–A9. **Done**, tests first, each slice with planted
+   faults caught:
+   - `civkit-geometry`: `Affine2` and block placement, `region_area` (even-odd regions), the §8.7 bounding-box sweep
+     with a work limit, linear polygon cleaning (GEOMETRY.md §8.7, §10, §11).
+   - `civkit-drawing`: bounded block and MINSERT expansion in the shared budget (`expand`); quantities by effective
+     layer, drawing units and the P1–P4 unit check (`measure`); the versioned JSON report and the CSV schedule
+     (`report`: `analyze`, `analyze_dxf`, `to_json`, `to_csv`).
+   - Geometry notes, "not supported in 0.1" (`NOT_SUPPORTED`) and "clients accept unknown warning codes" settled in
+     API_DESIGN §5 and §13 (ADR 0010's deferred items).
+4. Fuzzing; DXF fixtures; expose via Python and MCP. **Done:** `civkit.drawing.analyze` and `schedule_csv` (Python) and
+   the read-only `drawing.analyze` tool behind `--drawing-root` (MCP), with parity for every DXF fixture; the fuzz
+   target runs read + analyse + report + schedule (A9). **Open:** the 8-hour fuzz total (ACCEPTANCE_CRITERIA).
+5. Bulk human review before 0.1: complete D6, the separate C1–C9 engineering review, Phase 4 DXF results and fixtures,
+   and generated documentation review; record each outcome. Then the release checklist and `v0.1.0`. **Open.**
+
+Gate status (ADR 0015 X1–X6, ADR 0016 A1–A9) is kept in [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Phase 4.
 
 ## Phase 5 — AutoCAD / Civil 3D → 0.2
 

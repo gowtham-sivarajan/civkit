@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 23:49 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
 > green. The engine has seven registered calculations in five families, each tested against published reference
@@ -14,7 +14,8 @@
 >   built, tests first. Its geometry (transformations, areas of regions with holes, a bounded intersection check)
 >   bounded block and MINSERT expansion, quantities by layer, drawing units, the unit check, and the JSON report and
 >   CSV schedule are written, in Rust, Python (`civkit.drawing`) and MCP (`drawing.analyze`, behind `--drawing-root`).
-> - Fuzzing stands at 1 h 40 min of the 8 hours required before 0.1.
+> - Every analysis gate (ADR 0016 A1–A9) passes; A5 and A6 are closed with their own end-to-end tests.
+> - Fuzzing stands at 2 h 10 min of the 8 hours required before 0.1.
 >
 > There is no release yet. Exit criteria and current status: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
 
