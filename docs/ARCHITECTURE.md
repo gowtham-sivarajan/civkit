@@ -1,6 +1,6 @@
 # Architecture
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-25 18:37 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Design — accepted parts are marked with their decision ID; the rest is proposed.
 > Contract and API details: [API_DESIGN.md](API_DESIGN.md).
@@ -88,13 +88,14 @@ from Python, MCP and C#. Details: [API_DESIGN.md §7](API_DESIGN.md#7-units).
 ### 3.3 `civkit-geometry` — *accepted (D-22, ADR 0010)*
 2D primitives and algorithms used by calculations and drawing analysis: distance and azimuth, polyline length
 (straight and bulged segments), arc length, polygon area and orientation, and centroid of straight-edged polygons
-([GEOMETRY.md](GEOMETRY.md)). The 2D transformations needed for block inserts are specified in GEOMETRY.md §11 and
-added here in Phase 4 (release 0.1). 3D is not in 0.1.
+([GEOMETRY.md](GEOMETRY.md)). Phase 4 (D-28) adds 2D affine transformations and block placement (`Affine2`) and the
+area of regions combined by even-odd nesting (`region_area`), as GEOMETRY.md §11 specifies. 3D is not in 0.1.
 
 ### 3.4 `civkit-drawing` — *accepted (D-12, ADR 0002)*
 A CAD-neutral drawing model (lines, polylines, arcs, circles, blocks, layers, dimensions, drawing units) plus a
 DXF reader. All drawing analysis — quantity extraction, unit-consistency checks, schedules — is written against
-this model, so it works from every interface, is testable in CI with DXF fixtures, and helps users without
+this model (the drawing report of [API_DESIGN.md §13](API_DESIGN.md), D-28), so it works from every interface, is
+testable in CI with DXF fixtures, and helps users without
 AutoCAD. The AutoCAD/Civil 3D integrations translate their entities into this model.
 
 ### 3.5 `civkit-ffi`

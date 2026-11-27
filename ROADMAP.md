@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 18:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 What gets built, in what order. Task breakdown: [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md).
 Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
@@ -13,16 +13,17 @@ Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTA
 | **1** | Architecture and Rust core *(done — tag `phase-1-done`)* | Cargo workspace, `civkit-core` registry and contract, CI on Windows/macOS/Linux | — |
 | **2** | Units, geometry, calculations, validation *(done — tag `phase-2-done`)* | civkit-units, civkit-geometry, the 0.1 calculation set with reference tests | — |
 | **3** | Python bindings + local MCP server *(done — tag `phase-3-done`)* | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
-| **4** | Drawing model + DXF analysis *(current: the DXF reader is done; the analysis layer is next, proposal first)* | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
+| **4** | Drawing model + DXF analysis *(current: the DXF reader is done; the analysis layer is decided (D-28) and being built, its geometry first)* | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
 | **5** | AutoCAD / Civil 3D integration | `civkit-ffi`, AutoCAD 2027 plugin (read-only), Civil 3D extension | **0.2** |
 | **6** | Standalone desktop app | Tauri 2 app with forms generated from the registry; SQLite history | 0.3 |
 | **7** | Expansion and community | Design codes, MATLAB wrapper, more domains, external contributors | 0.4+ |
 
 ## Path to 0.1
 
-1. Finish Phase 4: the analysis layer (block and MINSERT expansion, transformations, quantities, unit checks,
-   schedules, warnings and unsupported geometry), proposed and accepted before its code, then exposed through Python
-   and MCP.
+1. Finish Phase 4: the analysis layer, decided in D-28 ([ADR 0016](planning/decisions/0016-drawing-analysis.md)):
+   - done: transformations and areas of regions with holes, in `civkit-geometry`;
+   - next: the bounding-box prefilter; block and MINSERT expansion; quantities, the unit check, schedules, warnings
+     and unsupported geometry; then Python and MCP.
 2. Fuzz the DXF reader for 8 hours in total ([planning/FUZZ_LOG.md](planning/FUZZ_LOG.md)).
 3. Bulk human review: the D6 code review and, separately, the engineering review of the calculations; the DXF results
    and fixtures; the generated documentation.

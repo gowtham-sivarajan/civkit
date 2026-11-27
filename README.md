@@ -2,15 +2,20 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
 > green. The engine has seven registered calculations in five families, each tested against published reference
 > cases. They can be used from Rust, from the `civkit` Python package and from the `civkit-mcp` server for AI
 > assistants, with identical results (both are built from source for now; nothing is on PyPI or crates.io yet).
-> **Current: Phase 4** (drawing model and DXF), which completes release 0.1. There is no release yet. Exit
-> criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
-> [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
+> **Current: Phase 4** (drawing model and DXF), which completes release 0.1:
+> - CivKit's own DXF reader is in `main` (D-27, [ADR 0015](planning/decisions/0015-dxf-reader.md)).
+> - The drawing analysis is decided (D-28, [ADR 0016](planning/decisions/0016-drawing-analysis.md)) and is being
+>   built, tests first. Its geometry (transformations and areas of regions with holes) is written.
+> - Fuzzing stands at 30 minutes of the 8 hours required before 0.1.
+>
+> There is no release yet. Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current
+> state: [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
 
 CivKit is a free, open-source, offline-first engineering toolkit. It brings reliable civil-engineering
 calculations, unit handling and drawing analysis into the tools engineers already use — AutoCAD / Civil 3D,
@@ -40,8 +45,8 @@ available in every interface with the same inputs, the same results and the same
 | | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | How we treat each other; how to report a problem privately. |
 | | [`ACCESSIBILITY.md`](ACCESSIBILITY.md) | Accessibility commitments, known limits, reporting barriers. |
 | `docs/` — *how the software works and the rules it follows (changes slowly)* | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How is the system structured? |
-| | [`API_DESIGN.md`](docs/API_DESIGN.md) | Calculation contract, units format, FFI, Python and MCP surfaces. |
-| | [`GEOMETRY.md`](docs/GEOMETRY.md) | Geometry conventions: axes, angles, tolerances, degeneracy, length, area (proposed). |
+| | [`API_DESIGN.md`](docs/API_DESIGN.md) | Calculation contract, units format, the drawing report, FFI, Python and MCP surfaces. |
+| | [`GEOMETRY.md`](docs/GEOMETRY.md) | Geometry conventions: axes, angles, tolerances, degeneracy, length, area, transformations, regions (accepted: D-22, D-28). |
 | | [`ENGINEERING_STANDARDS.md`](docs/ENGINEERING_STANDARDS.md) | What must every calculation meet to be trusted? |
 | | [`OFFLINE_POLICY.md`](docs/OFFLINE_POLICY.md) | What may and may not touch the network? |
 | | [`SECURITY.md`](docs/SECURITY.md) | Threat model, supply chain, reporting a vulnerability. |
@@ -56,11 +61,15 @@ available in every interface with the same inputs, the same results and the same
 | | [`REFERENCE_CASES.md`](planning/REFERENCE_CASES.md) | Collected worked examples, re-derivations, source errata, 0.1 coverage. |
 | | [`PHASE_2D_REVIEW.md`](planning/PHASE_2D_REVIEW.md) | Phase 2 integration and regression review: checks, findings, decisions needed (2026-11-26). |
 | | [`CODE_REVIEW_D6.md`](planning/CODE_REVIEW_D6.md) | Guide and record for the first human code review (`registry.rs`, `levelling.rs`); open. |
-| | [`MCP_SDK_PROPOSAL.md`](planning/MCP_SDK_PROPOSAL.md) | D-13: the MCP SDK, its pinned version and how the contract maps onto MCP (proposed). |
-| | [`PYTHON_BINDINGS_PROPOSAL.md`](planning/PYTHON_BINDINGS_PROPOSAL.md) | D-26: Python versions, wheels and the thin binding layer (proposed). |
-| | [`EARTHWORK_DESCRIPTOR_PROPOSAL.md`](planning/EARTHWORK_DESCRIPTOR_PROPOSAL.md) | The earthwork calculation's descriptor, proposed for review before any code (D-20). |
-| | [`LEVELLING_DESCRIPTOR_PROPOSAL.md`](planning/LEVELLING_DESCRIPTOR_PROPOSAL.md) | The levelling calculations' descriptors, proposed for review before any code (D-20). |
-| | [`TRAVERSE_DESCRIPTOR_PROPOSAL.md`](planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md) | The traverse calculation's descriptor, proposed for review before any code (D-20). |
+| | [`MCP_SDK_PROPOSAL.md`](planning/MCP_SDK_PROPOSAL.md) | D-13: the MCP SDK, its pinned version and how the contract maps onto MCP (accepted, ADR 0013). |
+| | [`PYTHON_BINDINGS_PROPOSAL.md`](planning/PYTHON_BINDINGS_PROPOSAL.md) | D-26: Python versions, wheels and the thin binding layer (accepted, ADR 0014). |
+| | [`DXF_READER_PROPOSAL.md`](planning/DXF_READER_PROPOSAL.md) | D-27: CivKit's own DXF reader, its limits and heap budget (accepted, ADR 0015). |
+| | [`DRAWING_ANALYSIS_PROPOSAL.md`](planning/DRAWING_ANALYSIS_PROPOSAL.md) | D-28: drawing analysis: expansion, transformations, quantities, unit check, schedules, warnings (accepted, ADR 0016). |
+| | [`DXF_CROSS_CHECK_LOG.md`](planning/DXF_CROSS_CHECK_LOG.md) | Triage of every disagreement between CivKit's DXF reader and `undxf`. |
+| | [`FUZZ_LOG.md`](planning/FUZZ_LOG.md) | DXF reader fuzzing runs and the running total toward 8 hours. |
+| | [`EARTHWORK_DESCRIPTOR_PROPOSAL.md`](planning/EARTHWORK_DESCRIPTOR_PROPOSAL.md) | The earthwork calculation's descriptor (accepted; implemented in Phase 2, D-20). |
+| | [`LEVELLING_DESCRIPTOR_PROPOSAL.md`](planning/LEVELLING_DESCRIPTOR_PROPOSAL.md) | The levelling calculations' descriptors (accepted; implemented in Phase 2, D-20). |
+| | [`TRAVERSE_DESCRIPTOR_PROPOSAL.md`](planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md) | The traverse calculation's descriptor (accepted; implemented in Phase 2, D-20). |
 | | [`COMPETITIVE_LANDSCAPE.md`](planning/COMPETITIVE_LANDSCAPE.md) | Who else is building this, licences, gaps, naming risks (research, 2026-11-25). |
 | | [`FEATURE_PROPOSALS.md`](planning/FEATURE_PROPOSALS.md) | Feature ideas from that research, scored; none accepted. |
 | | [`AI_HANDOVER.md`](planning/AI_HANDOVER.md) | Current state and next actions — **read first when resuming work** (human or AI). |

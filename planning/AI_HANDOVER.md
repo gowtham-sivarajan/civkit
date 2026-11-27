@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -12,8 +12,8 @@
 `a94bf3f`). Phase 4 task 1 is decided (D-27, ADR 0015); **task 2, the DXF reader, is in `main`** (`241b44c`, CI #23,
 Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`4e41e7a`, `c740fd4`: CI #25, Python
 #10 and Fuzz #3 green). **Task 3 decided: D-28, [ADR 0016](decisions/0016-drawing-analysis.md)** (all questions as
-recommended); next is its code, tests first. Fuzzing: 30 min
-of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+recommended); its code has started, tests first: `Affine2` and `region_area` are written (uncommitted at the time of
+writing). Fuzzing: 30 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -165,9 +165,10 @@ git status                # confirm planning/ui-concepts/ is not staged
    handle, extrusion and every field per entity, hatch edges in full, `$DWGCODEPAGE`, layer state, uninterpreted
    counts by type and layer both ways, a synthetic drawing always run, the corpus required in the fuzz job).
    **Task 3 decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md), every question Q-A … Q-I of
-   [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Next: the code, tests
-   first**, in the order of the proposal's §13: `Affine2`, `region_area` and the sweep prefilter in `civkit-geometry`
-   (A3, A7); expansion and quantities (A1, A4–A6); the unit check (A2); schedules; Python and MCP (A8); fuzz (A9). The 8-hour fuzz
+   [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Code, tests first**, in
+   the order of the proposal's §13. Done: `Affine2` and `region_area` in `civkit-geometry` (A3's transform tests,
+   A7's region tests). Next: the §8.7 sweep prefilter and work limit (A7); expansion and quantities (A1, A4–A6); the
+   unit check (A2); schedules; Python and MCP (A8); fuzz (A9). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -183,6 +184,26 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 19:02 IST — Task 3 code starts: `Affine2` and `region_area` (tests first) *(Claude Sonnet 5.5)*
+- The maintainer pushed D-28 (`ecc0193`: CI #26, Python #11 green; Fuzz #4 running) and asked for this slice,
+  after Fuzz #3 was confirmed green (it was: 13:07 UTC on `c740fd4`).
+- Tests first: `crates/civkit-geometry/tests/transforms.rs` (15) and `tests/regions.rs` (11), expected values worked
+  by hand from GEOMETRY §11 or closed forms; they failed to compile before the code existed.
+- Code: `src/transform.rs` (`Affine2`: `new`, `translation`, `scale`, exact quarter-turn `rotation_deg`, `mirror_x`,
+  `insert` from `InsertPlacement`, `then`, `apply`, `apply_vertex`, `det`, `is_mirror`, `singular_values`,
+  `similarity_scale`) and `src/region.rs` (`region_area`, `RegionArea`, `RegionRing`); four `GeometryError` variants
+  (`DegenerateTransform`, `CurveUnderNonUniformScale`, `NoRings`, `RingsIntersect`), all §11.
+- Found by the tests: with concentric circles, the inner ring's first vertex lies on the outer ring's bulged chord,
+  where the chord-and-segment parity is ill-defined (it gave 26π instead of 24π). Fix: test a vertex or edge
+  midpoint clear of every other ring's bulged chords; recorded in GEOMETRY §11 as (impl.).
+- Mutation check: no bulge negation (1 test fails), reversed composition (2), circular segments ignored in
+  containment (3).
+- Not yet: the §8.7 sweep prefilter and pair-test limit (`region_area` still tests all edge pairs between rings).
+- Docs refreshed at the maintainer's request: README (status, documentation map), ROADMAP, CONTRIBUTING (stale
+  Phase 2 status), ARCHITECTURE §3.3 and §3.4, GEOMETRY (§1, §11, §12 item 9), IMPLEMENTATION_PLAN,
+  ACCEPTANCE_CRITERIA.
+- Local: fmt and clippy clean, 347 Rust tests pass.
 
 ### 2026-11-27 18:50 IST — D-28 accepted (ADR 0016): drawing analysis *(Claude Sonnet 5.5)*
 - The maintainer accepted every question Q-A … Q-I of the proposal as recommended.

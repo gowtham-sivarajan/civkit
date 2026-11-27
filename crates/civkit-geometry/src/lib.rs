@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 19:01 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit geometry: the 2D primitives used by calculations and drawing analysis.
 //!
@@ -11,7 +11,9 @@
 //! - every degenerate case has one defined behaviour, reported or refused, never silent (§8);
 //! - unit-agnostic: lengths come back in the input's unit (§2).
 //!
-//! Not in this crate in 0.1: 3D, transformations (Phase 4), public intersections, splines, geodesy.
+//! - 2D affine transformations and block placement, and regions by even-odd nesting (§11, D-28).
+//!
+//! Not in this crate in 0.1: 3D, public intersections, splines, geodesy.
 
 mod angle;
 mod bulge;
@@ -20,7 +22,9 @@ mod error;
 mod length;
 mod point;
 mod polygon;
+mod region;
 mod tolerance;
+mod transform;
 
 pub use angle::{
     Direction, azimuth_from_components, azimuth_from_direction, components, direction,
@@ -32,4 +36,6 @@ pub use length::{
 };
 pub use point::{Point, Vertex};
 pub use polygon::{Centroid, Orientation, PolygonArea, polygon_area, polygon_centroid};
+pub use region::{RegionArea, RegionRing, region_area};
 pub use tolerance::{Tolerance, ulp};
+pub use transform::{Affine2, InsertPlacement};

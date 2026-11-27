@@ -1,8 +1,9 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-26 21:09 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
-> **Status:** Phase 2 (units, geometry, calculations) is complete; Phase 3 (Python and MCP) is next. Code contributions are not open yet; feedback on the planning documents is
+> **Status:** Phases 1–3 are complete (core, units, geometry, calculations, Python and MCP); Phase 4 (drawing model and
+> DXF, release 0.1) is under way. Code contributions are not open yet; feedback on the planning documents is
 > welcome through GitHub issues. CivKit is licensed under [Apache-2.0](LICENSE); by contributing you agree that
 > your contribution is licensed under the same terms (Apache-2.0, section 5).
 

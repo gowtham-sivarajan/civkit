@@ -1,12 +1,14 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status: Accepted** (maintainer, 2026-11-25), after the review in
 > [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
 > [ADR 0010](../planning/decisions/0010-geometry-conventions.md).
 > A few details were settled while implementing. They are marked **(impl.)** below and listed in ADR 0010; the
 > maintainer confirmed them on 2026-11-25, adding the overflow rule for derived tolerances (§5).
+> §11 (transformations, regions) and the §8.7 prefilter were added by D-28
+> ([ADR 0016](../planning/decisions/0016-drawing-analysis.md)) for Phase 4.
 
 This document defines, before any implementation, every convention `civkit-geometry` follows:
 
@@ -38,9 +40,9 @@ implemented.
 - Intersections, offsets and clipping, except the internal self-intersection *check* in §8.7. There is no public
   intersection API.
 - Splines and ellipses.
-- Coordinate transformations. Drawing analysis needs block inserts with scale, rotation and mirroring. §11 fixes
-  their conventions now. They are implemented in Phase 4, which is still part of release 0.1, in
-  `civkit-geometry` (D6b), when `civkit-drawing` first needs them.
+- Coordinate transformations and regions. Drawing analysis needs block inserts with scale, rotation and mirroring,
+  and hatch areas with holes. They are specified in §11 and implemented in Phase 4 (D-28), still part of release
+  0.1, in `civkit-geometry` (D6b).
 - Map projections, grid scale factors, earth curvature and geodesy.
 - Any registry calculation (`geometry.*` IDs) or other change to the calculation contract.
 
@@ -380,9 +382,19 @@ Fixed in 2B so the drawing layer could not drift; specified in full by [ADR 0016
 - **DXF ARC** (always counter-clockwise from start to end angle): Δ = (end − start) mod 360°, computed exactly in
   degrees as stated, then converted. Δ = 0 is a **zero-sweep arc**: length 0 with the note of §8.8, not a full
   circle.
+- **`apply_vertex`** maps a polyline vertex. det = 0 is an error (degenerate transform); a bulged vertex under a
+  transform that is not a similarity is an error (curve under non-uniform scale); results that overflow are errors
+  (§8.1).
 - **Regions (`region_area`):** rings combined by even-odd nesting. A ring at nesting depth k counts with sign (−1)ᵏ.
   Rings that cross or touch each other (within ε, by the relations of §8.7) are not supported. A ring's depth is
   found by testing a point of it against the other rings.
+  - One tolerance for the region: D from all rings (arc extremes included), M from all coordinates. Each ring is
+    checked on its own (§8) with that ε; the first invalid ring, in input order, gives its error.
+  - Containment **(impl.)**: the parity of a ray from the point equals the parity of the chord polygon, flipped once
+    for each circular segment (between a bulged edge's chord and its arc) that contains the point. That rule is
+    ill-defined on a bulged chord, so the point tested is a vertex or edge midpoint of the ring that lies more than ε
+    from every other ring's bulged chords (every point of a ring that crosses no other ring has the same
+    containment).
 
 ## 12. How 2B is verified
 
@@ -426,6 +438,16 @@ the repository, or a result from another program. Each records where it came fro
    - a skipped translation;
    - the old g(x);
    - a missing TAU wrap.
+9. **§11, Phase 4** (gates A3 and A7 of ADR 0016), `tests/transforms.rs` and `tests/regions.rs`:
+   - the insert formula, MINSERT spacing and nested placement, worked by hand step by step;
+   - exact quarter turns; composition order; mirrors negate bulges (square with a semicircular edge stays 4 + π/2);
+   - areas scale by |det|; singular values of a shear (φ and 1/φ); the similarity threshold either side;
+   - regions: holes and islands with every orientation and input order; discs with square and disc holes
+     (25π − 4, 24π); holes inside an outward bulge and islands inside an inward bulge (containment follows the arc);
+     crossing and touching rings refused;
+   - property tests: composition equals sequential application (exact on integers); concentric squares alternate;
+   - mutation check: dropping the bulge negation, reversing the composition, or ignoring circular segments in
+     containment each make a test fail.
 
 ## 13. Decisions
 

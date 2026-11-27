@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 19:01 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Errors and degeneracy notes (docs/GEOMETRY.md §8). Rust types only in 0.1 (D-22, D3).
 
@@ -56,6 +56,21 @@ pub enum GeometryError {
     SweepOutOfRange,
     /// The centroid of a ring with bulged edges is not supported in 0.1 (§10, D5).
     CurvedCentroidUnsupported,
+    /// A transform with determinant 0 cannot map a polyline vertex (§11).
+    DegenerateTransform,
+    /// A curved segment under a scale that is not uniform would become elliptical; not supported
+    /// in 0.1 (§11).
+    CurveUnderNonUniformScale,
+    /// A region needs at least one ring (§11).
+    NoRings,
+    /// Two rings of a region cross or come within the tolerance of each other (§11). They are named
+    /// by their positions in the input.
+    RingsIntersect {
+        /// The first ring.
+        first: usize,
+        /// The second ring.
+        second: usize,
+    },
 }
 
 impl GeometryError {
@@ -79,6 +94,10 @@ impl GeometryError {
             Self::SelfIntersection { .. } => "§8.7",
             Self::UndefinedOrientation | Self::CurvedCentroidUnsupported => "§10",
             Self::NegativeRadius | Self::RadiusTooSmall | Self::SweepOutOfRange => "§8.8",
+            Self::DegenerateTransform
+            | Self::CurveUnderNonUniformScale
+            | Self::NoRings
+            | Self::RingsIntersect { .. } => "§11",
         }
     }
 }
@@ -114,6 +133,16 @@ impl fmt::Display for GeometryError {
             Self::SweepOutOfRange => "an arc sweep must be less than 2π; use a circle".to_owned(),
             Self::CurvedCentroidUnsupported => {
                 "the centroid of a ring with curved edges is not supported in 0.1".to_owned()
+            }
+            Self::DegenerateTransform => {
+                "the transform has determinant 0, so it cannot map a vertex".to_owned()
+            }
+            Self::CurveUnderNonUniformScale => {
+                "a curved segment under a non-uniform scale is not supported in 0.1".to_owned()
+            }
+            Self::NoRings => "a region needs at least one ring".to_owned(),
+            Self::RingsIntersect { first, second } => {
+                format!("rings {first} and {second} of the region cross or touch")
             }
         };
         write!(f, "{text} ({})", self.section())
