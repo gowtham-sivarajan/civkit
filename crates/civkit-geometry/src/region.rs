@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 18:59 IST · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 18:59 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Regions: rings combined by even-odd nesting (docs/GEOMETRY.md §11, D-28 / ADR 0016).
 //!
@@ -10,7 +10,8 @@ use crate::bulge::{BulgeArc, arc_length};
 use crate::edges::{Edge, conflict};
 use crate::error::{GeometryError, Note};
 use crate::point::{Point, Vertex};
-use crate::polygon::{PolygonArea, polygon_area};
+use crate::polygon::{PolygonArea, polygon_area_limited};
+use crate::sweep::{EdgeBox, WorkLimit, overlapping_pairs};
 use crate::tolerance::{BoundingBox, Sum, Tolerance, magnitude, ulp};
 
 /// One ring of a region.
@@ -134,6 +135,19 @@ pub fn region_area(
     rings: &[&[Vertex]],
     tolerance: Option<f64>,
 ) -> Result<RegionArea, GeometryError> {
+    region_area_limited(rings, tolerance, &mut WorkLimit::unlimited())
+}
+
+/// As [`region_area`], with every §8.7 edge-pair examination (each ring's own check, then pairs of
+/// edges from different rings) drawn from `work` (D-28).
+///
+/// # Errors
+/// As [`region_area`], plus [`GeometryError::WorkLimitExceeded`].
+pub fn region_area_limited(
+    rings: &[&[Vertex]],
+    tolerance: Option<f64>,
+    work: &mut WorkLimit,
+) -> Result<RegionArea, GeometryError> {
     if rings.is_empty() {
         return Err(GeometryError::NoRings);
     }
@@ -182,26 +196,37 @@ pub fn region_area(
     // Each ring on its own, with the region's ε.
     let areas = rings
         .iter()
-        .map(|r| polygon_area(r, Some(eps)))
+        .map(|r| polygon_area_limited(r, Some(eps), work))
         .collect::<Result<Vec<_>, _>>()?;
 
-    // No two rings may cross or touch.
-    let edges: Vec<Vec<Edge>> = translated
-        .iter()
-        .map(|r| r.edges(eps, representable))
-        .collect();
-    for i in 0..edges.len() {
-        for j in i + 1..edges.len() {
-            let meet = edges[i]
-                .iter()
-                .any(|e1| edges[j].iter().any(|e2| conflict(e1, e2, &[], eps)));
-            if meet {
-                return Err(GeometryError::RingsIntersect {
-                    first: i,
-                    second: j,
-                });
-            }
+    // No two rings may cross or touch: one sweep over every ring's edges, pairs from the same ring
+    // skipped (each ring's own check covered them). The first pair of rings in order is reported.
+    let mut owner = Vec::new();
+    let mut edges = Vec::new();
+    for (k, r) in translated.iter().enumerate() {
+        for e in r.edges(eps, representable) {
+            owner.push(k);
+            edges.push(e);
         }
+    }
+    let boxes: Vec<EdgeBox> = edges.iter().map(|e| EdgeBox::of(e, eps)).collect();
+    let mut first: Option<(usize, usize)> = None;
+    overlapping_pairs(
+        &boxes,
+        |i, j| owner[i] == owner[j],
+        work,
+        |i, j| {
+            let rings_pair = (owner[i].min(owner[j]), owner[i].max(owner[j]));
+            if first.is_some_and(|f| f <= rings_pair) {
+                return;
+            }
+            if conflict(&edges[i], &edges[j], &[], eps) {
+                first = Some(rings_pair);
+            }
+        },
+    )?;
+    if let Some((first, second)) = first {
+        return Err(GeometryError::RingsIntersect { first, second });
     }
 
     // Depths, from a point of each ring (more than ε from every other ring), chosen clear of the

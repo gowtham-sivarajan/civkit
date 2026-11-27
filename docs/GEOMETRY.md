@@ -1,6 +1,6 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status: Accepted** (maintainer, 2026-11-25), after the review in
 > [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
@@ -270,6 +270,17 @@ no accuracy.
   is a prefilter: only pairs whose boxes overlap are tested exactly. A pair whose boxes do not overlap cannot
   conflict, so results are identical to testing all pairs. The worst case stays O(n²); callers that need a time
   bound (drawing analysis) pass a limit on pair tests, and exceeding it is reported, not a validity result.
+  - A box covers a line's ends, or an arc's ends and its extremes (§5), widened by ε on every side. Two edges whose
+    widened boxes do not overlap are more than 2ε apart.
+  - **Work** is the number of edge pairs the sweep examines: pairs whose widened x-ranges overlap (the sweep runs
+    in x). It bounds the sweep's time even when many boxes overlap in x but not in y. **(impl.)**
+  - `polygon_area_limited` and `region_area_limited` draw on a caller's `WorkLimit`, shared across calls;
+    `polygon_area`, `region_area` and `polygon_centroid` are unlimited. A region is charged each ring's own check,
+    then the pairs of edges from different rings.
+  - When the work would pass the limit, the result is `WorkLimitExceeded`: the check was not completed, so the
+    geometry is reported neither valid nor self-intersecting, even if a conflict was already found.
+  - The error names the first conflicting pair in (i, j) order (the first pair of rings, for a region), as testing
+    every pair in order does, whatever order the sweep meets them in.
 
 **Order of evaluation for a polygon:**
 
@@ -448,6 +459,18 @@ the repository, or a result from another program. Each records where it came fro
    - property tests: composition equals sequential application (exact on integers); concentric squares alternate;
    - mutation check: dropping the bulge negation, reversing the composition, or ignoring circular segments in
      containment each make a test fail.
+10. **§8.7 prefilter, Phase 4** (gate A7), `src/sweep.rs` (unit tests) and `tests/sweep.rs`:
+    - property tests: on random rings (integer coordinates nudged by 0, ±ε/2 or ±5ε; minor and major arcs of both
+      signs), the sweep finds exactly the conflicting pairs that testing every pair finds, and is charged exactly
+      the pairs whose widened x-ranges overlap; pairs whose widened boxes do not overlap never conflict;
+    - widened boxes: rings δ apart are refused for δ = 10⁻⁹ < ε and accepted for δ = 10⁻⁶;
+    - arc extremes: a ring under an arc's lowest point, whose box the chord's box would miss;
+    - the work limit at its boundary and one below (a square costs 5, a ring with a hole 18), shared across calls;
+      over the limit, a bow tie is `WorkLimitExceeded`, not self-intersecting; a 40 000-vertex meander of
+      overlapping rows stops at its limit; a regular 50 000-gon costs under 10 pairs per edge;
+    - the first crossing in order is reported for a ring and for a region with two crossings;
+    - mutation check: unwidened boxes, ignored arc extremes, charging only y-overlaps, an unenforced limit, and
+      reporting the first crossing found (ring or region) each make a test fail.
 
 ## 13. Decisions
 

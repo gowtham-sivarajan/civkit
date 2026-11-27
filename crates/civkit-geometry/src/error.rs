@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 19:01 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Errors and degeneracy notes (docs/GEOMETRY.md §8). Rust types only in 0.1 (D-22, D3).
 
@@ -71,6 +71,12 @@ pub enum GeometryError {
         /// The second ring.
         second: usize,
     },
+    /// The §8.7 check needs more edge-pair examinations than the caller's [`crate::WorkLimit`]
+    /// allows. The check was not completed: the geometry is neither valid nor self-intersecting.
+    WorkLimitExceeded {
+        /// The limit that was reached.
+        limit: u64,
+    },
 }
 
 impl GeometryError {
@@ -91,7 +97,7 @@ impl GeometryError {
             Self::TooFewVertices { .. } => "§8.5",
             Self::IllConditionedBulge { .. } => "§8.2a",
             Self::DegenerateRing => "§8.6",
-            Self::SelfIntersection { .. } => "§8.7",
+            Self::SelfIntersection { .. } | Self::WorkLimitExceeded { .. } => "§8.7",
             Self::UndefinedOrientation | Self::CurvedCentroidUnsupported => "§10",
             Self::NegativeRadius | Self::RadiusTooSmall | Self::SweepOutOfRange => "§8.8",
             Self::DegenerateTransform
@@ -144,6 +150,9 @@ impl fmt::Display for GeometryError {
             Self::RingsIntersect { first, second } => {
                 format!("rings {first} and {second} of the region cross or touch")
             }
+            Self::WorkLimitExceeded { limit } => format!(
+                "the intersection check needs more than {limit} edge-pair examinations, so it was not completed"
+            ),
         };
         write!(f, "{text} ({})", self.section())
     }

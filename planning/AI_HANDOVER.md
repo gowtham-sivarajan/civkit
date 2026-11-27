@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 19:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -12,8 +12,8 @@
 `a94bf3f`). Phase 4 task 1 is decided (D-27, ADR 0015); **task 2, the DXF reader, is in `main`** (`241b44c`, CI #23,
 Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`4e41e7a`, `c740fd4`: CI #25, Python
 #10 and Fuzz #3 green). **Task 3 decided: D-28, [ADR 0016](decisions/0016-drawing-analysis.md)** (all questions as
-recommended); its code has started, tests first: `Affine2` and `region_area` are written (uncommitted at the time of
-writing). Fuzzing: 30 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+recommended); its code has started, tests first: `Affine2` and `region_area` in `435bb23` (CI #27, Python #12 green);
+the §8.7 sweep prefilter and `WorkLimit` written after it. Fuzzing: 50 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -166,9 +166,15 @@ git status                # confirm planning/ui-concepts/ is not staged
    counts by type and layer both ways, a synthetic drawing always run, the corpus required in the fuzz job).
    **Task 3 decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md), every question Q-A … Q-I of
    [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Code, tests first**, in
-   the order of the proposal's §13. Done: `Affine2` and `region_area` in `civkit-geometry` (A3's transform tests,
-   A7's region tests). Next: the §8.7 sweep prefilter and work limit (A7); expansion and quantities (A1, A4–A6); the
-   unit check (A2); schedules; Python and MCP (A8); fuzz (A9). The 8-hour fuzz
+   the order of the proposal's §13. Done in `civkit-geometry`: `Affine2` and `region_area` (A3's transform tests),
+   the §8.7 sweep prefilter with `WorkLimit` (A7 complete). Next, in `civkit-drawing`: first make the polygon
+   cleaning loop linear (below), then bounded block and MINSERT expansion with `Affine2` in the shared budget (F5's
+   13 placements, the nested and mirrored BricsCAD fixture), quantities (A1, A4–A6), the unit check (A2), schedules
+   and the report; Python and MCP (A8); fuzz (A9).
+   **Known time hazard, not yet fixed:** `prepare` in `civkit-geometry/src/polygon.rs` cleans zero-length segments by
+   searching from the start and calling `Vec::remove` until none is left: O(n²). A ring of 1 000 000 repeated
+   vertices (allowed by the reader) would effectively hang, which gate A5 forbids. It needs a linear pass that gives
+   the identical cleaned ring, proven against the current loop by a property test. The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -184,6 +190,24 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 19:18 IST — §8.7 sweep prefilter and work limit (tests first); A7 complete *(Claude Sonnet 5.5)*
+- The maintainer pushed `435bb23` (CI #27, Python #12 green) and asked for the prefilter, then expansion.
+- Tests first: `tests/sweep.rs` (9) failed to compile before the code; `src/sweep.rs` adds 3 unit tests, two of them
+  property tests showing the sweep finds exactly the conflicts all-pairs testing finds, with work equal to the
+  x-overlapping pairs.
+- Code: `WorkLimit` (shared, `new`, `unlimited`, `used`, `remaining`), `polygon_area_limited`,
+  `region_area_limited`, `GeometryError::WorkLimitExceeded { limit }` (§8.7). `polygon.rs` and `region.rs` use
+  the sweep; the error still names the first pair in (i, j) order.
+- Mutation check: unwidened boxes (2 tests fail), ignored arc extremes (2), charging only y-overlaps (1), an
+  unenforced limit (5), reporting the first crossing found: the ring and region cases caught by an added test
+  (two crossings met in the opposite order by the sweep).
+- Found: the O(n²) cleaning loop in `prepare` (recorded under Next steps); to fix first in the next slice.
+- Fuzz #4 (`ecc0193`) and Fuzz #5 (`435bb23`) green, fuzzing and X2 steps both: 50 min of 8 h. Their X2 summaries
+  are not yet reviewed by the maintainer.
+- Docs: GEOMETRY §8.7 and §12 item 10; ARCHITECTURE §3.3; README; ROADMAP; IMPLEMENTATION_PLAN; ACCEPTANCE_CRITERIA
+  (A7 passes locally).
+- Local: fmt and clippy clean, 359 Rust tests pass.
 
 ### 2026-11-27 19:02 IST — Task 3 code starts: `Affine2` and `region_area` (tests first) *(Claude Sonnet 5.5)*
 - The maintainer pushed D-28 (`ecc0193`: CI #26, Python #11 green; Fuzz #4 running) and asked for this slice,

@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -43,7 +43,7 @@
 
 ### Phase 4 — Drawing model + DXF → **Release 0.1**
 - [ ] Quantity extraction, unit checks and schedule export pass on all DXF fixtures.
-- [ ] Drawing analysis gates A1–A9 of [ADR 0016](decisions/0016-drawing-analysis.md) pass in CI: fixtures, unit check, transforms, budget accounting, limits, no silent loss, region area, interface parity and safety, fuzzing of read + analyse. *(Status 2026-11-27: A3's transform tests and A7's region tests pass locally; A3's placement match against F5 and BricsCAD, and A7's sweep prefilter, follow with the analysis.)*
+- [ ] Drawing analysis gates A1–A9 of [ADR 0016](decisions/0016-drawing-analysis.md) pass in CI: fixtures, unit check, transforms, budget accounting, limits, no silent loss, region area, interface parity and safety, fuzzing of read + analyse. *(Status 2026-11-27: A7 passes locally: `region_area`, and the §8.7 sweep prefilter shown identical to testing every pair, with its work limit. A3's transform tests pass; its placement match against F5 and BricsCAD follows with the expansion.)*
 - [ ] DXF reader gates X1–X6 of [ADR 0015](decisions/0015-dxf-reader.md) pass in CI: fixtures, `undxf` cross-check, heap-budget accounting (measured peak ≤ reserved peak + slack), budget exhaustion (never a panic or overrun), malformed input, fuzzing. *(Status 2026-11-27: X1–X5 pass locally and in CI on `241b44c`; X6's 10-minute run passed in Fuzz #1; the 8-hour record is outstanding, so this stays open.)*
 - [ ] DXF parser fuzzed for a defined minimum duration with no crashes: 10 minutes per CI run, and 8 hours in total recorded before 0.1, under the default heap budget (ADR 0015).
 - [ ] Everything in §2 holds. Tag `v0.1.0`.

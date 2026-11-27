@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Polygon area, orientation and centroid (docs/GEOMETRY.md §8, §10).
 
@@ -6,6 +6,7 @@ use crate::bulge::{BulgeArc, arc_length, segment_area};
 use crate::edges::{Edge, conflict};
 use crate::error::{GeometryError, Note};
 use crate::point::{Point, Vertex};
+use crate::sweep::{EdgeBox, WorkLimit, overlapping_pairs};
 use crate::tolerance::{BoundingBox, Sum, Tolerance, magnitude, ulp};
 
 /// Orientation of a ring (§10).
@@ -73,6 +74,7 @@ fn prepare(
     vertices: &[Vertex],
     tolerance: Option<f64>,
     for_centroid: bool,
+    work: &mut WorkLimit,
 ) -> Result<Prepared, GeometryError> {
     // 8.1 non-finite input.
     if !vertices
@@ -209,8 +211,18 @@ fn prepare(
                 }
             })
             .collect();
-        for i in 0..m {
-            for j in i + 1..m {
+        // Only pairs whose ε-widened boxes overlap can conflict (the sweep prefilter). The first
+        // conflicting pair in (i, j) order is reported, as testing every pair in order would.
+        let boxes: Vec<EdgeBox> = edges.iter().map(|e| EdgeBox::of(e, eps)).collect();
+        let mut first: Option<(usize, usize)> = None;
+        overlapping_pairs(
+            &boxes,
+            |_, _| false,
+            work,
+            |i, j| {
+                if first.is_some_and(|f| f <= (i, j)) {
+                    return;
+                }
                 let shared: Vec<Point> = if m == 2 {
                     vec![ring[0].1, ring[1].1]
                 } else if j == i + 1 {
@@ -221,12 +233,15 @@ fn prepare(
                     Vec::new()
                 };
                 if conflict(&edges[i], &edges[j], &shared, eps) {
-                    return Err(GeometryError::SelfIntersection {
-                        first: ring[i].0,
-                        second: ring[j].0,
-                    });
+                    first = Some((i, j));
                 }
-            }
+            },
+        )?;
+        if let Some((i, j)) = first {
+            return Err(GeometryError::SelfIntersection {
+                first: ring[i].0,
+                second: ring[j].0,
+            });
         }
         if signed_area > t.area {
             Orientation::CounterClockwise
@@ -263,7 +278,20 @@ pub fn polygon_area(
     vertices: &[Vertex],
     tolerance: Option<f64>,
 ) -> Result<PolygonArea, GeometryError> {
-    let p = prepare(vertices, tolerance, false)?;
+    polygon_area_limited(vertices, tolerance, &mut WorkLimit::unlimited())
+}
+
+/// As [`polygon_area`], with the §8.7 check's edge-pair examinations drawn from `work`, so that a
+/// caller can bound the time any ring takes (D-28).
+///
+/// # Errors
+/// As [`polygon_area`], plus [`GeometryError::WorkLimitExceeded`].
+pub fn polygon_area_limited(
+    vertices: &[Vertex],
+    tolerance: Option<f64>,
+    work: &mut WorkLimit,
+) -> Result<PolygonArea, GeometryError> {
+    let p = prepare(vertices, tolerance, false, work)?;
     Ok(PolygonArea {
         area: p.signed_area.abs(),
         signed_area: p.signed_area,
@@ -282,7 +310,7 @@ pub fn polygon_centroid(
     vertices: &[Vertex],
     tolerance: Option<f64>,
 ) -> Result<Centroid, GeometryError> {
-    let p = prepare(vertices, tolerance, true)?;
+    let p = prepare(vertices, tolerance, true, &mut WorkLimit::unlimited())?;
     if p.degenerate {
         return Err(GeometryError::DegenerateRing);
     }

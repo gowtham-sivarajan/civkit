@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
 > green. The engine has seven registered calculations in five families, each tested against published reference
@@ -11,7 +11,8 @@
 > **Current: Phase 4** (drawing model and DXF), which completes release 0.1:
 > - CivKit's own DXF reader is in `main` (D-27, [ADR 0015](planning/decisions/0015-dxf-reader.md)).
 > - The drawing analysis is decided (D-28, [ADR 0016](planning/decisions/0016-drawing-analysis.md)) and is being
->   built, tests first. Its geometry (transformations and areas of regions with holes) is written.
+>   built, tests first. Its geometry (transformations, areas of regions with holes, a bounded intersection check)
+>   is written.
 > - Fuzzing stands at 30 minutes of the 8 hours required before 0.1.
 >
 > There is no release yet. Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current

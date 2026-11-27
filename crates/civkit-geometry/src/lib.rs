@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 19:01 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit geometry: the 2D primitives used by calculations and drawing analysis.
 //!
@@ -23,6 +23,7 @@ mod length;
 mod point;
 mod polygon;
 mod region;
+mod sweep;
 mod tolerance;
 mod transform;
 
@@ -35,7 +36,10 @@ pub use length::{
     Arc, Circle, Measure, arc_length, circle_area, circle_circumference, polyline_length,
 };
 pub use point::{Point, Vertex};
-pub use polygon::{Centroid, Orientation, PolygonArea, polygon_area, polygon_centroid};
-pub use region::{RegionArea, RegionRing, region_area};
+pub use polygon::{
+    Centroid, Orientation, PolygonArea, polygon_area, polygon_area_limited, polygon_centroid,
+};
+pub use region::{RegionArea, RegionRing, region_area, region_area_limited};
+pub use sweep::WorkLimit;
 pub use tolerance::{Tolerance, ulp};
 pub use transform::{Affine2, InsertPlacement};
