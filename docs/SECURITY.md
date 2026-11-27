@@ -1,6 +1,6 @@
 # Security
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:36 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. No released versions yet.
 
@@ -19,7 +19,7 @@ CivKit runs locally and has no server, so the main risks come from **untrusted i
 
 | Entry point | Threat | Mitigation |
 |---|---|---|
-| DXF files (any interface) | Malformed or hostile files causing crashes, hangs or memory exhaustion | Hardened parser; size, entity-count and nesting limits; fuzzing (`cargo-fuzz`) from Phase 4; no code execution from drawing content |
+| DXF files (any interface) | Malformed or hostile files causing crashes, hangs or memory exhaustion | CivKit's own parser ([ADR 0015](../planning/decisions/0015-dxf-reader.md)): input-size limit, a heap budget that every allocation reserves from (parsing and expansion share it), per-item caps, nesting limit, no recursion; fuzzing (`cargo-fuzz`); no code execution from drawing content |
 | JSON requests (Python, MCP, FFI) | Malformed input, huge payloads | Schema validation, size limits, structured errors — never a crash |
 | FFI boundary | Rust panic unwinding into C#; memory misuse | Panics caught and returned as errors; clear ownership rules (`civkit_free`) — see [API_DESIGN.md §9](API_DESIGN.md#9-ffi-cratescivkit-ffi) |
 | MCP server | Prompt injection: text inside a drawing (layer names, notes) reaching the AI client as instructions | Drawing-sourced text is returned as clearly labelled data; all 0.1 tools are read-only; any future write tool requires confirmation in the host |

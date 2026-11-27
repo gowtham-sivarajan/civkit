@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -100,14 +100,16 @@ acceptance item is ticked with its evidence.
 **Current phase (from 2026-11-27).**
 
 1. Evaluate existing Rust DXF crates vs own reader; decide (new decision record).
-   **Proposed, revision 2 (2026-11-27):** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27). The maintainer held Q-A, Q-B and
-   the ADR until `undxf` 0.11.0 was compared; revision 2 compares it hands-on and revises the limits to a measured
-   peak-memory bound. Awaiting the maintainer.
-2. `civkit-drawing`: neutral model, DXF import, limits.
+   **Decided (2026-11-27):** D-27, [ADR 0015](decisions/0015-dxf-reader.md): CivKit's own reader; `undxf` =0.11.0 as a
+   test-only cross-check; a 512 MiB heap budget that every allocation reserves from; gates X1–X6 (fixtures,
+   cross-check, budget accounting, budget exhaustion, malformed input, fuzzing).
+2. `civkit-drawing`: neutral model, DXF import, limits. Tests first, to ADR 0015's gates X1–X6.
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).
+   - Expansion (block instances, MINSERT arrays, transformed geometry) reserves from the **same combined budget** as
+     the parsed drawing (ADR 0015), not a separate one; the task 3 proposal fixes its details within that rule.
 4. Fuzzing; DXF fixtures; expose via Python and MCP.
 5. Bulk human review before 0.1: complete D6, the separate C1–C9 engineering review, Phase 4 DXF results and fixtures, and generated documentation review; record each outcome. Then release 0.1.
 

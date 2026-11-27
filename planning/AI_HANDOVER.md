@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -68,7 +68,7 @@ package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MC
 - **Phase 4 (drawing model and DXF): current, not started.** See §4.
 
 **Decisions**
-- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-26.
+- All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-27.
 - Proposed: D-8, D-9, D-14; D-21 (SI prefixes and Unicode units, after 0.1).
   See [DECISIONS.md](DECISIONS.md).
 
@@ -143,8 +143,9 @@ git status                # confirm planning/ui-concepts/ is not staged
    ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 4). As in Phase 3, interface and contract details are
    proposed and accepted before code (geometry notes and unsupported-feature reporting first), and code is written
    tests first.
-   **Task 1 proposed, revision 2:** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27). The maintainer holds Q-A, Q-B and the
-   ADR; Q-C and Q-E are under consideration; Q-D revised to a measured memory bound. Awaiting the maintainer.
+   **Task 1 decided (2026-11-27):** D-27, [ADR 0015](decisions/0015-dxf-reader.md): own reader, `undxf` =0.11.0 as a test-only
+   cross-check, a reserved heap budget, gates X1–X6. **Next: task 2**, the reader, tests first. Task 3's proposal must
+   use one combined budget for the parsed drawing and its expansion.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
    `docs/calculations`). Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
@@ -159,6 +160,20 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 14:50 IST — D-27 accepted (ADR 0015): CivKit's own DXF reader *(Claude Sonnet 5.5)*
+- The maintainer accepted revision 2 (own reader; `undxf` =0.11.0 as a test-only cross-check; Q-C scope and Q-E
+  fuzzing schedule), noting that `undxf`'s first-placement MINSERT means the fixtures' expected values are the check
+  for MINSERT arrays. Two changes were required before the ADR, both applied to the proposal:
+  - **Q-D tightened:** every allocation reserves from the budget first: container capacity (growth by
+    `try_reserve_exact`), strings, temporary buffers, maps and sets (including unknown-entity counts) at a stated
+    per-entry cost; reservation failure or a refused allocation is a clean error. The bound is defined as
+    **reader-requested heap**, not a process-memory ceiling. Parsing and expansion share **one combined budget**.
+  - **R4 claim corrected:** the 3 150-input check is a smoke-test pass, not R4 (limits and fuzzing).
+- Recorded: ADR 0015 with gates X1–X6 (named X, not D, because D6 is the code review); DECISIONS (D-27 Accepted,
+  index); ADR 0002 points to it; SECURITY.md's DXF row; IMPLEMENTATION_PLAN Phase 4 (task 1 decided, task 3 combined
+  budget); ACCEPTANCE_CRITERIA Phase 4 (gates, fuzzing duration).
+- Next: Phase 4 task 2, the reader in `civkit-drawing`, tests first.
 
 ### 2026-11-27 14:28 IST — D-27 revision 2: `undxf` compared; memory bound *(Claude Sonnet 5.5)*
 - The maintainer held D-27 (Q-A, Q-B, ADR): revision 1 missed `undxf` 0.11.0. Q-C and Q-E stay under consideration;

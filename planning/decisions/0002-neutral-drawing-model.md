@@ -1,6 +1,6 @@
 # ADR 0002 — Neutral drawing model and DXF reader in the Rust engine
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:14 IST · last edited 2026-11-25 00:28 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:14 IST · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted
 - **Date:** 2026-11-25
@@ -29,3 +29,4 @@ Analysis stays read-only (principle S-5). Writing to drawings is a separate, lat
 - The neutral model must be designed carefully up front; AutoCAD/Civil 3D objects with no DXF equivalent
   (e.g. Civil 3D alignments and surfaces) will need explicit extensions later.
 - DXF parsing adds a dependency (an existing Rust DXF crate, to be evaluated in Phase 4) or our own reader.
+  *Settled 2026-11-27: CivKit's own reader, [ADR 0015](0015-dxf-reader.md) (D-27).*

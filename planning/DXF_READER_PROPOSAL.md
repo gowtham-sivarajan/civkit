@@ -1,12 +1,13 @@
 # Proposal: the DXF reader (Phase 4, task 1)
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:10 IST · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:10 IST · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
-> **Status:** **Proposed; revision 2 after the maintainer's review (2026-11-27).** Decision ID **D-27**. Nothing is
-> implemented. The maintainer **held Q-A, Q-B and the ADR**: the first revision's case for an own reader missed
-> `undxf` 0.11.0. This revision adds `undxf` to the evaluation, runs it hands-on against the fixtures, malformed
-> inputs and memory measurements, and revises the limits (Q-D), because file and entity caps alone do not bound peak
-> memory. Q-C (scope) and Q-E (fuzzing) remain under consideration.
+> **Status:** **Accepted by the maintainer, 2026-11-27 (revision 2, with two review changes applied).** Recorded as
+> [ADR 0015](decisions/0015-dxf-reader.md) (D-27), the source of truth. History: revision 1 missed `undxf` 0.11.0, so
+> the maintainer held Q-A, Q-B and the ADR; revision 2 compared it hands-on and revised the limits. The maintainer then
+> accepted it with two changes, both applied below: Q-D reserves every allocation against the budget and defines the
+> bound as reader-requested heap (not process memory), with a combined budget for parsing and expansion; and the
+> malformed-input evidence is described as a smoke-test pass, not as meeting R4.
 >
 > Built on: D-12 / [ADR 0002](decisions/0002-neutral-drawing-model.md) (neutral drawing model and DXF reader in the
 > Rust engine), [SECURITY.md](../docs/SECURITY.md) (hardened parser, limits, fuzzing), [MVP_SCOPE.md](MVP_SCOPE.md) §3
@@ -74,7 +75,8 @@ The same 3 150 corrupted variants of the fixtures (truncation, byte flips, numbe
 | Parses slower than 2 s | 0 | 0 |
 | Clean errors | 2 333 | 2 352 |
 
-Both are robust at this level.
+Both pass this smoke test. It is evidence of no gross fragility, not of R4: neither crate takes limits, and
+neither was fuzzed in this evaluation.
 
 ### 3.3 Peak memory (R5)
 
@@ -109,7 +111,9 @@ for what it stores.
 **Still an own reader in `civkit-drawing`, now with `undxf` as the primary test-only cross-check.** The comparison
 changes the reasons, not the conclusion:
 
-- `undxf` meets R1, R3 and R4 and most of R2, which the first revision's case did not reflect. It fails two
+- `undxf` meets R1 and R3 and most of R2, which the first revision's case did not reflect, and it **passed the same
+  malformed-input smoke test** as `dxf` (3 150 corrupted inputs, no panic or hang). That is a smoke-test pass, not R4:
+  R4 requires limits and fuzzing, `undxf` takes no limits, and neither crate was fuzzed here. It fails two
   requirements that matter for 0.1: **R2 (MINSERT arrays reduced to one placement: F5 gives 11 bays, not 13)** and
   **R5 (no way to bound memory: up to 158 × the input on hostile content)**. Meeting both while using it means a
   CivKit pre-scan of the raw file (to count and budget before `undxf` allocates) and a second pass for MINSERT rows
@@ -119,7 +123,9 @@ changes the reasons, not the conclusion:
 - **`undxf` as the cross-check (dev-dependency, never shipped):** it covers HATCH, header presence and unknown
   entities, which `dxf` does not, so it checks more of what our reader does. Tests read every fixture and the fuzz
   corpus with both readers and compare what both support: entity counts by type and layer, coordinates, bulges, hatch
-  boundaries, insert transforms, header values and their absence. `dxf` is not needed as well.
+  boundaries, insert transforms, header values and their absence. `dxf` is not needed as well. **It cannot validate
+  MINSERT arrays** (it reads only the first placement): for those, the fixtures' expected values (F5's 13 bays) are the
+  check, and the cross-check compares only a MINSERT's first placement.
 - **Revisit later:** if `undxf` gains MINSERT arrays and caller-set limits and settles its API, replacing our reader
   with it becomes a contained change, because analysis is written against CivKit's model, not a reader.
 
@@ -141,27 +147,47 @@ the fixtures' expected values were set by construction and checked with ezdxf.
 - **The reader produces a parsed drawing, not results.** Block expansion, transformations, lengths and areas are
   analysis (task 3).
 
-**Limits (Q-D, revised).** The bound is on memory itself, not only on counts:
+**Limits (Q-D, revised after review).** The bound is on the heap the reader requests, enforced by reservation:
 
-1. **Input size:** at most **256 MiB** (checked before reading; the input is held once, as bytes).
+1. **Input size:** at most **256 MiB**, checked before reading. The input is the caller's buffer, read in place; it
+   is bounded by this limit, not by the budget below.
 2. **No whole-file copies:** the reader works over the input bytes and decodes one value at a time; it never builds
    a decoded copy of the file.
-3. **A storage budget the reader enforces:** every element it keeps is charged its size as it is stored (a fixed
-   record per entity, 24 bytes per vertex, the length of each string, each table entry). Unrecognised entities are
-   counted per type and layer, not kept. When the charge would pass the budget, reading stops with an error naming the
-   limit. Default budget **512 MiB**, a named constant, lowerable by the caller.
-4. **Per-item caps,** so one entity cannot take the whole budget: 1 000 000 vertices in one polyline or hatch path;
-   64 KiB in one string.
-5. **Peak memory bound:** input + budget + a fixed overhead, so at the defaults **under 1 GiB for any input**. It is
-   shown, not assumed: tests measure the actual peak (a counting allocator from a dev-dependency, as `civkit-drawing`
-   itself forbids `unsafe`) on adversarial synthetic inputs (many tiny entities, unrecognised entities, long
-   polylines, long strings, many layers) and require peak ≤ input + budget + overhead, and that the budget error comes
-   before the bound is reached.
-6. **Expansion (task 3), its own budget:** block nesting depth 32; expanded entities charged against a second budget
-   (default 512 MiB), so a MINSERT of nested arrays cannot multiply past it. Its numbers are part of the task 3
-   proposal.
+3. **A heap budget, reserved before allocating.** One budget object (default **512 MiB**, a named constant, lowerable
+   by the caller) is passed through the reader. **Every heap allocation the reader makes reserves its bytes from the
+   budget first**, and releases them when freed, so the live total can never pass the budget:
+   - **container capacity**, not length: a vector or string reserves its full new capacity (element size × capacity)
+     before it grows; growth is explicit (`try_reserve_exact`, never implicit doubling), so spare capacity is charged;
+   - **strings**: their capacity in bytes;
+   - **temporary buffers** (value decoding, code-page conversion, scratch vectors) while they are alive;
+   - **maps and sets**, including the counts of unrecognised entities by type and layer and the layer and block name
+     tables: a stated cost per entry (key bytes plus a fixed per-node allowance), reserved before inserting.
+   When a reservation would pass the budget, or the allocator itself refuses (`try_reserve` failing), reading stops
+   with a clean error naming the limit; nothing is half-built and nothing aborts.
+4. **Per-item caps,** so one item cannot take the whole budget: 1 000 000 vertices in one polyline or hatch path;
+   64 KiB in one string; 256 bytes in an unrecognised entity's type name.
+5. **No unbounded recursion:** the reader is iterative (sections, entities and SEQEND-terminated groups are read in a
+   loop), so stack use does not grow with the input.
+6. **What the bound means.** It is a bound on **reader-requested heap**: at any moment, the bytes the reader has
+   requested from the allocator for its own data are at most the budget (512 MiB at the default), with the input
+   bounded separately (256 MiB). It is **not a process-memory ceiling**: process memory also includes the caller's
+   own data, allocator overhead and fragmentation, thread stacks and the rest of the program, which the reader cannot
+   bound. Interfaces (Python, MCP) state this when they document the limits.
+7. **How it is shown (implementation gates):**
+   - **Accounting tests:** a counting allocator (a dev-dependency; `civkit-drawing` itself forbids `unsafe`) measures
+     the heap actually requested during each read, on every fixture and on adversarial synthetic inputs (many tiny
+     entities, unrecognised entities with many distinct types and layers, long polylines, long strings, many layers
+     and blocks). Each test requires **measured peak ≤ reserved peak + a small fixed slack** (for allocations the
+     standard library makes when building an error message), which shows that no allocation escapes the reservation.
+   - **Exhaustion tests:** reading each fixture and each adversarial input under budgets from a few bytes upward must
+     always end in success or the budget error: never a panic, abort or overrun (measured peak ≤ budget + slack).
+   - **Fuzzing** (Q-E) runs under the default budget with the counting allocator's check, so an overrun is a failure.
+8. **Expansion (task 3) shares the same budget.** The parsed drawing and its expanded form (block instances, MINSERT
+   arrays, transformed geometry) reserve from **one combined budget**, so the parsed drawing plus everything expanded
+   from it stays within it (512 MiB at the default); separate budgets could exceed the reader's bound. Block nesting
+   depth is limited to 32. The task 3 proposal fixes the expansion details within this rule.
 
-The entity-count cap of revision 1 is dropped: the storage budget bounds it more directly.
+The entity-count cap of revision 1 is dropped: the reservation budget bounds memory directly.
 
 ## 6. Tests and fuzzing (Q-E, unchanged)
 
@@ -176,14 +202,14 @@ The entity-count cap of revision 1 is dropped: the storage budget bounds it more
 
 ## 7. Questions for the maintainer
 
-| # | Question | Recommendation | State |
+| # | Question | Recommendation | Decision (2026-11-27) |
 |---|---|---|---|
-| **Q-A** | Own reader in `civkit-drawing` (§4), rather than adopting `undxf` 0.11.0 or `dxf` 0.6.2? | **Own reader**: `undxf` fails R2 (MINSERT) and R5 (memory) and would bring an external 0.x model; `dxf` fails R2 (HATCH) and R3. | Held; revised |
-| **Q-B** | Use **`undxf` 0.11.0** as the test-only cross-check (instead of `dxf`, as revision 1 proposed)? | **Yes**: it covers more of what the reader does. | Held; revised |
-| **Q-C** | 0.1 scope of §5. | **As proposed.** | Under consideration |
-| **Q-D** | Limits of §5: 256 MiB input; no whole-file copies; a 512 MiB storage budget charged per stored element; per-item caps; peak under 1 GiB at the defaults, measured in tests; expansion budgeted separately in task 3. | **As proposed.** | Revised |
-| **Q-E** | Fuzzing: nightly `cargo-fuzz` CI job, 10 minutes per run, 8 hours recorded before 0.1, under the default budget. | **As proposed.** | Under consideration |
-| **Q-F** | Record as D-27 in a new ADR (0015), amending ADR 0002's open question. | **Yes**, once Q-A to Q-E are settled. | Held |
+| **Q-A** | Own reader in `civkit-drawing` (§4), rather than adopting `undxf` 0.11.0 or `dxf` 0.6.2? | **Own reader**: `undxf` fails R2 (MINSERT) and R5 (memory) and would bring an external 0.x model; `dxf` fails R2 (HATCH) and R3. | **Accepted** |
+| **Q-B** | Use **`undxf` = 0.11.0** as the test-only cross-check (instead of `dxf`, as revision 1 proposed)? | **Yes**: it covers more of what the reader does; MINSERT arrays are checked by the fixtures' expected values instead. | **Accepted** |
+| **Q-C** | 0.1 scope of §5. | **As proposed.** | **Accepted** |
+| **Q-D** | Limits of §5: 256 MiB input; no whole-file copies; a 512 MiB heap budget that every allocation reserves from first (capacity, temporaries, strings, maps); per-item caps; the bound is reader-requested heap, not process memory; one combined budget with expansion (task 3); accounting, exhaustion and fuzz tests as gates. | **As revised after review.** | **Accepted** |
+| **Q-E** | Fuzzing: nightly `cargo-fuzz` CI job, 10 minutes per run, 8 hours recorded before 0.1, under the default budget. | **As proposed.** | **Accepted** |
+| **Q-F** | Record as D-27 in a new ADR (0015), amending ADR 0002's open question. | **Yes.** | **Accepted**: [ADR 0015](decisions/0015-dxf-reader.md) |
 
 ## 8. After acceptance
 

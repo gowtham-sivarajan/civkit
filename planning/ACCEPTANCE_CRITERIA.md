@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -43,7 +43,8 @@
 
 ### Phase 4 — Drawing model + DXF → **Release 0.1**
 - [ ] Quantity extraction, unit checks and schedule export pass on all DXF fixtures.
-- [ ] DXF parser fuzzed for a defined minimum duration with no crashes.
+- [ ] DXF reader gates X1–X6 of [ADR 0015](decisions/0015-dxf-reader.md) pass in CI: fixtures, `undxf` cross-check, heap-budget accounting (measured peak ≤ reserved peak + slack), budget exhaustion (never a panic or overrun), malformed input, fuzzing.
+- [ ] DXF parser fuzzed for a defined minimum duration with no crashes: 10 minutes per CI run, and 8 hours in total recorded before 0.1, under the default heap budget (ADR 0015).
 - [ ] Everything in §2 holds. Tag `v0.1.0`.
 
 ### Phase 5 — AutoCAD / Civil 3D → **Release 0.2**
