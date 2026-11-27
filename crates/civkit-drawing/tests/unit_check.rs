@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 21:00 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 21:00 IST · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The unit check, F3's planted problems P1–P4 (D-28 / ADR 0016 §8; gate A2). Every finding is a
 //! caution-level warning, never an error: a drawing can be like this on purpose.
@@ -232,6 +232,12 @@ fn p4_dimension_override() {
     assert_eq!(level(12.0, Some(r"12\XTYP")), None);
     // The lower text often has its own formatting; none of it is part of the value.
     assert_eq!(level(12.0, Some(r"12\X{\H0.7x;TYP}")), None);
+    // The `<>` placeholder counts only before the first unescaped `\X`: 15 over the measured value is a
+    // wrong value; the measured value over 15 is not; with the `\X` escaped (`\\X`), nothing splits.
+    assert_eq!(level(12.0, Some(r"15\X<>")), Some(Level::Caution));
+    assert_eq!(level(12.0, Some(r"<>\X15")), None);
+    assert_eq!(level(12.0, Some(r"15\\X<>")), None);
+    assert_eq!(level(12.0, Some(r"12\\X15")), Some(Level::Info));
     // Codes with a payload end at `;` (height, alignment, colour, font), wherever they are.
     assert_eq!(level(12.0, Some(r"{\H2.5;15}")), Some(Level::Caution));
     assert_eq!(level(12.0, Some(r"\A1;15")), Some(Level::Caution));

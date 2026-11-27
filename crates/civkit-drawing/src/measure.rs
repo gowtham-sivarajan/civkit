@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities by effective layer (D-28 / ADR 0016 §6, §7, §10).
 //!
@@ -1414,11 +1414,27 @@ enum Override {
 /// - every other code (`\A`, `\C`, `\F`, `\f`, `\H`, `\Q`, `\S`, `\T`, `\W`, …) has a payload ending at
 ///   `;`, and the code and its payload go.
 fn read_override(text: &str) -> Override {
-    if text.trim().is_empty() || text.contains("<>") {
+    // The value is the text before the first unescaped `\X` (a `\\` is an escaped backslash, so the
+    // `X` after it is text); the `<>` placeholder counts only there.
+    let mut end = text.len();
+    let mut scan = text.char_indices();
+    while let Some((i, ch)) = scan.next() {
+        if ch == '\\' {
+            match scan.next() {
+                Some((_, 'X')) | None => {
+                    end = i;
+                    break;
+                }
+                Some(_) => {}
+            }
+        }
+    }
+    let value = &text[..end];
+    if value.trim().is_empty() || value.contains("<>") {
         return Override::Measured;
     }
-    let mut plain = String::with_capacity(text.len());
-    let mut chars = text.chars();
+    let mut plain = String::with_capacity(value.len());
+    let mut chars = value.chars();
     while let Some(ch) = chars.next() {
         match ch {
             '{' | '}' => {}

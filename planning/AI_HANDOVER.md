@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -172,8 +172,8 @@ git status                # confirm planning/ui-concepts/ is not staged
    the §8.7 sweep prefilter with `WorkLimit` (A7 complete), and linear polygon cleaning. Done in `civkit-drawing`:
    `expand` (A3 complete; A5 in part), and `measure`: quantities by effective layer, drawing units and the unit check
    (A1 and A2 locally; A6 in part). Of the six implementation details in ADR 0016 ("Settled during
-   implementation"), 1, 2 and 5 are confirmed; 3 now implements the accepted behaviour; **4 (vertex work 10⁸, with
-   timing evidence) and 6 (P4's MTEXT codes) were revised after review and await confirmation**. Next: A4's measured heap check for read + analyse
+   implementation"), 1, 2 and 5 are confirmed; 3 now implements the accepted behaviour; 4 (vertex work 10⁸, with
+   timing evidence) is confirmed; **6 (P4's MTEXT codes) was fixed after a second review and awaits confirmation**. Next: A4's measured heap check for read + analyse
    (it checks the 256-bytes-per-vertex reservation around geometry calls), then A9 (the fuzz target runs read +
    analyse), then the CSV and JSON schedules and the drawing report, then Python and MCP (A8). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
@@ -191,6 +191,18 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 21:44 IST — P4: the `<>` placeholder respects the first unescaped `\X` *(Claude Sonnet 5.5)*
+- The maintainer (after `7fec8ed`, pushed): item 4 confirmed (timings are estimates from the named machine, not
+  portable guarantees); item 6 not yet: `read_override` looked for `<>` in the whole text before stopping at `\X`,
+  so `15\X<>` read as the measured value and missed the mismatch.
+- Tests first: `15\X<>` (caution), `<>\X15` (no finding), `15\\X<>` (escaped: no split, placeholder: no finding),
+  `12\\X15` (escaped: text, info). The first failed before the fix.
+- Fix: one pass finds the first unescaped `\X` (skipping the character after every backslash); the placeholder check
+  and the number are read only in the text before it.
+- Planted faults: placeholder checked in the whole text; escaped backslash not skipped when finding `\X`: both caught.
+- ADR 0016: item 4 confirmed with the maintainer's note; item 6 fixed and awaiting confirmation.
+- Local: fmt and clippy clean, 392 Rust tests pass. Next: schedules (CSV and JSON) and the drawing report.
 
 ### 2026-11-27 21:34 IST — Review of ADR 0016's implementation details: 3 implemented, 4 timed, 6 fixed *(Claude Sonnet 5.5)*
 - The maintainer (after `861f9fa`): confirm 1, 2, 5; item 3 (clockwise hatch arcs refused) changed the accepted scope;

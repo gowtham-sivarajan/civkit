@@ -1,10 +1,10 @@
 # ADR 0016 — Drawing analysis: a versioned report, streaming expansion in the shared budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: every question Q-A … Q-I of
   [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended). Details settled while implementing
-  are listed below: items 1, 2 and 5 confirmed (2026-11-27); 4 and 6 revised after review, awaiting confirmation.
+  are listed below: items 1, 2, 4 and 5 confirmed (2026-11-27); 6 fixed after a second review, awaiting confirmation.
 - **Date:** 2026-11-27
 - **Decision ID:** D-28
 - **Relation to earlier decisions:**
@@ -119,7 +119,8 @@ The proposal's §3–§11 are the specification. In summary:
 
 Writing the code exposed points the accepted text did not settle. Each is implemented and tested; none changes a
 decision above. The maintainer reviewed them on 2026-11-27: items 1, 2 and 5 **confirmed**; item 3 resolved by
-implementing the accepted behaviour; items 4 and 6 revised as below and **awaiting confirmation**.
+implementing the accepted behaviour; item 4 revised and then **confirmed**; item 6 revised twice and **awaiting
+confirmation**.
 
 1. **Where uninterpreted entities count** (refines §10 "make their layer's row incomplete"). *Confirmed.* The
    reader records where each one is: model space, paper space, or a block definition.
@@ -139,7 +140,8 @@ implementing the accepted behaviour; items 4 and 6 revised as below and **awaiti
    - Consecutive edges must join within ε (GEOMETRY §5 over the path's points); otherwise `NOT_SUPPORTED`
      (`feature: "hatch boundary not joined"`).
    - An arc edge becomes two half-arcs, so a full circle (360°) is representable.
-4. **Hard and soft limits added.** *Revised after review; awaiting confirmation.*
+4. **Hard and soft limits added.** *Revised after review; confirmed (2026-11-27). The timings are estimates from the
+   named machine, not portable wall-clock guarantees.*
    - **Vertex work, 100 000 000 (hard, `DRAWING_LIMIT` "vertices"; first proposed as 200 000 000).** It counts
      vertices measured or transformed: a polyline's or hatch's vertices when first measured in its own coordinates
      (once per block entity, since measures are cached), each vertex again when re-measured under a non-uniform
@@ -161,9 +163,11 @@ implementing the accepted behaviour; items 4 and 6 revised as below and **awaiti
 5. **Placement factor:** under any non-degenerate placement, area is the local area × |det|; under a similarity,
    lengths are the local length × s. Straight-edged geometry under a non-uniform scale is re-measured from its
    placed vertices. *Confirmed.*
-6. **P4 formatting** (Autodesk's MTEXT codes). *Revised after review; awaiting confirmation.* Before the override is
-   read as a number:
-   - `\X` splits dimension text (what follows goes below the dimension line), so only the part before it is read;
+6. **P4 formatting** (Autodesk's MTEXT codes). *Revised after two reviews; awaiting confirmation.* Before the
+   override is read as a number:
+   - `\X` splits dimension text (what follows goes below the dimension line), so only the part before the first
+     **unescaped** `\X` is read (in `\\X` the backslash is escaped and the `X` is text), and the `<>` placeholder
+     counts only in that part;
    - `\\`, `\{` and `\}` are a literal backslash and braces; other braces group formatting and are removed;
    - the one-letter codes `\P`, `\L`, `\l`, `\O`, `\o`, `\K`, `\k` are removed; `\~` is a space;
    - every other code (`\A`, `\C`, `\F`, `\f`, `\H`, `\Q`, `\S`, `\T`, `\W`, …) has a payload ending at `;`, and the
@@ -171,7 +175,9 @@ implementing the accepted behaviour; items 4 and 6 revised as below and **awaiti
 
    The first text ("`\X…;` codes" beside "`\X`" as a one-letter code) was ambiguous, and `\X` was dropped while
    the text after it was kept, so `15\Xmm` read as "15mm". Regression tests: `15\Xmm` (caution), `12\XTYP` and
-   `12\X{\H0.7x;TYP}` (no finding), `{\H2.5;15}`, `\A1;15`, `\C1;12`, `\P15`, and an escaped backslash. `DIMLFAC`
+   `12\X{\H0.7x;TYP}` (no finding), `{\H2.5;15}`, `\A1;15`, `\C1;12`, `\P15`, and an escaped backslash. The second
+   review found that `<>` was looked for in the whole text, so `15\X<>` read as the measured value and the mismatch
+   was missed; now `15\X<>` is a caution, `<>\X15` and `15\\X<>` are not findings, and `12\\X15` is info. `DIMLFAC`
    is not read (as §8 says).
 
 ## Consequences
