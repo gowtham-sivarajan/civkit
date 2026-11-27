@@ -1,6 +1,6 @@
 # ADR 0015 — The DXF reader: CivKit's own, with a reserved heap budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:50 IST · last edited 2026-11-27 18:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:50 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: revision 2 of [DXF_READER_PROPOSAL.md](../DXF_READER_PROPOSAL.md),
   with two changes, both applied: Q-D tightened; the malformed-input evidence described as a smoke-test pass).
@@ -84,7 +84,7 @@ recovery choices. So:
   or an allocation failure.
 - **Triage:** a disagreement on a valid DXF is promoted into the strict corpus (and fixed). A disagreement caused by
   ambiguity CivKit should refuse (a value stated twice) is fixed by refusing it, with a test. A tolerance difference on
-  malformed input is logged as reviewed in [DXF_CROSS_CHECK_LOG.md](../DXF_CROSS_CHECK_LOG.md); CivKit does not copy
+  malformed input is logged as reviewed in the maintainer's triage log (kept locally since 2026-11-27); CivKit does not copy
   `undxf`'s recovery choice. Malformed-input behaviour stays covered by CivKit's own refusal and safety tests (X3–X6).
 
 ## Consequences

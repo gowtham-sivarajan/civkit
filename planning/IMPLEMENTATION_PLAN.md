@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -43,7 +43,7 @@ Order agreed 2026-11-25. The units parser is infrastructure: it is finished and 
 |---|---|---|---|
 | 2A | `civkit-units`: quantity type, dimension algebra, named units and compound parser, ambiguity rejection, DMS and bearings ([API_DESIGN.md §7](../docs/API_DESIGN.md#7-units), D-19) | Explicit units; dimensional validation; ambiguity rejection; round-trip, property-based and rejection tests pass | ✅ 2026-11-25: implemented and reviewed; CI green on `b4f37e2` and on the internal-units follow-up `6d3d16a` |
 | 2B | `civkit-geometry`: primitives needed by 0.1 | Documented coordinate and angle conventions, numerical tolerances, edge-case tests | ✅ 2026-11-25: specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green; implementation items confirmed; CI green on the overflow-rule follow-up `bc06cb1` |
-| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | ✅ 2026-11-26: **all five D-20 families are implemented**, as seven registered calculations: Manning (C5), beam reactions, deflection and end slope (C6–C8), traverse (C3, [proposal](TRAVERSE_DESCRIPTOR_PROPOSAL.md)), levelling in three calculations (C4, C9, [proposal](LEVELLING_DESCRIPTOR_PROPOSAL.md)) and earthwork (C1, C2, [proposal](EARTHWORK_DESCRIPTOR_PROPOSAL.md)). D-23 (lists and choices) accepted, [ADR 0011](decisions/0011-list-and-choice-inputs.md). Every descriptor was proposed and accepted before its code (D-20 condition 4). The beam's maximum shear and moment are deferred from 0.1 (D-25, [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). Committed and pushed as `948a49a`, CI green. Details: [AI_HANDOVER.md](AI_HANDOVER.md) |
+| 2C | The five 0.1 calculations, exactly as D-20 ([ADR 0009](decisions/0009-implementation-scope-0-1-calculations.md)) defines, one at a time | All applicable reference cases (C1–C9 and the extra beam case) pass | ✅ 2026-11-26: **all five D-20 families are implemented**, as seven registered calculations: Manning (C5), beam reactions, deflection and end slope (C6–C8), traverse (C3, [proposal](TRAVERSE_DESCRIPTOR_PROPOSAL.md)), levelling in three calculations (C4, C9, [proposal](LEVELLING_DESCRIPTOR_PROPOSAL.md)) and earthwork (C1, C2, [proposal](EARTHWORK_DESCRIPTOR_PROPOSAL.md)). D-23 (lists and choices) accepted, [ADR 0011](decisions/0011-list-and-choice-inputs.md). Every descriptor was proposed and accepted before its code (D-20 condition 4). The beam's maximum shear and moment are deferred from 0.1 (D-25, [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). Committed and pushed as `948a49a`, CI green. Details: AI_HANDOVER.md |
 | 2D | Integration and regression | Full test suite, dependency checks and cross-platform CI pass; tag `phase-2-done` | ✅ 2026-11-26: review done ([PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md)); CI green on `948a49a` (all nine jobs); D3 and D4 decided (D-24, D-25, [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). Tag `phase-2-done` held until CI has checked the latest commit (the green run on `948a49a` predates D-24 and D-25), which waits for pushing to resume (the maintainer, 2026-11-26) |
 
 Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)). The search for an openly licensed worked example that numerically verifies them continues (D-20 condition 1); when one is accepted they return as new outputs, a pure addition, in a later release. Searched 2026-11-25 (S4 ch. 7, an openly licensed statics text): none fits a full-span UDL with one point load.
@@ -109,8 +109,8 @@ acceptance item is ticked with its evidence.
    In `main` as `241b44c` (2026-11-27): CI #23, Python #8 and Fuzz #1 green, so X6's 10-minute run has passed once. Review
    follow-ups are in `4e41e7a` (CI #24, Python #9 green). Fuzz #2: fuzzing green, its corpus cross-check red. ADR 0015
    amended (maintainer): X2 is strict on the fixtures and a curated well-formed corpus (`tests/well_formed/`) and
-   reports-and-triages the fuzz corpus ([DXF_CROSS_CHECK_LOG.md](DXF_CROSS_CHECK_LOG.md)). Fuzz time:
-   [FUZZ_LOG.md](FUZZ_LOG.md) (Fuzz #3 on `c740fd4` green, X2 report empty: 30 min of 8 h).
+   reports-and-triages the fuzz corpus (triage log kept locally). Fuzz time: recorded in
+   [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    **Decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md) (all of
    [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended): the versioned `drawing.analyze` report,
@@ -156,6 +156,6 @@ Tauri 2 app; forms generated from descriptors; SQLite history; offline and CSP c
 | AutoCAD .NET runtime churn (.NET 8 → .NET 10) | Plugin breaks on new releases | Thin plugin; logic in Rust; start with 2027 only; per-version checklist |
 | MCP specification changes | Integration rework | MCP isolated in `integrations/mcp`; pin SDK version per release |
 | Rust is a barrier for engineering contributors | Few contributors | Templates; data-driven reference cases; review-only contributions |
-| Single maintainer burnout | Project stalls | Small releases; clear docs; AI_HANDOVER.md always current |
+| Single maintainer burnout | Project stalls | Small releases; clear docs; plan and checklist always current |
 | Copyright in design-code material | Legal exposure | Cite clauses, implement equations, never paste code text |
 | Hostile DXF files | Crashes, hangs | Parser limits and fuzzing ([SECURITY.md](../docs/SECURITY.md)) |

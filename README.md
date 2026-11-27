@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
 > green. The engine has seven registered calculations in five families, each tested against published reference
@@ -16,8 +16,7 @@
 >   CSV schedule are written, in Rust, Python (`civkit.drawing`) and MCP (`drawing.analyze`, behind `--drawing-root`).
 > - Fuzzing stands at 1 h 40 min of the 8 hours required before 0.1.
 >
-> There is no release yet. Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current
-> state: [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
+> There is no release yet. Exit criteria and current status: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
 
 CivKit is a free, open-source, offline-first engineering toolkit. It brings reliable civil-engineering
 calculations, unit handling and drawing analysis into the tools engineers already use — AutoCAD / Civil 3D,
@@ -67,19 +66,17 @@ available in every interface with the same inputs, the same results and the same
 | | [`PYTHON_BINDINGS_PROPOSAL.md`](planning/PYTHON_BINDINGS_PROPOSAL.md) | D-26: Python versions, wheels and the thin binding layer (accepted, ADR 0014). |
 | | [`DXF_READER_PROPOSAL.md`](planning/DXF_READER_PROPOSAL.md) | D-27: CivKit's own DXF reader, its limits and heap budget (accepted, ADR 0015). |
 | | [`DRAWING_ANALYSIS_PROPOSAL.md`](planning/DRAWING_ANALYSIS_PROPOSAL.md) | D-28: drawing analysis: expansion, transformations, quantities, unit check, schedules, warnings (accepted, ADR 0016). |
-| | [`DXF_CROSS_CHECK_LOG.md`](planning/DXF_CROSS_CHECK_LOG.md) | Triage of every disagreement between CivKit's DXF reader and `undxf`. |
-| | [`FUZZ_LOG.md`](planning/FUZZ_LOG.md) | DXF reader fuzzing runs and the running total toward 8 hours. |
 | | [`EARTHWORK_DESCRIPTOR_PROPOSAL.md`](planning/EARTHWORK_DESCRIPTOR_PROPOSAL.md) | The earthwork calculation's descriptor (accepted; implemented in Phase 2, D-20). |
 | | [`LEVELLING_DESCRIPTOR_PROPOSAL.md`](planning/LEVELLING_DESCRIPTOR_PROPOSAL.md) | The levelling calculations' descriptors (accepted; implemented in Phase 2, D-20). |
 | | [`TRAVERSE_DESCRIPTOR_PROPOSAL.md`](planning/TRAVERSE_DESCRIPTOR_PROPOSAL.md) | The traverse calculation's descriptor (accepted; implemented in Phase 2, D-20). |
 | | [`COMPETITIVE_LANDSCAPE.md`](planning/COMPETITIVE_LANDSCAPE.md) | Who else is building this, licences, gaps, naming risks (research, 2026-11-25). |
 | | [`FEATURE_PROPOSALS.md`](planning/FEATURE_PROPOSALS.md) | Feature ideas from that research, scored; none accepted. |
-| | [`AI_HANDOVER.md`](planning/AI_HANDOVER.md) | Current state and next actions — **read first when resuming work** (human or AI). |
 | | [`ORIGINAL_PROPOSAL.md`](planning/ORIGINAL_PROPOSAL.md) | The original concept proposal, unchanged. |
 | `tests/` | [`fixtures/dxf/README.md`](tests/fixtures/dxf/README.md) | Sample drawings and their exact expected values. |
 
 **New to the project?** README → ARCHITECTURE → ROADMAP.
-**Resuming work?** Start with [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
+**Resuming work?** Start with [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md) and
+[planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
 
 ---
 

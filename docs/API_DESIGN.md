@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -261,7 +261,7 @@ moment (`kN*m`, `kip*ft`), velocity and flow all follow from the compound rule.
 
 This section is the complete, formal definition of what the engine accepts in 0.1. **Users should never need
 to discover a rule from an error message**: if a spelling is not listed here, it is not accepted.
-Written 2026-11-25 by Claude Opus 5.5; reviewed by the maintainer the same day (decisions recorded in AI_HANDOVER.md).
+Written 2026-11-25 by Claude Opus 5.5; reviewed by the maintainer the same day (decisions recorded in the session handover).
 
 #### 7.1.1 Unit expressions (the `unit` field)
 

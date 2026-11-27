@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities by effective layer (D-28 / ADR 0016 §6, §7, §10).
 //!
@@ -506,18 +506,29 @@ fn local(
     })
 }
 
-/// A budgeted copy of a polyline's vertices for the geometry crate (D-28 §4.1: its own allocations
-/// are covered by a per-vertex reservation, here the copy plus `GEOMETRY_BYTES_PER_VERTEX`).
-fn reserve_for_geometry(budget: &Budget, n: usize) -> Result<Reservation, AnalysisError> {
+/// Reserves, from the shared budget, what a geometry call may allocate outside it (D-28 §4.1): the vertex copies and
+/// the geometry crate's own working arrays, `per_vertex` bytes for each of `n` vertices. Gate A4
+/// (`tests/analysis_memory.rs`) measures the real use against these constants.
+fn reserve_for_geometry(
+    budget: &Budget,
+    n: usize,
+    per_vertex: usize,
+) -> Result<Reservation, AnalysisError> {
     let bytes = n
-        .checked_mul(GEOMETRY_BYTES_PER_VERTEX)
+        .checked_mul(per_vertex)
         .ok_or(ReadError::AllocationFailed { bytes: usize::MAX })?;
     Ok(Reservation::new(budget, bytes)?)
 }
 
-/// Heap the geometry crate and the vertex copies may use per vertex, reserved around each call
-/// (D-28 §4.1; gate A4 measures it).
-pub(crate) const GEOMETRY_BYTES_PER_VERTEX: usize = 256;
+/// Per vertex, for one polyline: its copy, polygon cleaning, the §8.7 edges, boxes and sweep. Measured by gate A4 at
+/// about 264 bytes (a convex 200 000-vertex ring, 2026-11-27); reserved with margin.
+pub(crate) const GEOMETRY_BYTES_PER_VERTEX: usize = 320;
+
+/// Per vertex, for one hatch region: its rings, `region_area`'s own copies, each ring's check and the cross-ring
+/// sweep, alive together. Measured by gate A4 at about 504 bytes (a 100 000-vertex polyline path), 512 (a
+/// 100 000-edge path) and 327 (500 rings of 200 vertices), 2026-11-27; reserved with margin. Under the default
+/// 512 MiB budget, a single hatch boundary above about 750 000 vertices is therefore a `DRAWING_LIMIT`.
+pub(crate) const REGION_BYTES_PER_VERTEX: usize = 640;
 
 fn polyline(
     p: &Polyline,
@@ -526,7 +537,7 @@ fn polyline(
     pairs: &mut WorkLimit,
 ) -> Result<Local, AnalysisError> {
     work.take(p.vertices.len())?;
-    let _reserved = reserve_for_geometry(budget, p.vertices.len())?;
+    let _reserved = reserve_for_geometry(budget, p.vertices.len(), GEOMETRY_BYTES_PER_VERTEX)?;
     let v: Vec<GVertex> = gvertices(&p.vertices).collect();
     let n = v.len();
     let curved_segments = if p.closed { n } else { n.saturating_sub(1) };
@@ -637,6 +648,21 @@ fn hatch(
     if h.paths.is_empty() {
         return Ok(Local::Failed(Fail::NotRead));
     }
+    // Reserve before the rings are built: a ring has one vertex per polyline vertex or line edge, two per arc edge.
+    let n: usize = h
+        .paths
+        .iter()
+        .map(|path| match &path.boundary {
+            Boundary::Polyline { vertices, .. } => vertices.len(),
+            Boundary::Edges(edges) => edges
+                .iter()
+                .map(|e| if matches!(e, Edge::Arc { .. }) { 2 } else { 1 })
+                .sum(),
+            Boundary::NotSupported { .. } => 0,
+        })
+        .sum();
+    work.take(n)?;
+    let _reserved = reserve_for_geometry(budget, n, REGION_BYTES_PER_VERTEX)?;
     let mut rings = Vec::with_capacity(h.paths.len());
     for path in h.paths.iter() {
         match path_ring(&path.boundary) {
@@ -644,9 +670,6 @@ fn hatch(
             Err(f) => return Ok(Local::Failed(f)),
         }
     }
-    let n: usize = rings.iter().map(Vec::len).sum();
-    work.take(n)?;
-    let _reserved = reserve_for_geometry(budget, n)?;
     let curved = rings.iter().flatten().any(|v| v.bulge != 0.0);
     let refs: Vec<&[GVertex]> = rings.iter().map(Vec::as_slice).collect();
     Ok(match region_area_limited(&refs, None, pairs) {
@@ -1456,7 +1479,7 @@ fn placed_length(
         return Ok(None);
     };
     work.take(p.vertices.len())?;
-    let _reserved = reserve_for_geometry(budget, p.vertices.len())?;
+    let _reserved = reserve_for_geometry(budget, p.vertices.len(), GEOMETRY_BYTES_PER_VERTEX)?;
     let placed: Result<Vec<GVertex>, GeometryError> = gvertices(&p.vertices)
         .map(|v| t.apply_vertex(GVertex::straight(v.point.x, v.point.y)))
         .collect();

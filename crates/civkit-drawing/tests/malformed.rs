@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:23 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0015 gate X5: malformed input gives a clean error naming the problem and its line; limits are enforced;
 //! encodings and unsupported content are reported, not guessed or dropped.
@@ -421,7 +421,7 @@ fn a_layer_or_block_defined_twice_is_refused() {
 
 /// Fuzz #2 (CI) input `2712f99c02149f916ce1cbd1770f5ea2952c775b`: the fuzzer spliced header values ($LIMMAX 420, 297) and
 /// an empty text into a TEXT entity of the BricsCAD fixture, so the entity stated its position, height and text twice.
-/// CivKit (then) kept the last values and undxf the first; now it is refused (DXF_CROSS_CHECK_LOG RA-4).
+/// CivKit (then) kept the last values and undxf the first; now it is refused (triage RA-4).
 #[test]
 fn a_text_with_spliced_second_values_is_refused() {
     let original = fixture_bytes("insert_bricscad_level_1.dxf");

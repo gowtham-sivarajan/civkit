@@ -1,8 +1,8 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # Fuzzing the DXF reader (ADR 0015 gate X6, Q-E): cargo-fuzz on nightly Rust, Linux, seeded with the DXF fixtures,
 # 10 minutes per run (on every push to main, daily, and on demand). After fuzzing, the corpus it grew is cross-checked
 # against undxf in report-and-triage mode (gate X2, ADR 0015 amendment): disagreements are listed in the job summary
-# for triage (planning/DXF_CROSS_CHECK_LOG.md) and do not fail the job; a crash, hang, budget or allocation failure, or
+# for triage (the maintainer's triage log) and do not fail the job; a crash, hang, budget or allocation failure, or
 # an empty corpus does. Longer recorded runs for the 8 hours required
 # before 0.1: run this workflow by hand with a larger `seconds` (a job may last at most 6 hours).
 # Actions are pinned to commit SHAs (docs/SECURITY.md).

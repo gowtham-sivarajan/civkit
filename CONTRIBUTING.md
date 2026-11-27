@@ -1,6 +1,6 @@
 # Contributing to CivKit
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 19:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (setup and git sections from HANDOFF.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phases 1–3 are complete (core, units, geometry, calculations, Python and MCP); Phase 4 (drawing model and
 > DXF, release 0.1) is under way. Code contributions are not open yet; feedback on the planning documents is
@@ -121,7 +121,9 @@ Rust: all crates use the **2024 edition**; the minimum supported Rust version is
 
 AI assistants are welcome as tools; humans remain responsible for what is merged.
 
-- Before starting, an AI assistant reads [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md) and follows its working rules.
+- Before starting, an AI assistant reads [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md) and
+  [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md), and the maintainer's working rules. (The
+  maintainer's session handover and working logs are kept locally, not in the repository.)
 - **Provenance is mandatory.** Every file an AI creates or edits carries a provenance line near the top with
   the model name, model ID and timestamp (IST), e.g.
 

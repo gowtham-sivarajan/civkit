@@ -1,6 +1,6 @@
 # D6 code review: guide and record
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 22:24 IST · last edited 2026-11-26 22:24 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 22:24 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** **Open.** This is the independent human code review that ACCEPTANCE_CRITERIA §3 requires and that the
 > Phase 2D review left open ([PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md), F11 and D6). All code so far was written and checked
@@ -90,5 +90,5 @@ Answers to the five questions in §2:
 | Outcome | Approved / approved with findings / changes required |
 
 After sign-off, the maintainer marks D6 closed in [PHASE_2D_REVIEW.md](PHASE_2D_REVIEW.md) and records the outcome in
-[AI_HANDOVER.md](AI_HANDOVER.md). Fixes for findings follow the usual rule: a test that shows the problem first, then
+this file and in [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md). Fixes for findings follow the usual rule: a test that shows the problem first, then
 the change.

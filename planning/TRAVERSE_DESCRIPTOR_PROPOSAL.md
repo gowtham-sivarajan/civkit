@@ -176,7 +176,7 @@ because they inherit the erratum. The computed values above are the independentl
 
 ## 10. After approval
 
-1. Record the answers here (status line) and in [AI_HANDOVER.md](AI_HANDOVER.md).
+1. Record the answers here (status line) and in AI_HANDOVER.md.
 2. Tests 1 to 4 and the mutation check first (red), then `surveying.traverse.compass_rule` in
    `crates/civkit-core/src/calcs/surveying.rs`, then the reference case. Registered in `Registry::with_builtins`.
 3. Full local checks (fmt, clippy `-D warnings`, tests, doc, dependency rule), then the maintainer's Windows run and commit.

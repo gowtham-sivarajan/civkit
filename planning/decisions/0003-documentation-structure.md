@@ -1,8 +1,10 @@
 # ADR 0003 — Documentation structure and AI provenance
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-25 00:29 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
-- **Status:** Accepted
+- **Status:** Accepted. *Amended 2026-11-27 (maintainer): `AI_HANDOVER.md` and the working logs `FUZZ_LOG.md` and
+  `DXF_CROSS_CHECK_LOG.md` are kept locally and updated, but are not in the repository. Decision records, plans,
+  proposals and reviews stay public (D-17 unchanged).*
 - **Date:** 2026-11-25
 - **Decision ID:** D-16
 

@@ -1,6 +1,6 @@
 # ADR 0016 — Drawing analysis: a versioned report, streaming expansion in the shared budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:59 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: every question Q-A … Q-I of
   [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended). Details settled while implementing
@@ -179,6 +179,15 @@ implementing the accepted behaviour; item 4 revised and then **confirmed**; item
    review found that `<>` was looked for in the whole text, so `15\X<>` read as the measured value and the mismatch
    was missed; now `15\X<>` is a caution, `<>\X15` and `15\\X<>` are not findings, and `12\\X15` is info. `DIMLFAC`
    is not read (as §8 says).
+
+7. **Geometry reservation, measured by A4** (refines §4.1's proposed 256 bytes per vertex). *Awaiting
+   confirmation.* Gate A4 (`crates/civkit-drawing/tests/analysis_memory.rs`) measured the real use: 264 bytes per vertex
+   for a polyline (its copy, cleaning, the §8.7 edges, boxes and sweep), and up to 512 for a hatch region (its rings,
+   `region_area`'s own copies, each ring's check and the cross-ring sweep). The reservations are now 320 and 640 bytes
+   per vertex, and a hatch's is taken before its rings are built (the first A4 run found them built outside it). With
+   the reservation bypassed, the large-geometry cases fail A4 by over 40 MB. Under the default 512 MiB budget a single
+   hatch boundary above about 750 000 vertices is a `DRAWING_LIMIT`. A4 also found the CSV writer's per-row strings
+   (a 60 KiB layer name each) outside the budget; cells are now written straight into the budgeted output.
 
 ## Consequences
 

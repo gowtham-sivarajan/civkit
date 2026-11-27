@@ -51,3 +51,8 @@ desktop.ini
 
 # Commit message prepared by an AI assistant (used with git commit -F); never committed
 /_commit_msg.txt
+
+# The maintainer's session handover and working logs: kept and updated locally, not published (2026-11-27)
+/planning/AI_HANDOVER.md
+/planning/FUZZ_LOG.md
+/planning/DXF_CROSS_CHECK_LOG.md

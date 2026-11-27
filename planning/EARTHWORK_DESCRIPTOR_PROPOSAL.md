@@ -158,7 +158,7 @@ the wrong formula is used, and nothing in the result would say so. It becomes a 
 
 ## 9. After approval
 
-1. Record the answers in the status line and in [AI_HANDOVER.md](AI_HANDOVER.md).
+1. Record the answers in the status line and in AI_HANDOVER.md.
 2. Tests first (red); then `crates/civkit-core/src/calcs/quantities.rs`, registered in `Registry::with_builtins`; then the
    two reference cases; then the mutation check and the full local checks; then the maintainer's Windows run and commit.
 3. That completes the five D-20 calculations in 2C. Phase **2D** (integration and regression, tag `phase-2-done`) follows.

@@ -182,7 +182,7 @@ cases; closed-form tests cover them.
 
 ## 9. After approval
 
-1. Record the answers in the status line and in [AI_HANDOVER.md](AI_HANDOVER.md).
+1. Record the answers in the status line and in AI_HANDOVER.md.
 2. Tests first (red), then `surveying.rs` gains the three calculations, sharing small pure functions; then the five
    reference cases; then the mutation check and the full local checks; then the maintainer's Windows run and commit.
 3. Earthwork (average end area, with an explicit pyramid method, cases C1 and C2) follows with its own proposal.

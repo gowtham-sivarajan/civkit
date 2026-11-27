@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 22:04 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 22:04 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The drawing report (JSON) and the quantity schedule (CSV) (D-28 / ADR 0016 §9, API_DESIGN §13).
 //!
@@ -9,7 +9,9 @@
 
 use crate::budget::{BVec, Budget};
 use crate::expand::AnalysisError;
-use crate::measure::{AnalysisOptions, Detail, Issue, LayerTotals, Level, Quantities, measure};
+use crate::measure::{
+    AnalysisOptions, Counts, Detail, Issue, LayerTotals, Level, Quantities, measure,
+};
 use crate::model::{Drawing, Entity, EntityKind, Where};
 use crate::reader::{Limits, read_dxf};
 
@@ -491,15 +493,13 @@ impl Analysis {
         o.s("layer,kind,count,length,area,unit,length_m,area_m2,incomplete,omitted,report_version,civkit_version\r\n")?;
         let opt = |x: Option<f64>| x.map_or(String::new(), number);
         for &l in self.sorted_layers()?.iter() {
-            let layer = csv_cell(d.name(l.layer));
-            let mut rows: Vec<(&str, u64, Option<f64>, Option<f64>)> =
-                kinds(l).into_iter().filter(|k| k.1 > 0).collect();
-            if rows.is_empty() {
-                rows.push(("", 0, None, None));
-            }
-            for (kind, count, length, area) in rows {
+            let measured = kinds(l).into_iter().filter(|k| k.1 > 0);
+            let none = (l.counts == Counts::default()).then_some(("", 0, None, None));
+            for (kind, count, length, area) in measured.chain(none) {
+                // The layer name (drawing text, up to the string limit) goes straight into the budgeted output.
+                csv_cell(&mut o, d.name(l.layer))?;
                 o.s(&format!(
-                    "{layer},{kind},{count},{},{},{unit},{},{},{},{},{REPORT_VERSION},{CIVKIT_VERSION}\r\n",
+                    ",{kind},{count},{},{},{unit},{},{},{},{},{REPORT_VERSION},{CIVKIT_VERSION}\r\n",
                     opt(length),
                     opt(area),
                     opt(length.and_then(|x| u.length_m(x))),
@@ -516,15 +516,23 @@ impl Analysis {
 /// A CSV cell from drawing text: a leading `=`, `+`, `-`, `@`, tab or carriage return is prefixed with
 /// `'` (spreadsheets would run it as a formula); a cell with a comma, quote or line break is quoted,
 /// quotes doubled (RFC 4180).
-fn csv_cell(text: &str) -> String {
-    let mut cell = String::with_capacity(text.len() + 3);
-    if text.starts_with(['=', '+', '-', '@', '\t', '\r']) {
-        cell.push('\'');
-    }
-    cell.push_str(text);
-    if cell.contains([',', '"', '\r', '\n']) {
-        format!("\"{}\"", cell.replace('"', "\"\""))
+fn csv_cell(out: &mut Out, text: &str) -> Result<(), AnalysisError> {
+    let prefix = if text.starts_with(['=', '+', '-', '@', '\t', '\r']) {
+        "'"
     } else {
-        cell
+        ""
+    };
+    if !text.contains([',', '"', '\r', '\n']) {
+        out.s(prefix)?;
+        return out.s(text);
     }
+    out.s("\"")?;
+    out.s(prefix)?;
+    for (k, piece) in text.split('"').enumerate() {
+        if k > 0 {
+            out.s("\"\"")?;
+        }
+        out.s(piece)?;
+    }
+    out.s("\"")
 }

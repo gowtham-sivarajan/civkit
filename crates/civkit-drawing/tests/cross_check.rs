@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0015 gate X2: what CivKit's reader and `undxf` 0.11.0 both support agrees, for every input both accept:
 //! - header: `$ACADVER`, `$INSUNITS`, `$MEASUREMENT`, `$DWGCODEPAGE`, each including its absence;
@@ -674,7 +674,7 @@ fn fuzz_corpus_disagreements_are_reported() {
         report.push_str(
             "\nTriage each one (ADR 0015, amendment): a valid DXF goes into tests/well_formed/; an ambiguity \
              CivKit should refuse gets a refusal and a test; a tolerance difference on malformed input is logged \
-             in planning/DXF_CROSS_CHECK_LOG.md.\n",
+             in the maintainer's triage log.\n",
         );
     }
     println!("{report}");
