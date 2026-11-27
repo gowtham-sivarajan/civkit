@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # The Python extension (D-26, ADR 0014). Its own workspace, excluded from the root one, so the root CI jobs do not
 # build PyO3 (which needs a Python >= 3.11 to build). Built with maturin; see pyproject.toml.
 [workspace]
@@ -21,6 +21,7 @@ path = "src/lib.rs"
 
 [dependencies]
 civkit-core = { path = "../../crates/civkit-core" }
+civkit-drawing = { path = "../../crates/civkit-drawing" }   # drawing analysis (D-28)
 pyo3 = { version = "=0.30.1", features = ["abi3-py311"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }   # as the engine: numbers keep every bit
 

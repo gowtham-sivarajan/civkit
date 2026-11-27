@@ -1,8 +1,11 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 00:24 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The MCP handler. Every calculation goes through `Registry::call_json`; results map onto MCP as ADR 0013 point 4
 //! fixes: success → `structuredContent` = the response, contract error → `isError: true` with the envelope, both
 //! also as a text block. An unknown tool is a JSON-RPC protocol error.
+
+use std::io::Read;
+use std::path::{Path, PathBuf};
 
 use civkit_core::Registry;
 use rmcp::model::{
@@ -51,11 +54,18 @@ pub struct CivKit {
     registry: Registry,
     surface: Surface,
     tools: Vec<Tool>,
+    /// Canonical drawing roots (`--drawing-root`); none means no drawing tool.
+    roots: Vec<PathBuf>,
 }
 
+/// Why a drawing path is refused. One message for every case, so the server never says whether a file outside
+/// the roots exists.
+const OUTSIDE: &str = "\"path\" must be an absolute path to a file inside a drawing root (symbolic links are resolved first)";
+
 impl CivKit {
-    /// A server over the built-in calculations.
-    pub fn new(surface: Surface) -> Self {
+    /// A server over the built-in calculations, with the drawing tool when `roots` (canonical directories) is
+    /// not empty.
+    pub fn new(surface: Surface, roots: Vec<PathBuf>) -> Self {
         let registry = Registry::with_builtins();
         let mut tools = Vec::new();
         if surface.per_calc() {
@@ -65,10 +75,84 @@ impl CivKit {
             let ids: Vec<String> = registry.list().iter().map(|d| d.id.clone()).collect();
             tools.extend(tools::generic(&ids));
         }
+        if !roots.is_empty() {
+            tools.push(tools::drawing());
+        }
         Self {
             registry,
             surface,
             tools,
+            roots,
+        }
+    }
+
+    /// The real path of a drawing, if it is a file inside a root: symlinks are resolved before the check, and
+    /// the file is then read through that resolved path.
+    fn resolve(&self, path: &str) -> Option<PathBuf> {
+        let path = Path::new(path);
+        if !path.is_absolute() {
+            return None;
+        }
+        let real = std::fs::canonicalize(path).ok()?;
+        (self.roots.iter().any(|root| real.starts_with(root)) && real.is_file()).then_some(real)
+    }
+
+    /// `drawing.analyze` (D-28): reads a DXF file inside a root and returns the drawing report.
+    fn drawing(&self, arguments: &Map<String, Value>) -> CallToolResult {
+        let refuse = |code: &str, message: &str, input: Option<&str>| {
+            CallToolResult::structured_error(envelope(code, message, input))
+        };
+        let path = match arguments.get("path") {
+            None | Some(Value::Null) => {
+                return refuse(
+                    "MISSING_INPUT",
+                    "drawing.analyze needs \"path\", the absolute path of a DXF file",
+                    Some("path"),
+                );
+            }
+            Some(Value::String(path)) => path,
+            Some(_) => return refuse("INVALID_VALUE", "\"path\" must be a string", Some("path")),
+        };
+        let entity_rows = match arguments.get("detail") {
+            None | Some(Value::Null) => false,
+            Some(Value::String(d)) if d == "layer" => false,
+            Some(Value::String(d)) if d == "entity" => true,
+            Some(_) => {
+                return refuse(
+                    "INVALID_VALUE",
+                    "\"detail\" must be \"layer\" or \"entity\"",
+                    Some("detail"),
+                );
+            }
+        };
+        let Some(real) = self.resolve(path) else {
+            return refuse("INVALID_VALUE", OUTSIDE, Some("path"));
+        };
+        // Read at most one byte more than the reader accepts: a larger file is a limit, not a long read.
+        let limit = civkit_drawing::Limits::default().max_input_bytes;
+        let mut bytes = Vec::new();
+        let read = std::fs::File::open(&real).and_then(|f| {
+            f.take(u64::try_from(limit).unwrap_or(u64::MAX).saturating_add(1))
+                .read_to_end(&mut bytes)
+        });
+        if read.is_err() {
+            return refuse("INVALID_VALUE", OUTSIDE, Some("path"));
+        }
+        let options = civkit_drawing::AnalysisOptions {
+            entity_rows,
+            ..civkit_drawing::AnalysisOptions::default()
+        };
+        let report = civkit_drawing::analyze_dxf(&bytes, &options).and_then(|a| a.to_json());
+        match report {
+            Ok(text) => match serde_json::from_str::<Value>(&text) {
+                Ok(value) => CallToolResult::structured(value),
+                Err(e) => refuse(
+                    "INTERNAL",
+                    &format!("the report is not valid JSON: {e}"),
+                    None,
+                ),
+            },
+            Err(e) => refuse(e.code(), &e.to_string(), None),
         }
     }
 
@@ -195,6 +279,9 @@ impl ServerHandler for CivKit {
         let name = request.name.as_ref();
         let generic = self.surface.generic();
         let result = match name {
+            tools::DRAWING if !self.roots.is_empty() => {
+                self.drawing(&request.arguments.unwrap_or_default())
+            }
             tools::LIST if generic => self.list(),
             tools::DESCRIBE if generic => self.describe(&request.arguments.unwrap_or_default()),
             tools::CALL if generic => {

@@ -1,6 +1,6 @@
 # ADR 0014 — Python package: versions, wheels and the binding layer
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 23:44 IST · last edited 2026-11-26 23:44 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-26 23:44 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-26: Q-A through Q-G of [PYTHON_BINDINGS_PROPOSAL.md](../PYTHON_BINDINGS_PROPOSAL.md),
   with two clarifications, recorded below)
@@ -34,7 +34,9 @@ Facts, verified:
    `civkit._civkit`. The PyPI name is decided with the 0.1 release (naming risk, COMPETITIVE_LANDSCAPE §10).
 4. **Thin Rust layer (Q-C).** The extension exposes only `call_json`, `list_json`, `describe_json` and `version`.
    Input parsing, `Result` and `Q` objects, errors and typed functions are plain Python; the Python layer does no
-   validation of its own.
+   validation of its own. *Extended by D-28 ([ADR 0016](0016-drawing-analysis.md) Q-A, 2026-11-27): two drawing
+   functions, `drawing_json` and `drawing_csv`, over `civkit_drawing::analyze_dxf`; the engine validates their
+   arguments too.*
 5. **Errors (Q-D).** One exception class, `CivKitError`, with `.code`, `.input`, `.index`, `.message`, and `.errors`
    listing every error of a multi-error response in order. Warnings stay in `Result.warnings`.
 6. **Typed functions (Q-E).** Generated at import time from the installed descriptors, each sending the descriptor

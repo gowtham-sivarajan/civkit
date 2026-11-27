@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 10:50 IST · last edited 2026-11-27 10:50 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 10:50 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """Phase 3 parity: every reference case, and a set of error and rounding cases, gives the same result through
 Rust, Python and MCP (IMPLEMENTATION_PLAN Phase 3, task 3).
 
@@ -130,9 +130,9 @@ def python_answer(request):
 class McpClient:
     """A minimal stdio JSON-RPC client, so the check reads raw lines with Python's json and needs no MCP SDK."""
 
-    def __init__(self, era):
+    def __init__(self, era, args=()):
         self.era = era
-        self.proc = subprocess.Popen([str(_binary("CIVKIT_MCP", "civkit-mcp"))], stdin=subprocess.PIPE,
+        self.proc = subprocess.Popen([str(_binary("CIVKIT_MCP", "civkit-mcp")), *args], stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
         self.next_id = 0
         if era == "2025-11-25":
@@ -229,6 +229,90 @@ class Parity(unittest.TestCase):
             client.close()
         self.assertEqual(result["structuredContent"]["outputs"]["sum_backsights"]["value"], exact)
 
+
+
+# ------------------------------------------------------------------------------- drawing analysis (D-28)
+#
+# Gate A8 of ADR 0016: for every DXF fixture, the Rust report (`crates/civkit-drawing/examples/analyze_dxf.rs`,
+# env `CIVKIT_ANALYZE_DXF`), `civkit.drawing.analyze` and the MCP tool `drawing.analyze` give the same JSON (read
+# with Python's json, so a lost bit shows), at both details; the CSV schedule is the same text from Rust and Python;
+# formula-like layer names are neutralised the same way. Build first:
+#     cargo build --release --locked -p civkit-drawing --example analyze_dxf
+
+DXF_ROOT = ROOT / "tests" / "fixtures" / "dxf"
+DXF = sorted(DXF_ROOT.rglob("*.dxf"))
+
+
+def rust_drawing(path, fmt, detail="layer"):
+    exe = _binary("CIVKIT_ANALYZE_DXF", "examples/analyze_dxf")
+    done = subprocess.run([str(exe), str(path), "--format", fmt, "--detail", detail], capture_output=True,
+                          timeout=120, check=True)
+    return done.stdout.decode("utf-8")
+
+
+FORMULA_DXF = (
+    "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1032\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n"
+    "0\nSECTION\n2\nENTITIES\n"
+    + "".join(
+        f"0\nLINE\n5\n{k + 10:X}\n8\n{name}\n10\n0\n20\n0\n30\n0\n11\n1\n21\n0\n31\n0\n"
+        for k, name in enumerate(["=cmd|' /C calc'!A0", "+1", "-2", "@x", "a,b", 'q"q'])
+    )
+    + "0\nENDSEC\n0\nEOF\n"
+)
+
+
+class DrawingParity(unittest.TestCase):
+    def test_the_fixture_set(self):
+        self.assertEqual(len(DXF), 7, [p.name for p in DXF])
+
+    def test_python_json_equals_rust(self):
+        for path in DXF:
+            for detail in ("layer", "entity"):
+                with self.subTest(f"{path.name} {detail}"):
+                    rust = json.loads(rust_drawing(path, "json", detail))
+                    self.assertEqual(civkit.drawing.analyze(path, detail=detail), rust)
+
+    def test_mcp_json_equals_rust_in_both_eras(self):
+        for era in ("2025-11-25", "2026-07-28"):
+            client = McpClient(era, ["--drawing-root", str(DXF_ROOT.resolve())])
+            try:
+                for path in DXF:
+                    for detail in ("layer", "entity"):
+                        with self.subTest(f"{era} {path.name} {detail}"):
+                            rust = json.loads(rust_drawing(path, "json", detail))
+                            got = client.call("drawing.analyze", {"path": str(path.resolve()), "detail": detail})
+                            self.assertFalse(got.get("isError", False), got)
+                            self.assertEqual(got["structuredContent"], rust)
+            finally:
+                client.close()
+
+    def test_python_csv_is_the_rust_text(self):
+        for path in DXF:
+            with self.subTest(path.name):
+                self.assertEqual(civkit.drawing.schedule_csv(path), rust_drawing(path, "csv"))
+
+    def test_formula_injection_is_handled_the_same_way(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "formulas.dxf"
+            path.write_bytes(FORMULA_DXF.encode())
+            rust_csv = rust_drawing(path, "csv")
+            self.assertEqual(civkit.drawing.schedule_csv(path), rust_csv)
+            first = sorted(row.split(",")[0] for row in rust_csv.splitlines()[1:] if not row.startswith('"'))
+            self.assertEqual(first, ["'+1", "'-2", "'=cmd|' /C calc'!A0", "'@x"])
+            self.assertIn('"a,b",line,', rust_csv)
+            self.assertIn('"q""q",line,', rust_csv)
+            rust_json = json.loads(rust_drawing(path, "json"))
+            self.assertEqual(civkit.drawing.analyze(path), rust_json)
+            client = McpClient("2026-07-28", ["--drawing-root", str(Path(d).resolve())])
+            try:
+                got = client.call("drawing.analyze", {"path": str(path.resolve())})
+            finally:
+                client.close()
+            self.assertEqual(got["structuredContent"], rust_json)
+            # JSON is data, not a spreadsheet: names are as the drawing states them.
+            self.assertIn("=cmd|' /C calc'!A0", [l["name"] for l in rust_json["layers"]])
 
 if __name__ == "__main__":
     unittest.main()

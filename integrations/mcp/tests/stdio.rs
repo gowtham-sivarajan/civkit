@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0013 gates G1 and G3 over real stdio: the built `civkit-mcp` binary is spawned and spoken to as a
 //! 2025-11-25 client (`initialize` handshake) and as a 2026-07-28 client (per-request `_meta`, `server/discover`).
@@ -582,4 +582,289 @@ fn a_bad_option_exits_with_an_error_and_writes_nothing_to_stdout() {
     assert!(!out.status.success());
     assert!(out.stdout.is_empty(), "stdout is for MCP messages only");
     assert!(String::from_utf8_lossy(&out.stderr).contains("--tools"));
+}
+
+// ------------------------------------------------------------------------------------- drawing.analyze
+
+/// The drawing tool (D-28 / ADR 0016 Q-A, API_DESIGN §10 and §13; gate A8): present only with a
+/// `--drawing-root`, read-only, and it reads only files whose real path (symlinks resolved) lies inside a
+/// root.
+const DRAWING: &str = "drawing.analyze";
+
+fn fixtures() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/dxf")
+}
+
+const DXF_FIXTURES: [&str; 7] = [
+    "f1_site_plan_m.dxf",
+    "f2_site_plan_mm.dxf",
+    "f3_units_mismatch.dxf",
+    "f4_legacy_r12.dxf",
+    "f5_blocks_inserts.dxf",
+    "third_party/ezdxf/Minimal_DXF_AC1009.dxf",
+    "third_party/ezdxf/insert_bricscad_level_1.dxf",
+];
+
+/// The Rust report for a file, parsed: what the tool must return.
+fn rust_report(path: &Path, entity_rows: bool) -> Value {
+    let options = civkit_drawing::AnalysisOptions {
+        entity_rows,
+        ..civkit_drawing::AnalysisOptions::default()
+    };
+    let bytes = std::fs::read(path).expect("read fixture");
+    let a = civkit_drawing::analyze_dxf(&bytes, &options).expect("analyses");
+    serde_json::from_str(&a.to_json().expect("json")).expect("valid JSON")
+}
+
+/// A fresh, empty directory for one test.
+fn scratch(tag: &str) -> PathBuf {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or_default();
+    let dir = std::env::temp_dir().join(format!("civkit-mcp-{}-{nanos}-{tag}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("scratch dir");
+    dir
+}
+
+/// A symbolic link to a file or directory. On Unix it must succeed (CI on Linux and macOS runs every case).
+/// On Windows a file symlink needs a privilege the test may not have (`false`); a directory link falls back to a
+/// junction, which needs none.
+fn symlink(target: &Path, link: &Path, dir: bool) -> bool {
+    #[cfg(unix)]
+    {
+        let _ = dir;
+        std::os::unix::fs::symlink(target, link).expect("symlinks work on Unix");
+        true
+    }
+    #[cfg(windows)]
+    {
+        if !dir {
+            return std::os::windows::fs::symlink_file(target, link).is_ok();
+        }
+        std::os::windows::fs::symlink_dir(target, link).is_ok()
+            || Command::new("cmd")
+                .args(["/C", "mklink", "/J"])
+                .arg(link)
+                .arg(target)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .is_ok_and(|s| s.success())
+    }
+}
+
+fn path_arg(p: &Path) -> Value {
+    json!({ "path": p.to_str().expect("UTF-8 path") })
+}
+
+/// A refused call: `isError`, and the contract envelope with the code and input.
+fn assert_refused(result: &Value, code: &str, input: Option<&str>, what: &str) {
+    assert_eq!(result["isError"], true, "{what}: {result}");
+    let e = &result["structuredContent"]["error"];
+    assert_eq!(e["code"], code, "{what}: {result}");
+    if let Some(input) = input {
+        assert_eq!(e["input"], input, "{what}: {result}");
+    }
+}
+
+#[test]
+fn the_drawing_tool_exists_only_with_a_drawing_root() {
+    let mut c = Client::start(Era::Handshake, &[]);
+    assert!(c.tools().iter().all(|t| t["name"] != DRAWING));
+    let r = c.request("tools/call", json!({ "name": DRAWING, "arguments": {} }));
+    assert!(r.get("error").is_some(), "no tool without a root: {r}");
+    c.finish();
+
+    let root = fixtures();
+    let mut c = Client::start(
+        Era::Handshake,
+        &["--drawing-root", root.to_str().expect("path")],
+    );
+    let tools = c.tools();
+    let t = tools
+        .iter()
+        .find(|t| t["name"] == DRAWING)
+        .expect("drawing tool");
+    assert_eq!(t["annotations"]["readOnlyHint"], true);
+    assert_eq!(t["annotations"]["openWorldHint"], false);
+    assert_eq!(t["inputSchema"]["required"], json!(["path"]));
+    // A relative path is refused even when, from the server's working directory (this package's
+    // directory, which the test process and so the server start in), it names a file inside the root.
+    let relative = "../../tests/fixtures/dxf/f1_site_plan_m.dxf";
+    assert!(
+        Path::new(relative).is_file(),
+        "the relative path names a real fixture"
+    );
+    assert_refused(
+        &c.call(DRAWING, json!({ "path": relative })),
+        "INVALID_VALUE",
+        Some("path"),
+        "relative path to a file inside the root",
+    );
+    assert!(
+        t["description"]
+            .as_str()
+            .is_some_and(|d| d.contains("data")),
+        "drawing text is data: {t}"
+    );
+    c.finish();
+}
+
+/// Every fixture, both eras, both details: `structuredContent` and the text block equal the Rust report.
+#[test]
+fn the_drawing_tool_returns_the_rust_report_in_both_eras() {
+    let root = std::fs::canonicalize(fixtures()).expect("fixtures");
+    for era in ERAS {
+        let mut c = Client::start(era, &["--drawing-root", root.to_str().expect("path")]);
+        for name in DXF_FIXTURES {
+            let path = root.join(name);
+            for (detail, entity_rows) in [("layer", false), ("entity", true)] {
+                let mut args = path_arg(&path);
+                args["detail"] = json!(detail);
+                let r = c.call(DRAWING, args);
+                let expected = rust_report(&path, entity_rows);
+                assert!(
+                    r.get("isError").is_none_or(|e| e == false),
+                    "{era:?} {name}: {r}"
+                );
+                assert_eq!(r["structuredContent"], expected, "{era:?} {name} {detail}");
+                let text: Value =
+                    serde_json::from_str(r["content"][0]["text"].as_str().expect("text"))
+                        .expect("text block is JSON");
+                assert_eq!(text, expected, "{era:?} {name} {detail}: text block");
+            }
+        }
+        c.finish();
+    }
+}
+
+/// Only files whose real path is inside a root are read; everything else is `INVALID_VALUE` on `path`.
+#[test]
+fn paths_outside_the_roots_are_refused_including_through_symlinks() {
+    let f1 = fixtures().join("f1_site_plan_m.dxf");
+    let root = std::fs::canonicalize(scratch("root")).expect("root");
+    let outside = std::fs::canonicalize(scratch("outside")).expect("outside");
+    std::fs::copy(&f1, root.join("f1.dxf")).expect("copy");
+    std::fs::copy(&f1, outside.join("f1.dxf")).expect("copy");
+    std::fs::write(
+        root.join("broken.dxf"),
+        b"0\nSECTION\n2\nENTITIES\n0\nLINE\n10\nx\n",
+    )
+    .expect("write");
+    std::fs::create_dir(root.join("folder")).expect("dir");
+
+    let mut c = Client::start(
+        Era::Handshake,
+        &["--drawing-root", root.to_str().expect("path")],
+    );
+    let ok = c.call(DRAWING, path_arg(&root.join("f1.dxf")));
+    assert_eq!(
+        ok["structuredContent"],
+        rust_report(&f1, false),
+        "inside the root"
+    );
+
+    let climb = root
+        .join("..")
+        .join(outside.file_name().expect("name"))
+        .join("f1.dxf");
+    for (what, path) in [
+        ("outside the root", outside.join("f1.dxf")),
+        ("climbing out with ..", climb),
+        ("missing", root.join("missing.dxf")),
+        ("a directory", root.join("folder")),
+    ] {
+        assert_refused(
+            &c.call(DRAWING, path_arg(&path)),
+            "INVALID_VALUE",
+            Some("path"),
+            what,
+        );
+    }
+    assert_refused(
+        &c.call(DRAWING, json!({ "path": "f1.dxf" })),
+        "INVALID_VALUE",
+        Some("path"),
+        "relative",
+    );
+    assert_refused(
+        &c.call(DRAWING, json!({})),
+        "MISSING_INPUT",
+        Some("path"),
+        "no path",
+    );
+    assert_refused(
+        &c.call(DRAWING, json!({ "path": 7 })),
+        "INVALID_VALUE",
+        Some("path"),
+        "not a string",
+    );
+    let mut bad_detail = path_arg(&root.join("f1.dxf"));
+    bad_detail["detail"] = json!("everything");
+    assert_refused(
+        &c.call(DRAWING, bad_detail),
+        "INVALID_VALUE",
+        Some("detail"),
+        "detail",
+    );
+    assert_refused(
+        &c.call(DRAWING, path_arg(&root.join("broken.dxf"))),
+        "DRAWING_UNREADABLE",
+        None,
+        "unreadable",
+    );
+
+    // A directory link out of the root (a junction on Windows if need be): the file's real path is outside.
+    let dir_link = root.join("away");
+    assert!(
+        symlink(&outside, &dir_link, true),
+        "a directory link can be made"
+    );
+    assert_refused(
+        &c.call(DRAWING, path_arg(&dir_link.join("f1.dxf"))),
+        "INVALID_VALUE",
+        Some("path"),
+        "directory link out",
+    );
+    // File symlinks: one inside the root to a file outside (refused), and one to a file inside (allowed:
+    // its real path is inside).
+    let file_link = root.join("link.dxf");
+    let inner_link = root.join("inner.dxf");
+    if symlink(&outside.join("f1.dxf"), &file_link, false)
+        && symlink(&root.join("f1.dxf"), &inner_link, false)
+    {
+        assert_refused(
+            &c.call(DRAWING, path_arg(&file_link)),
+            "INVALID_VALUE",
+            Some("path"),
+            "file symlink out",
+        );
+        let inner = c.call(DRAWING, path_arg(&inner_link));
+        assert_eq!(
+            inner["structuredContent"],
+            rust_report(&f1, false),
+            "symlink to a file inside"
+        );
+    } else {
+        eprintln!(
+            "file-symlink cases skipped: Windows without the symlink privilege (Unix CI runs them)"
+        );
+    }
+    c.finish();
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&outside);
+}
+
+#[test]
+fn a_drawing_root_that_is_not_a_directory_is_a_startup_error() {
+    let missing = scratch("gone").join("not-here");
+    let out = Command::new(env!("CARGO_BIN_EXE_civkit-mcp"))
+        .args(["--drawing-root", missing.to_str().expect("path")])
+        .stdin(Stdio::null())
+        .output()
+        .expect("run");
+    assert!(!out.status.success());
+    assert!(out.stdout.is_empty(), "stdout is for MCP messages only");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("--drawing-root"));
 }

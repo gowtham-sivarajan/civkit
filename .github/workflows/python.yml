@@ -1,9 +1,10 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 10:50 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:51 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # The Python package (D-26, planning/decisions/0014-python-package.md): gates P1-P5 in CI.
 #   P1  each of the five targets builds its abi3 wheel, installs it offline and runs a calculation
 #   P2  the test suite on CPython 3.11-3.15 (all five on Linux x86-64; the lowest and highest elsewhere)
 #   P3-P5 and the stub drift check (Q-E) are tests in bindings/python/tests, run on every target and version
-# parity: Rust call_json, the Python package and the MCP server agree on every reference case (tests/parity).
+# parity: Rust call_json, the Python package and the MCP server agree on every reference case (tests/parity), and
+#   on the drawing report and schedule for every DXF fixture (D-28 gate A8; Rust: the analyze_dxf example).
 # Also: rustfmt, clippy, the MSRV build and cargo-deny for bindings/python, which is its own Cargo workspace and so is
 # not covered by ci.yml. Actions are pinned to commit SHAs (docs/SECURITY.md).
 name: Python
@@ -110,9 +111,10 @@ jobs:
         with:
           python-version: "3.11"
       - run: rustup toolchain install stable --profile minimal && rustup default stable
-      - name: Build the Rust runner and the MCP server
+      - name: Build the Rust runners and the MCP server
         run: |
           cargo build --release --locked -p civkit-core --example call_json
+          cargo build --release --locked -p civkit-drawing --example analyze_dxf
           cargo build --release --locked -p civkit-mcp
       - name: Build and install the Python package
         shell: bash

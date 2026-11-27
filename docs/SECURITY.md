@@ -1,6 +1,6 @@
 # Security
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. No released versions yet.
 
@@ -23,7 +23,7 @@ CivKit runs locally and has no server, so the main risks come from **untrusted i
 | JSON requests (Python, MCP, FFI) | Malformed input, huge payloads | Schema validation, size limits, structured errors — never a crash |
 | FFI boundary | Rust panic unwinding into C#; memory misuse | Panics caught and returned as errors; clear ownership rules (`civkit_free`) — see [API_DESIGN.md §9](API_DESIGN.md#9-ffi-cratescivkit-ffi) |
 | MCP server | Prompt injection: text inside a drawing (layer names, notes) reaching the AI client as instructions | Drawing-sourced text is returned as clearly labelled data; all 0.1 tools are read-only; any future write tool requires confirmation in the host |
-| MCP server | Reading files the user did not intend to expose | Drawing tools only read paths inside user-configured locations |
+| MCP server | Reading files the user did not intend to expose | The drawing tool exists only with `--drawing-root`; it reads only absolute paths whose real location (symbolic links and junctions resolved) is a file inside a root, with one refusal message for every case (no existence oracle), and at most the input limit plus one byte. Residual: a hard link inside a root to a file elsewhere is read (making one needs access to that file already), and a directory swapped for a link between the check and the open is not detected |
 | AutoCAD / Civil 3D plugin | Plugin DLL hijacking or tampering | Install to AutoCAD trusted locations (respecting AutoCAD's secure-load settings); release checksums; code signing to be investigated (must be free for the project) |
 | Desktop app | Remote content or script injection | No remote content; strict CSP; minimal Tauri capabilities (see [OFFLINE_POLICY.md](OFFLINE_POLICY.md)) |
 

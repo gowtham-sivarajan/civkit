@@ -2,7 +2,7 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
 > **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
 > green. The engine has seven registered calculations in five families, each tested against published reference
@@ -13,8 +13,8 @@
 > - The drawing analysis is decided (D-28, [ADR 0016](planning/decisions/0016-drawing-analysis.md)) and is being
 >   built, tests first. Its geometry (transformations, areas of regions with holes, a bounded intersection check)
 >   bounded block and MINSERT expansion, quantities by layer, drawing units, the unit check, and the JSON report and
->   CSV schedule are written (Rust); Python and MCP next.
-> - Fuzzing stands at 1 h 30 min of the 8 hours required before 0.1.
+>   CSV schedule are written, in Rust, Python (`civkit.drawing`) and MCP (`drawing.analyze`, behind `--drawing-root`).
+> - Fuzzing stands at 1 h 40 min of the 8 hours required before 0.1.
 >
 > There is no release yet. Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current
 > state: [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).

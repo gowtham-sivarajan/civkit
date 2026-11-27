@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -435,8 +435,9 @@ Request processing:
 - CPython 3.11–3.15. PyO3 `=0.30.1` with `abi3-py311`, built with maturin 1.16.0: one abi3 wheel per target (Windows
   x86-64; macOS x86-64 and ARM64; Linux x86-64 and ARM64, manylinux2014). Free-threaded CPython, PyPy and GraalPy are
   not supported in 0.1. Offline installation is promised for wheels, not for the source archive.
-- The Rust extension `civkit._civkit` exposes only `call_json`, `list_json`, `describe_json` and `version`; everything
-  else is plain Python and does no validation of its own.
+- The Rust extension `civkit._civkit` exposes only `call_json`, `list_json`, `describe_json` and `version`, and, for
+  drawing analysis (D-28), `drawing_json` and `drawing_csv`; everything else is plain Python and does no validation of
+  its own.
 - Contract errors raise `civkit.CivKitError` with `.code`, `.input`, `.index`, `.message` and `.errors`.
 - The package has no runtime dependencies, makes no network calls and no intentional file writes (Python's own
   bytecode caches excepted).
@@ -466,7 +467,8 @@ Request processing:
     At that point the default may switch to `generic`, with per-calculation tools left as an option.
 - Tool results return the full contract response (outputs, trace, warnings, references) so the AI client
   explains CivKit's numbers instead of computing its own.
-- Drawing tools accept file paths only within locations the user configures (see [SECURITY.md](SECURITY.md)).
+- Drawing tools accept file paths only within locations the user configures (see [SECURITY.md](SECURITY.md)): the
+  `drawing.analyze` tool exists only when the server is started with `--drawing-root <dir>` (§13).
 
 ### 10.1 SDK and result mapping (D-13, [ADR 0013](../planning/decisions/0013-mcp-sdk-and-surface.md))
 
@@ -518,11 +520,19 @@ full specification is [DRAWING_ANALYSIS_PROPOSAL.md](../planning/DRAWING_ANALYSI
   (the drawing and its `Quantities`) with `to_json()` and `to_csv()`. Errors are `AnalysisError`, whose `code()` is
   `DRAWING_UNREADABLE` or `DRAWING_LIMIT`. `AnalysisOptions::entity_rows` is the report's `detail = "entity"`;
   `max_rows` (100 000) bounds each list.
-- **Python:** `civkit.drawing.analyze(path_or_bytes, *, detail="layer")` returns a `dict`, and
-  `civkit.drawing.schedule_csv(...)` returns text. Neither writes a file.
-- **MCP:** one read-only tool, `drawing.analyze` (`path`, `detail`). It exists only when the server is started with at
-  least one `--drawing-root <dir>`. Paths are canonicalised and must lie inside a root, otherwise `INVALID_VALUE` on
-  `path`. Drawing-sourced strings appear only in fields documented as drawing text, and are data.
+- **Python** (implemented): `civkit.drawing.analyze(source, *, detail="layer")` returns the report as a `dict`, and
+  `civkit.drawing.schedule_csv(source)` returns the CSV text; `source` is a path (`str` or `os.PathLike`) or the
+  file's bytes. Analysis errors raise `CivKitError` (`DRAWING_UNREADABLE`, `DRAWING_LIMIT`, or `INVALID_VALUE` on
+  `detail`, which the engine validates); a file that cannot be opened raises Python's own `OSError`. Nothing is
+  written.
+- **MCP** (implemented): one read-only tool, `drawing.analyze` (`path`, optional `detail`). It exists only when the
+  server is started with at least one `--drawing-root <dir>` (repeatable; each must be an existing directory, or the
+  server does not start). The path must be absolute; it is canonicalised (symbolic links and junctions resolved,
+  `..` removed) and the real path must lie inside a root and be a file. Every refusal is `INVALID_VALUE` on `path`
+  with one message, so the server never says whether a file outside the roots exists. At most the reader's input
+  limit plus one byte is read. Results: `structuredContent` is the report, repeated as text; analysis errors carry
+  their code (`DRAWING_UNREADABLE`, `DRAWING_LIMIT`) with `isError: true`. Drawing-sourced strings appear only in
+  fields documented as drawing text, and are data.
 - **Content** (JSON, one object): `report`, `version`, `civkit_version`; `drawing` (`acadver`, `codepage`, and
   `units`: `insunits`, `name`, `to_metres`, `stated`); `plan_quantities: true`; then:
   - `layers`, in name order: `name`, `frozen`, `off`, `incomplete`, `omitted`, `counts` (line, arc, circle,

@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """CivKit: offline, traceable civil-engineering calculations.
 
     >>> import civkit
@@ -11,7 +11,7 @@ Every calculation runs in the Rust engine through its JSON contract; this packag
 It has no dependencies and makes no network calls.
 """
 
-from . import _civkit
+from . import _civkit, drawing
 from ._api import call, describe
 from ._api import list_calculations as list  # noqa: A001 (the API name of API_DESIGN §8)
 from ._errors import CivKitError
@@ -27,7 +27,7 @@ def version() -> str:
     return _civkit.version()
 
 
-__all__ = ["CivKitError", "Q", "Result", "call", "describe", "list", "version"]
+__all__ = ["CivKitError", "Q", "Result", "call", "describe", "drawing", "list", "version"]
 
 # The typed functions: civkit.<domain>.<topic>.<method>, one per installed calculation.
 _namespaces = _build(list(), reserved=set(globals()))

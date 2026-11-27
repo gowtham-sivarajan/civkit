@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -15,7 +15,7 @@ Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`
 recommended); its code has started, tests first: `Affine2` and `region_area` in `435bb23` (CI #27, Python #12 green);
 the §8.7 sweep prefilter and `WorkLimit` in `29d7230`; linear polygon cleaning and bounded block and MINSERT
 expansion in `07e200e` (CI #29, Python #14, Fuzz #7 green); then quantities, drawing units and the unit check.
-Fuzzing: 1 h 30 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+Fuzzing: 1 h 40 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -174,9 +174,11 @@ git status                # confirm planning/ui-concepts/ is not staged
    (A1 and A2 locally; A6 in part). Of the six implementation details in ADR 0016 ("Settled during
    implementation"), 1, 2 and 5 are confirmed; 3 now implements the accepted behaviour; 4 (vertex work 10⁸, with
    timing evidence) and 6 (P4's MTEXT codes, fixed after a second review) are confirmed: all six are settled. The JSON report and CSV
-   schedule are written in Rust (`src/report.rs`). Next: Python and MCP (A8: `civkit.drawing.analyze` and
-   `schedule_csv`; the MCP tool behind `--drawing-root`; parity tests), then A4's measured heap check for read +
-   analyse (it checks the 256-bytes-per-vertex reservation), then A9 (the fuzz target runs read + analyse). The 8-hour fuzz
+   schedule are written in Rust (`src/report.rs`), and reachable from Python (`civkit.drawing.analyze`,
+   `schedule_csv`) and MCP (`drawing.analyze`, only with `--drawing-root`), with parity and path tests (A8, complete
+   once CI passes them; **the parity job needs the staged workflow** `_move_to_dot_github/workflows/python.yml`).
+   Next: A4's measured heap check for read + analyse (it checks the 256-bytes-per-vertex reservation), then A9 (the
+   fuzz target runs read + analyse). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -192,6 +194,36 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 22:53 IST — Drawing analysis from Python and MCP, with parity (gate A8), tests first *(Claude Sonnet 5.5)*
+- `5ebaf8d` pushed: CI #33, Python #18, Fuzz #11 green (logged: 1 h 40 min of 8 h). The maintainer asked for parity on
+  every DXF fixture, CSV parity and formula injection, and MCP path restrictions including symlinks; A8 is complete
+  only once those pass in CI.
+- Tests first: `integrations/mcp/tests/stdio.rs` (+4: the tool only with a root; Rust report for all 7 fixtures, both
+  eras, both details; refusals: outside, `..`, relative (one that names a real file inside the root), missing,
+  directory, no path, wrong types, bad detail, unreadable, file and directory symlinks out, a symlink to a file
+  inside allowed; a root that is not a directory stops the server); `bindings/python/tests/test_drawing.py` (path,
+  str, bytes, detail, errors, schedule, formula names, nothing written); `tests/parity/test_parity.py`
+  (`DrawingParity`: Rust example vs Python vs MCP JSON for every fixture at both details, CSV text, formula
+  injection).
+- Code: `crates/civkit-drawing/examples/analyze_dxf.rs` (the Rust reference); `bindings/python` `drawing_json`,
+  `drawing_csv` and `civkit/drawing.py` (the engine validates `detail`, keeping ADR 0014 point 4; ADR 0014 notes the
+  two functions); `integrations/mcp` `--drawing-root`, `tools::drawing`, `CivKit::drawing`/`resolve` (absolute only,
+  canonicalised, inside a root, a file; one refusal message; reads at most the limit + 1 byte).
+- Symlinks on this Windows machine: file symlinks need a privilege it lacks (those cases skip here, and must succeed
+  on Unix, where the test now fails if it cannot make one); the directory case uses a junction and ran here.
+- Mutation check: root check removed, path checked before resolving links, relative paths accepted (first missed:
+  the relative test named a file that did not exist; now it names a real fixture): all caught.
+- Found on the way: the Phase 2B property `rotation_keeps_area_and_length` failed on a random thin triangle (area 3,
+  coordinates near 500; rotation rounding moved the area by 2.9 × 10⁻¹¹ > 10⁻¹²·area). The area code is unchanged
+  since `435bb23`; the test's tolerance ignored conditioning. Now 10⁻¹²·area + 8·ε·M·D; proptest's seed for the case
+  is kept (`tests/properties.proptest-regressions`).
+- CI: the parity job must build the example: staged `_move_to_dot_github/workflows/python.yml` (one build line).
+- Docs: API_DESIGN §8.1, §10, §13; integrations/mcp/README.md; SECURITY.md (MCP row, with residual risks: hard links,
+  a link swapped between check and open); ADR 0014 point 4 note; README; ROADMAP; IMPLEMENTATION_PLAN;
+  ACCEPTANCE_CRITERIA (A8 pending CI).
+- Local: fmt and clippy clean (workspace and `bindings/python`), 407 Rust tests, 59 Python tests and 9 parity tests
+  pass; dependency rule OK.
 
 ### 2026-11-27 22:05 IST — The drawing report (JSON) and the schedule (CSV), tests first *(Claude Sonnet 5.5)*
 - `e9dfa91` pushed by the maintainer: CI #32, Python #17, Fuzz #10 green; item 6 confirmed (ADR 0016: all six

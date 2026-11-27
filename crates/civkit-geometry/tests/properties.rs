@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 18:37 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Invariants (docs/GEOMETRY.md §12, item 6). Each property states its tolerance explicitly;
 //! exact equality is used only where every operation involved is exact.
@@ -87,7 +87,15 @@ proptest! {
         let (s, c) = phi.sin_cos();
         let rot: Vec<(f64, f64)> = pts.iter().map(|&(x, y)| (x * c - y * s, x * s + y * c)).collect();
         if let (Ok(a), Ok(b)) = (polygon_area(&ring(&pts, 0.0, 0.0, 1.0), None), polygon_area(&ring(&rot, 0.0, 0.0, 1.0), None)) {
-            prop_assert!((a.signed_area - b.signed_area).abs() <= 1e-12 * a.area.max(1.0));
+            // Rotating rounds each coordinate by about ε·M, which moves the area by up to about
+            // perimeter × ε·M ≤ 8·ε·M·D, however small the area: a thin ring is ill-conditioned (a triangle of
+            // area 3 with coordinates near 500 moves by 3 × 10⁻¹¹). The relative term covers the rest.
+            let m = pts.iter().fold(0.0_f64, |m, p| m.max(p.0.abs()).max(p.1.abs()));
+            let (xs, ys): (Vec<f64>, Vec<f64>) = pts.iter().copied().unzip();
+            let span = |v: &[f64]| v.iter().fold(f64::MIN, |a, &b| a.max(b)) - v.iter().fold(f64::MAX, |a, &b| a.min(b));
+            let d = span(&xs).hypot(span(&ys));
+            let bound = 1e-12 * a.area.max(1.0) + 8.0 * f64::EPSILON * m * d;
+            prop_assert!((a.signed_area - b.signed_area).abs() <= bound);
         }
         let la = polyline_length(&ring(&pts, 0.0, 0.0, 1.0), true, None).expect("valid input").value;
         let lb = polyline_length(&ring(&rot, 0.0, 0.0, 1.0), true, None).expect("valid input").value;

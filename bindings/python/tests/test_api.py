@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """The Python API of API_DESIGN §8 and ADR 0014 (D-26): discovery, the input forms, results, typed functions."""
 
 import inspect
@@ -23,9 +23,12 @@ def raw(request: dict) -> dict:
 
 
 class TheRustLayerIsThin(unittest.TestCase):
-    def test_exactly_four_functions(self):
+    def test_exactly_six_functions(self):
+        # ADR 0014's four calculation functions, and D-28's two drawing functions (ADR 0016 Q-A).
         public = sorted(n for n in dir(_civkit) if not n.startswith("_"))
-        self.assertEqual(public, ["call_json", "describe_json", "list_json", "version"])
+        self.assertEqual(
+            public, ["call_json", "describe_json", "drawing_csv", "drawing_json", "list_json", "version"]
+        )
 
     def test_version_matches_the_engine(self):
         self.assertEqual(civkit.version(), _civkit.version())

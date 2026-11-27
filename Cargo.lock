@@ -99,6 +99,7 @@ name = "civkit-mcp"
 version = "0.0.0"
 dependencies = [
  "civkit-core",
+ "civkit-drawing",
  "civkit-units",
  "rmcp",
  "serde_json",
