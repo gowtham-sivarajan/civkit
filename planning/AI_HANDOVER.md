@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -143,7 +143,8 @@ git status                # confirm planning/ui-concepts/ is not staged
    ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 4). As in Phase 3, interface and contract details are
    proposed and accepted before code (geometry notes and unsupported-feature reporting first), and code is written
    tests first.
-   **Task 1 proposed:** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27, Q-A … Q-F), awaiting the maintainer.
+   **Task 1 proposed, revision 2:** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27). The maintainer holds Q-A, Q-B and the
+   ADR; Q-C and Q-E are under consideration; Q-D revised to a measured memory bound. Awaiting the maintainer.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
    `docs/calculations`). Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
@@ -158,6 +159,21 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 14:28 IST — D-27 revision 2: `undxf` compared; memory bound *(Claude Sonnet 5.5)*
+- The maintainer held D-27 (Q-A, Q-B, ADR): revision 1 missed `undxf` 0.11.0. Q-C and Q-E stay under consideration;
+  Q-D to be revisited because file and entity caps do not bound peak memory.
+- Verified the maintainer's facts (MIT, Rust 1.88, deps encoding_rs, serde, uncad-model) and added: first release
+  2026-09-29, 13 releases in 5 weeks (all 0.x minor bumps), `uncad-model` makes `Entity` exhaustive on purpose (each
+  new entity type is breaking), `forbid(unsafe_code)` in both, binary DXF supported.
+- Hands-on, same harness as `dxf`: all fixtures load; HATCH area 96 ✅; F4 units absent ✅; inserts transformed ✅;
+  **MINSERT reduced to its first placement** (diagnostic) so F5 gives 11 of 13 bays; 3 150 corruptions, 0 panics.
+  Peak heap (counting allocator): 39 × input for 200 000 LINEs (dxf 55 ×), **158 ×** for 300 000 unknown entities;
+  neither crate takes limits.
+- Harness mistakes caught before reporting: header keys have no `$`; the hatch path JSON shape. Corrected and rerun.
+- Revision 2: own reader still recommended, for MINSERT and the memory bound; `undxf` replaces `dxf` as the test-only
+  cross-check; Q-D is now a 512 MiB storage budget charged per stored element, no whole-file copies, per-item caps,
+  peak under 1 GiB at the defaults, measured in tests; the entity-count cap is dropped.
 
 ### 2026-11-27 14:10 IST — Phase 4 started: DXF reader proposal (D-27) *(Claude Sonnet 5.5)*
 - Evaluated `dxf` 0.6.2, `cadkit-dxf`, `dxf-tools-rs`, `cadrender-dxf` (crates.io facts) and `dxf` hands-on in a scratch

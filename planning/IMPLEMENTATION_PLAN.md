@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -100,8 +100,9 @@ acceptance item is ticked with its evidence.
 **Current phase (from 2026-11-27).**
 
 1. Evaluate existing Rust DXF crates vs own reader; decide (new decision record).
-   **Proposed (2026-11-27):** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27): own reader; `dxf` 0.6.2 as a test-only
-   cross-check. Awaiting the maintainer.
+   **Proposed, revision 2 (2026-11-27):** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27). The maintainer held Q-A, Q-B and
+   the ADR until `undxf` 0.11.0 was compared; revision 2 compares it hands-on and revises the limits to a measured
+   peak-memory bound. Awaiting the maintainer.
 2. `civkit-drawing`: neutral model, DXF import, limits.
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).

@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-27 14:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-27 14:28 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -47,7 +47,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-24 | P1 | When does a calculation carry a validity range? | Mathematical domain checks always apply. A validity range only with a reliable basis (a cited source stating it); otherwise the descriptor says so explicitly; never invent one. Adding a rule later bumps the version. | **Accepted** 2026-11-26 · [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) |
 | D-25 | P1 | Beam maximum shear and moment in 0.1? | **Deferred from 0.1.** The beam ships with reactions, deflection and end slope; the search for an open worked example continues; they return as new outputs (a pure addition) in a later release. | **Accepted** 2026-11-26 · [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) |
 | D-26 | P1 | Python package: versions, ABI, wheels, API layer? | CPython 3.11–3.15; PyO3 `=0.30.1` with `abi3-py311`; maturin 1.16.0; five abi3 wheels (manylinux2014 on Linux); thin Rust layer over `call_json`; `CivKitError`; no network calls or intentional writes (bytecode caches excluded); gates P1–P5. | **Accepted** 2026-11-26 · [ADR 0014](decisions/0014-python-package.md) |
-| D-27 | P0 | DXF reader: own reader or an existing crate? | Own zero-dependency reader in `civkit-drawing` for the 0.1 subset; `dxf` 0.6.2 as a test-only cross-check; limits and fuzzing ([DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md)). | Proposed |
+| D-27 | P0 | DXF reader: own reader or an existing crate? | Revision 2: own zero-dependency reader with a storage budget (peak memory bounded); `undxf` 0.11.0 as the test-only cross-check; `undxf` and `dxf` evaluated hands-on ([DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md)). Q-A, Q-B and the ADR held by the maintainer pending this comparison. | Proposed |
 | D-21 | P2 | Accept SI prefixes generally (`mN`, `µm`) and common Unicode notation (`m²`, `s⁻¹`) in unit strings? | Maintainer would eventually support both. **Not in 0.1**: [API_DESIGN.md §7.1](../docs/API_DESIGN.md) lists exactly what 0.1 accepts. Needs a grammar extension that stays unambiguous (e.g. `mm` vs milli-metre, `m` vs milli). | Proposed (after 0.1) |
 
 ## Decision record index
