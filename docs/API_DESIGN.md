@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 00:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -456,7 +456,11 @@ Request processing:
 - SDK: `rmcp` pinned to `=3.12.0`, `default-features = false`, features `server` and `transport-io`; no HTTP features.
   Crate `civkit-mcp` in `integrations/mcp`; stdout carries only MCP messages, logging goes to stderr.
 - Protocol: both eras are served: 2026-07-28 (per-request version, `server/discover`) and 2025-11-25 (`initialize`).
-- Tool name = calculation ID, verbatim (MCP allows `.`; at most 128 characters: `check_descriptor` will enforce this, ADR 0013 gate G2).
+- Tool name = calculation ID, verbatim (MCP allows `.`). `check_descriptor` enforces at most 128 characters (ADR 0013
+  gate G2) and reserves the input names `version` and `output_units`, which the interfaces use for their own arguments.
+- Per-calculation tool arguments: each input in the contract's form (`{ "value", "unit", "negative" }`), plus an
+  optional `output_units`; the tool sends its descriptor's version. `civkit_call` takes a full request;
+  `civkit_list` returns ID, version, title and summary of each calculation; `civkit_describe` the full descriptor.
 - Success: `structuredContent` is the response exactly as `Registry::call_json` returns it; the same JSON is repeated
   as a text block for older clients.
 - Contract error (any code in §5): a result with `isError: true` and the error envelope (`code`, `input`, `index`,

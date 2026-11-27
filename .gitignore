@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-25 10:49 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 00:13 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 # Rust
 /target/
@@ -7,6 +7,10 @@
 # Python
 __pycache__/
 *.py[cod]
+# Extension modules and debug symbols left in the source tree by `maturin develop` (bindings/python)
+*.so
+*.dylib
+*.pdb
 .venv/
 venv/
 *.egg-info/

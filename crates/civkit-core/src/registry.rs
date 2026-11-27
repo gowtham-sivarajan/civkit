@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 00:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The calculation trait and the registry that validates requests and runs calculations.
 
@@ -979,6 +979,13 @@ fn known_list(known: &BTreeSet<&str>) -> String {
     known.iter().copied().collect::<Vec<_>>().join(", ")
 }
 
+/// The longest calculation ID: an ID is also an MCP tool name, which is at most 128 characters (ADR 0013, G2).
+pub const MAX_ID_LEN: usize = 128;
+
+/// Input names the interfaces use for their own arguments: `civkit.call(id, version=…, output_units=…)` in Python and
+/// the MCP per-calculation tools.
+pub const RESERVED_INPUT_NAMES: &[&str] = &["version", "output_units"];
+
 /// Checks that a descriptor is well formed before it is registered.
 pub fn check_descriptor(d: &Descriptor) -> Result<(), RegistryError> {
     let err = |msg: String| Err(RegistryError(format!("{}: {msg}", d.id)));
@@ -991,6 +998,12 @@ pub fn check_descriptor(d: &Descriptor) -> Result<(), RegistryError> {
     };
     if segments.len() != 3 || !segments.iter().all(|s| segment_ok(s)) {
         return err("ID must be 'domain.topic.method' in lowercase letters, digits and '_'".into());
+    }
+    if d.id.len() > MAX_ID_LEN {
+        return err(format!(
+            "ID is {} characters; at most {MAX_ID_LEN} (it is also the MCP tool name)",
+            d.id.len()
+        ));
     }
     if !DOMAINS.contains(&segments[0]) {
         return err(format!(
@@ -1017,6 +1030,12 @@ pub fn check_descriptor(d: &Descriptor) -> Result<(), RegistryError> {
         }
     }
     for input in &d.inputs {
+        if RESERVED_INPUT_NAMES.contains(&input.name.as_str()) {
+            return err(format!(
+                "input name '{}' is reserved for the interfaces' own arguments",
+                input.name
+            ));
+        }
         if input.required && input.default.is_some() {
             return err(format!(
                 "required input '{}' must not have a default",

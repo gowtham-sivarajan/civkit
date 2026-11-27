@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 [workspace]
 resolver = "3"
 members = [
@@ -7,6 +7,7 @@ members = [
     "crates/civkit-geometry",
     "crates/civkit-drawing",
     "crates/civkit-ffi",
+    "integrations/mcp",
 ]
 exclude = ["bindings/python"]   # its own workspace: PyO3 needs a Python to build (ADR 0014)
 
@@ -24,7 +25,7 @@ publish = false                 # nothing is published to crates.io before 0.1
 civkit-units = { path = "crates/civkit-units" }
 civkit-geometry = { path = "crates/civkit-geometry" }
 serde ={ version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["float_roundtrip"] }   # numbers keep every bit through JSON
 
 [workspace.lints.rust]
 unsafe_code = "forbid"          # civkit-ffi overrides this to "deny" + local allows (Phase 5)

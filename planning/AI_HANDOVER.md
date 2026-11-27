@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -114,8 +114,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 
 1. **Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md): `rmcp` `=3.12.0`, both protocol eras, tool names and the result mapping, gates G1–G3) and D-26 ([ADR 0014](decisions/0014-python-package.md): CPython 3.11–3.15, PyO3 0.30.1 abi3 wheels for five targets, the thin binding layer, gates P1–P5). D-26 was the last open precondition.
 2. **Phase 3 implementation:** Python package code is done (`bindings/python`, see the log); **its gates P1–P5 are
-   met only when the `Python` workflow is green on GitHub.** Next: the MCP server (`integrations/mcp`, ADR 0013,
-   G1–G3, tests first), then parity tests across Rust, Python and MCP, notebooks and generated documentation.
+   met only when the `Python` workflow is green on GitHub.** The MCP server (`integrations/mcp`) is written, its G1–G3
+   tests pass locally, and MCP Inspector and the Python MCP SDK agree with the engine in both eras. G1–G3 are met
+   when `ci.yml` is green. Next: parity tests across Rust, Python and MCP, notebooks and generated documentation.
 3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
 4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
 5. D5 (local cargo-deny) is optional; CI already checks it.
@@ -126,6 +127,51 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 00:24 IST — Phase 3: the MCP server (`integrations/mcp`), tests first *(Claude Sonnet 5.5)*
+- The maintainer reported the Python workflow green (24/24 jobs) after `929c052` and asked for the MCP server next.
+- **Mistake in `929c052`:** `bindings/python/python/civkit/_civkit.pdb` (Windows debug symbols left by `maturin
+  develop`) was committed, because the AI did not list untracked files inside `bindings/` before giving the add
+  command. `.gitignore` now covers `*.pdb`, `*.so`, `*.dylib`; the file is untracked in the next commit (history
+  keeps it, no force push). **Rule:** before giving `git add` for a new directory, list its untracked files.
+- **G2 first** (`tests/contract.rs`, red then green): `check_descriptor` refuses IDs over 128 characters
+  (`MAX_ID_LEN`, the MCP tool-name limit) and the input names `version` and `output_units`
+  (`RESERVED_INPUT_NAMES`, control arguments of Python `call` and the MCP tools); AI addition, recorded in
+  API_DESIGN §10.1.
+- **Stdio tests before the server** (`integrations/mcp/tests/stdio.rs`, 8 tests, all red against an empty binary):
+  the real binary in both eras: 2025-11-25 `initialize`, and 2026-07-28 `_meta` per request plus
+  `server/discover`. Every reference case through its tool and through `civkit_call` equals `call_json`
+  (structuredContent and the text block); contract errors (single, several, list index, bad choice, unknown output,
+  unknown version/calculation, malformed request) keep `isError` and the envelope; unknown tool = -32602;
+  `--tools`; stdout carries only JSON-RPC; exit when stdin closes.
+- **Server:** rmcp `=3.12.0` (`server`, `transport-io`), handler written directly (no macros), one current-thread
+  tokio runtime. rmcp picks the lifecycle from the first message; stdin closing before any lifecycle (only a
+  discover probe) is treated as a normal exit (found by a test). Schemas from descriptors: inputs
+  `{value, unit, negative?}`, `unit` required for dimensional inputs, lists with min/max items, choices as `enum`;
+  `outputSchema` = `oneOf` [response, envelope]. Schemas guide only; the engine validates.
+- **Mutation check** (11 mutants): 10 killed, the survivor (`unit` not required in the schema) got a test; 11/11.
+- `tools/check_dependency_rule.py` rule 3: no HTTP/TLS/WebSocket/SSE crate in `civkit-mcp`'s tree (shown to fail
+  when a present crate is forbidden). Licences of the new crates all have an allowed option in `deny.toml`
+  (cargo-deny is not installed locally; CI runs it).
+- Root workspace: fmt, clippy clean; 280 tests; `civkit-mcp` builds on Rust 1.98.
+- **Interoperability (maintainer approved both downloads; scratchpad only, not in the repo):**
+  - **MCP Inspector 2.16.0** CLI (`--config` read-only file, `--protocol-era legacy|modern`): tools/list with
+    `--strict`, a scalar, a list, a choice call and a contract error, against the debug and release binaries.
+    `--strict` flagged a `type` array (`["number","string","array"]`) on angle inputs as unportable (some
+    clients accept one type only): now `anyOf`, and a test asserts every `type` in every schema is one string.
+    Run it with `node <inspector>/clients/launcher/build/index.js`: the Windows `.cmd` shim passes arguments
+    through cmd.exe, which eats `^`, so `"m^2"` arrived as `"m2"` (`UNKNOWN_UNIT`; a harness problem).
+  - **Python MCP SDK 2.3.0** (`initialize` and `discover` sessions): 10 tools, all read-only; scalar, list,
+    choice and a list-index error each equal `call_json`; the server process had 0 TCP and 0 UDP endpoints.
+    (Windows cannot block one process's network without firewall changes, so endpoints were observed instead.)
+- **Bug found by the cross-client comparison, fixed:** serde_json's default float parser is not correctly rounded
+  (`1.8276944379471094` parsed as `…096`). The MCP server re-reads `call_json`'s output, so it changed last digits;
+  the engine's request parsing could also take inputs one ulp off. The stdio tests missed it because their
+  reference parse used the same lossy parser. Fix: `serde_json` feature `float_roundtrip` in the workspace (and
+  bindings/python). Test first: `json_numbers_are_parsed_exactly` (contract.rs; known values + 20 000 random
+  bit patterns). All 281 Rust and 38 Python tests still pass; reference tolerances unaffected.
+- **Lesson for the Phase 3 parity task:** compare interfaces through a correctly-rounding JSON reader (Python's
+  `json`), or across processes, not only inside one Rust process.
 
 ### 2026-11-27 00:02 IST — Phase 3: the Python package (`bindings/python`), tests first *(Claude Sonnet 5.5)*
 - **Tests first** (red before any package existed), `unittest` only: `tests/test_api.py` (discovery, the input

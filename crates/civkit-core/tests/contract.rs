@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 23:47 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Tests of the JSON contract itself: envelopes, error codes and descriptor checks (`docs/API_DESIGN.md`).
 
@@ -525,4 +525,96 @@ fn messages_name_the_internal_unit() {
         msg.contains("-0.6096 m") && msg.contains("[0, ∞) m"),
         "{msg}"
     );
+}
+
+/// ADR 0013 gate G2: a calculation ID is also an MCP tool name, so it is at most 128 characters from
+/// `A–Z a–z 0–9 _ - .`. CivKit's own ID rule is a subset of that set; the length limit is the new part.
+#[test]
+fn ids_fit_mcp_tool_names() {
+    let with_method_len = |n: usize| {
+        let mut d = Doubler::new().0;
+        d.id = format!("geometry.test.{}", "m".repeat(n));
+        d
+    };
+    let prefix = "geometry.test.".len();
+    let longest = with_method_len(128 - prefix);
+    assert_eq!(longest.id.len(), 128);
+    assert!(
+        check_descriptor(&longest).is_ok(),
+        "128 characters is allowed"
+    );
+    let too_long = with_method_len(129 - prefix);
+    let message = check_descriptor(&too_long)
+        .expect_err("129 characters")
+        .to_string();
+    assert!(
+        message.contains("128"),
+        "the error names the limit: {message}"
+    );
+    for id in [
+        "geometry.test.Double",
+        "geometry.test.double-length",
+        "geometry.test.dö",
+    ] {
+        let mut d = Doubler::new().0;
+        d.id = id.into();
+        assert!(check_descriptor(&d).is_err(), "{id}");
+    }
+    for d in Registry::with_builtins().list() {
+        assert!(
+            d.id.len() <= 128
+                && d.id
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "_-.".contains(c)),
+            "{}",
+            d.id
+        );
+    }
+}
+
+/// `version` and `output_units` are control arguments of the Python `call` and of the MCP per-calculation tools,
+/// so no calculation may name an input that way.
+#[test]
+fn reserved_input_names_are_refused() {
+    for name in ["version", "output_units"] {
+        let mut d = Doubler::new().0;
+        d.inputs[0].name = name.into();
+        let message = check_descriptor(&d).expect_err("reserved").to_string();
+        assert!(message.contains("reserved"), "{name}: {message}");
+    }
+}
+
+/// Numbers in requests and responses keep every bit: serde_json must parse floats correctly rounded (its
+/// `float_roundtrip` feature). Without it, `1.8276944379471094` parses one ulp off, so an interface that re-reads
+/// `call_json`'s output (the MCP server) changed the last digit, and request inputs could arrive one ulp off.
+/// Found by comparing MCP Inspector's results with the Python package's.
+#[test]
+fn json_numbers_are_parsed_exactly() {
+    for text in [
+        "1.8276944379471094",
+        "0.013",
+        "0.002",
+        "0.3048",
+        "2.2250738585072014e-308",
+        "1.7976931348623157e308",
+        "5e-324",
+    ] {
+        let via_json: f64 = serde_json::from_str(text).expect("number");
+        let exact: f64 = text.parse().expect("number"); // the standard library rounds correctly
+        assert_eq!(via_json.to_bits(), exact.to_bits(), "{text}");
+    }
+    // Every f64 written by the engine reads back to the same bits.
+    let mut x: u64 = 0x9E37_79B9_7F4A_7C15;
+    for _ in 0..20_000 {
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        let v = f64::from_bits(x);
+        if !v.is_finite() {
+            continue;
+        }
+        let text = serde_json::to_string(&v).expect("finite");
+        let back: f64 = serde_json::from_str(&text).expect("number");
+        assert_eq!(back.to_bits(), v.to_bits(), "{text}");
+    }
 }

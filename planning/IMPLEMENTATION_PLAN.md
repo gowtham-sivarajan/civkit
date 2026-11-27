@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 00:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -73,7 +73,11 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
    (2026-11-27); gates pending CI:** 38 Python tests (API, P3 parity incl. error envelopes, P4, P5, stub drift) pass
    locally against an offline-installed Windows wheel; P1 on all five targets and P2 on 3.11–3.15 need the new
    `Python` workflow (`.github/workflows/python.yml`) to run green.
-2. `integrations/mcp`: `rmcp` server, stdio, tools generated from descriptors, read-only annotations.
+2. `integrations/mcp`: `rmcp` server, stdio, tools generated from descriptors, read-only annotations. **Code done
+   (2026-11-27):** G1–G3 tests over real stdio in both eras pass locally and run in `ci.yml` (the crate is a workspace
+   member); the dependency rule now also checks that `civkit-mcp` has no network crate. Checked with MCP Inspector
+   2.16.0 and the Python MCP SDK 2.3.0 in both eras: every result equals `call_json`, no network endpoint. G1–G3
+   are met when `ci.yml` is green with this code.
 3. Parity tests across Rust, Python and MCP.
 4. Example notebooks in `integrations/jupyter`.
 5. Generated forms, typed functions and API docs show conditional requirements prominently, e.g. the beam's

@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-25 22:03 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 00:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! # civkit-core
 //!
@@ -40,8 +40,8 @@ pub use descriptor::{
 };
 pub use error::{CalcError, ErrorCode, ErrorEnvelope};
 pub use registry::{
-    Calculation, Context, DOMAINS, Inputs, MAX_LIST_LEN, Outputs, Registry, RegistryError,
-    check_descriptor,
+    Calculation, Context, DOMAINS, Inputs, MAX_ID_LEN, MAX_LIST_LEN, Outputs, RESERVED_INPUT_NAMES,
+    Registry, RegistryError, check_descriptor,
 };
 
 /// The CivKit version, reported in every response.
