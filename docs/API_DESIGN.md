@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -173,7 +173,8 @@ calculations may use it later as an error with the same code.
   `DRAWING_SIZE_OUTLIER`, `DRAWING_DIMENSION_OVERRIDE`, `DRAWING_GEOMETRY_INVALID`, `DRAWING_GEOMETRY_NOTE`,
   `DRAWING_BLOCK_MISSING`, `DRAWING_BLOCK_CYCLE`, `DRAWING_ZERO_SCALE`, `DRAWING_TEXT_NOT_DECODED`,
   `DRAWING_HATCH_NOT_READ`, `DRAWING_REPORT_TRUNCATED`, plus `NOT_SUPPORTED` and `ROUNDING_SENSITIVE`.
-- Drawing warnings may also carry `count`, `layer`, `handles` (at most 20), `feature` and `note`.
+- Drawing warnings may also carry `count`, `layer`, `handles` (at most 20), `feature`, `note`, `entity_type`,
+  `unit_code` and `block`.
 
 **Resolved: validity breaches.**
 - A mathematically invalid input is **always** an error (`OUT_OF_DOMAIN`).

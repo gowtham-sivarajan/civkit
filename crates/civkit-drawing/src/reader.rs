@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit's DXF reader (D-27, ADR 0015): ASCII DXF R12–R2018 into a [`Drawing`], under a [`Budget`].
 //!
@@ -12,6 +12,7 @@ use crate::decode::{Encoding, decode, decoded_len};
 use crate::model::{
     Block, Boundary, Dimension, Drawing, Edge, EdgeKind, Entity, EntityKind, Hatch, HatchPath,
     Header, Insert, Layer, NameId, Note, Point2, Point3, Polyline, PolylineSource, Text, Vertex,
+    Where,
 };
 use crate::pairs::{Pair, Pairs};
 
@@ -144,8 +145,10 @@ struct Reader<'a, 'l> {
     layer0: NameId,
     /// Lookup of `drawing.names` by text, while reading only.
     name_index: BIndex,
-    /// Lookup of `drawing.unsupported` by (type, layer), while reading only.
+    /// Lookup of `drawing.unsupported` by (type, layer, where), while reading only.
     unsupported_index: BIndex,
+    /// The block whose entities are being read, if any.
+    current_block: Option<NameId>,
     /// Layers and blocks defined so far, by name, so a second definition is refused.
     layer_index: BIndex,
     block_index: BIndex,
@@ -183,6 +186,7 @@ impl<'a, 'l> Reader<'a, 'l> {
             layer0: NameId(0),
             name_index: BIndex::new(budget),
             unsupported_index: BIndex::new(budget),
+            current_block: None,
             layer_index: BIndex::new(budget),
             block_index: BIndex::new(budget),
         };
@@ -542,7 +546,9 @@ impl<'a, 'l> Reader<'a, 'l> {
                 h.hash_one(blocks[old as usize].name.0)
             })?;
             let mut entities = BVec::new(&self.budget);
+            self.current_block = Some(name);
             self.entities(b"ENDBLK", &mut entities)?;
+            self.current_block = None;
             self.drawing.blocks.push(Block {
                 name,
                 base,
@@ -612,13 +618,23 @@ impl<'a, 'l> Reader<'a, 'l> {
         }
     }
 
-    fn count_unsupported(&mut self, kind: NameId, layer: NameId) -> Result<(), ReadError> {
+    fn count_unsupported(
+        &mut self,
+        kind: NameId,
+        layer: NameId,
+        paper_space: bool,
+    ) -> Result<(), ReadError> {
+        let place = match self.current_block {
+            Some(b) => Where::Block(b),
+            None if paper_space => Where::PaperSpace,
+            None => Where::ModelSpace,
+        };
         let counts = &mut self.drawing.unsupported;
-        let key = (kind.0, layer.0);
+        let key = (kind.0, layer.0, place);
         let hash = self.unsupported_index.hash(&key);
         if let Some(i) = self
             .unsupported_index
-            .find(hash, |i| counts[i as usize].0 == (kind, layer))
+            .find(hash, |i| counts[i as usize].0 == (kind, layer, place))
         {
             counts[i as usize].1 += 1;
             return Ok(());
@@ -627,12 +643,12 @@ impl<'a, 'l> Reader<'a, 'l> {
             requested: 0,
             limit: self.budget.limit(),
         })?;
-        counts.push(((kind, layer), 1))?;
+        counts.push(((kind, layer, place), 1))?;
         let counts = &*counts;
         self.unsupported_index.insert(hash, id, |h, old| {
             use std::hash::BuildHasher;
-            let ((k, l), _) = counts[old as usize];
-            h.hash_one((k.0, l.0))
+            let ((k, l, w), _) = counts[old as usize];
+            h.hash_one((k.0, l.0, w))
         })
     }
 
@@ -817,7 +833,7 @@ impl<'a, 'l> Reader<'a, 'l> {
                 while let Some(p) = self.field_once(&mut seen, &[])? {
                     self.common(&mut c, &p)?;
                 }
-                return self.count_unsupported(kind, c.layer);
+                return self.count_unsupported(kind, c.layer, c.paper_space);
             }
         };
         list.push(c.entity(kind))
@@ -881,7 +897,7 @@ impl<'a, 'l> Reader<'a, 'l> {
         }
         if let Some(name) = unsupported {
             let kind = self.intern_str(name)?;
-            self.count_unsupported(kind, c.layer)?;
+            self.count_unsupported(kind, c.layer, c.paper_space)?;
             return Ok(None);
         }
         Ok(Some(EntityKind::Polyline(Polyline {
@@ -951,7 +967,7 @@ impl<'a, 'l> Reader<'a, 'l> {
                         while let Some(f) = self.field_once(&mut seen, &[])? {
                             self.common(&mut a, &f)?;
                         }
-                        self.count_unsupported(attrib, a.layer)?;
+                        self.count_unsupported(attrib, a.layer, a.paper_space)?;
                     }
                     Some(p) if p.code == 0 && p.is("SEQEND") => {
                         self.pairs.next()?;

@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The heap budget (ADR 0015, Q-D): every heap allocation the reader makes reserves its bytes here first, and
 //! releases them when freed, so the heap the reader has requested never passes the budget.
@@ -122,6 +122,18 @@ impl Charge {
 impl Drop for Charge {
     fn drop(&mut self) {
         self.budget.release(self.bytes);
+    }
+}
+
+/// Bytes reserved for allocations made outside the budgeted containers (the geometry crate's, D-28 §4.1),
+/// released when dropped.
+pub(crate) struct Reservation(#[allow(dead_code)] Charge);
+
+impl Reservation {
+    pub(crate) fn new(budget: &Budget, bytes: usize) -> Result<Self, ReadError> {
+        let mut charge = Charge::empty(budget);
+        charge.grow(bytes)?;
+        Ok(Self(charge))
     }
 }
 

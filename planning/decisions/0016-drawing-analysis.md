@@ -1,9 +1,10 @@
 # ADR 0016 — Drawing analysis: a versioned report, streaming expansion in the shared budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: every question Q-A … Q-I of
-  [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended).
+  [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended). Details settled while implementing
+  are listed below, **awaiting the maintainer's confirmation**.
 - **Date:** 2026-11-27
 - **Decision ID:** D-28
 - **Relation to earlier decisions:**
@@ -113,6 +114,35 @@ The proposal's §3–§11 are the specification. In summary:
 | **A7 — region area** | `region_area` matches an independent computation on nested and disjoint rings, and refuses crossing rings. The sweep prefilter matches the all-pairs check on random rings |
 | **A8 — parity and safety** | Rust, Python and MCP give identical JSON for every fixture. MCP refuses paths outside the roots, including through symlinks. CSV formula injection is neutralised |
 | **A9 — fuzzing** | The fuzz target runs read + analyse under the default budget. Its time counts toward ADR 0015's 8 hours |
+
+## Settled during implementation (awaiting confirmation)
+
+Writing the code exposed points the accepted text did not settle. Each is implemented and tested; none changes a
+decision above.
+
+1. **Where uninterpreted entities count** (refines §10 "make their layer's row incomplete"). The reader now records
+   where each one is: model space, paper space, or a block definition.
+   - In model space, or in a block that is placed, it makes the (effective) layer incomplete, once per placement.
+   - In paper space, or in a block never placed (a dimension's or hatch's own block, an unused definition), it is
+     listed at level info and leaves totals complete. Otherwise every dimensioned drawing (MTEXT and SOLID in the
+     dimension's block) and every layout (VIEWPORT) would show false "incomplete" totals.
+   - Types that carry no length or area (ATTDEF, ATTRIB, MTEXT, POINT, VIEWPORT) are listed, never "incomplete".
+2. **LINE and DIMENSION points are world (block) coordinates** in DXF, so their extrusion does not move them; the
+   other plan entities go through their OCS (`Placed::plan_transform`).
+3. **Hatch edge paths:**
+   - consecutive edges must join within ε (GEOMETRY §5 over the path's points); otherwise `NOT_SUPPORTED`
+     (`feature: "hatch boundary not joined"`);
+   - clockwise arc edges (group 73 = 0) are `NOT_SUPPORTED` (`"hatch clockwise arc edge"`) in 0.1: how their angles
+     are stated differs between writers, and no fixture has one to check against;
+   - an arc edge becomes two half-arcs, so a full circle (360°) is representable.
+4. **Hard and soft limits added:** 200 000 000 vertices measured or transformed (hard, `DRAWING_LIMIT` "vertices"),
+   and the size check (P3) keeps at most 1 000 000 areas (beyond, an info `NOT_SUPPORTED` "size check sample
+   limit").
+5. **Placement factor:** under any non-degenerate placement, area is the local area × |det|; under a similarity,
+   lengths are the local length × s. Straight-edged geometry under a non-uniform scale is re-measured from its
+   placed vertices.
+6. **P4 formatting:** braces, `\X…;` codes and the one-letter codes `\P \L \O \K \X \~` are removed before the
+   text is read as a number; `DIMLFAC` is not read (as §8 says).
 
 ## Consequences
 

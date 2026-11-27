@@ -1,6 +1,6 @@
 # DXF reader fuzzing log
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:02 IST · last edited 2026-11-27 19:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:02 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 Gate X6 of [ADR 0015](decisions/0015-dxf-reader.md) requires **8 hours of fuzzing in total before 0.1**, recorded here,
 beside the 10-minute run in every Fuzz workflow run. A run counts when its **fuzzing step** completes green (no crash, no
@@ -18,5 +18,7 @@ hours, so for example two runs of 14 400 seconds (4 hours) each.
 | [Fuzz #3](https://github.com/gowtham-sivarajan/civkit/actions/runs/46002771589) | 2026-11-27 | `c740fd4` | 600 | green (fuzzing and the X2 report step); X2 summary: no disagreements | 0 h 30 min |
 | [Fuzz #4](https://github.com/gowtham-sivarajan/civkit/actions/runs/46006337451) | 2026-11-27 | `ecc0193` | 600 | green (fuzzing and the X2 report step; summary not yet reviewed) | 0 h 40 min |
 | [Fuzz #5](https://github.com/gowtham-sivarajan/civkit/actions/runs/46009067122) | 2026-11-27 | `435bb23` | 600 | green (fuzzing and the X2 report step; summary not yet reviewed) | 0 h 50 min |
+| [Fuzz #6](https://github.com/gowtham-sivarajan/civkit/actions/runs/46018879706) | 2026-11-27 | `29d7230` | 600 | green (fuzzing and the X2 report step; summary not yet reviewed) | 1 h 0 min |
+| [Fuzz #7](https://github.com/gowtham-sivarajan/civkit/actions/runs/46024301153) | 2026-11-27 | `07e200e` | 600 | green (fuzzing and the X2 report step; summary not yet reviewed) | 1 h 10 min |
 
-**Total so far: 0 h 50 min of 8 h.**
+**Total so far: 1 h 10 min of 8 h.**

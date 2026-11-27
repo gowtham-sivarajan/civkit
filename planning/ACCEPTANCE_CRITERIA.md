@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -43,7 +43,7 @@
 
 ### Phase 4 — Drawing model + DXF → **Release 0.1**
 - [ ] Quantity extraction, unit checks and schedule export pass on all DXF fixtures.
-- [ ] Drawing analysis gates A1–A9 of [ADR 0016](decisions/0016-drawing-analysis.md) pass in CI: fixtures, unit check, transforms, budget accounting, limits, no silent loss, region area, interface parity and safety, fuzzing of read + analyse. *(Status 2026-11-27: A7 passes locally: `region_area`, and the §8.7 sweep prefilter shown identical to testing every pair, with its work limit. A3 passes locally: transform tests, and expansion matching hand-computed placements in F5 (13 bays, 4 trees, the README totals) and the nested and mirrored BricsCAD fixture. A5 in part: nesting, a 10⁹ × 10⁹ MINSERT and cycles are refused or reported; a 900 000-vertex ring cleans in linear time.)*
+- [ ] Drawing analysis gates A1–A9 of [ADR 0016](decisions/0016-drawing-analysis.md) pass in CI: fixtures, unit check, transforms, budget accounting, limits, no silent loss, region area, interface parity and safety, fuzzing of read + analyse. *(Status 2026-11-27: A7 passes locally: `region_area`, and the §8.7 sweep prefilter shown identical to testing every pair, with its work limit. A3 passes locally: transform tests, and expansion matching hand-computed placements in F5 (13 bays, 4 trees, the README totals) and the nested and mirrored BricsCAD fixture. A5 in part: nesting, a 10⁹ × 10⁹ MINSERT and cycles are refused or reported; a 900 000-vertex ring cleans in linear time. A1 and A2 pass locally: F1–F5 totals, F2 = F1 in metres, F4 units not stated, F3 exactly P1–P4. A6 in part: every unsupported or invalid case tested is counted and named. Open: A4 (measured heap), A8 (interfaces), A9 (fuzzing read + analyse).)*
 - [ ] DXF reader gates X1–X6 of [ADR 0015](decisions/0015-dxf-reader.md) pass in CI: fixtures, `undxf` cross-check, heap-budget accounting (measured peak ≤ reserved peak + slack), budget exhaustion (never a panic or overrun), malformed input, fuzzing. *(Status 2026-11-27: X1–X5 pass locally and in CI on `241b44c`; X6's 10-minute run passed in Fuzz #1; the 8-hour record is outstanding, so this stays open.)*
 - [ ] DXF parser fuzzed for a defined minimum duration with no crashes: 10 minutes per CI run, and 8 hours in total recorded before 0.1, under the default heap budget (ADR 0015).
 - [ ] Everything in §2 holds. Tag `v0.1.0`.

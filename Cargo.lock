@@ -75,6 +75,7 @@ version = "0.0.0"
 dependencies = [
  "cap",
  "civkit-geometry",
+ "civkit-units",
  "peak_alloc",
  "proptest",
  "serde_json",

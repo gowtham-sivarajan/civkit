@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -13,8 +13,9 @@
 Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`4e41e7a`, `c740fd4`: CI #25, Python
 #10 and Fuzz #3 green). **Task 3 decided: D-28, [ADR 0016](decisions/0016-drawing-analysis.md)** (all questions as
 recommended); its code has started, tests first: `Affine2` and `region_area` in `435bb23` (CI #27, Python #12 green);
-the §8.7 sweep prefilter and `WorkLimit` in `29d7230`; then linear polygon cleaning and bounded block and MINSERT
-expansion. Fuzzing: 50 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+the §8.7 sweep prefilter and `WorkLimit` in `29d7230`; linear polygon cleaning and bounded block and MINSERT
+expansion in `07e200e` (CI #29, Python #14, Fuzz #7 green); then quantities, drawing units and the unit check.
+Fuzzing: 1 h 10 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -169,9 +170,11 @@ git status                # confirm planning/ui-concepts/ is not staged
    [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Code, tests first**, in
    the order of the proposal's §13. Done in `civkit-geometry`: `Affine2` and `region_area` (A3's transform tests),
    the §8.7 sweep prefilter with `WorkLimit` (A7 complete), and linear polygon cleaning. Done in `civkit-drawing`:
-   `expand` (A3 complete; A5 in part). Next: quantities per placed entity and their aggregation by layer and kind
-   (A1, A4–A6: per-block caches, the per-vertex budget reservation around geometry calls, `incomplete` totals), the
-   unit check (A2), schedules and the drawing report; Python and MCP (A8); fuzz read + analyse (A9). The 8-hour fuzz
+   `expand` (A3 complete; A5 in part), and `measure`: quantities by effective layer, drawing units and the unit check
+   (A1 and A2 locally; A6 in part). **Six implementation details refine ADR 0016 and await the maintainer's
+   confirmation** (ADR 0016, "Settled during implementation"). Next: A4's measured heap check for read + analyse
+   (it checks the 256-bytes-per-vertex reservation around geometry calls), then A9 (the fuzz target runs read +
+   analyse), then the CSV and JSON schedules and the drawing report, then Python and MCP (A8). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -187,6 +190,28 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 21:10 IST — Quantities by layer, drawing units and the unit check (tests first) *(Claude Sonnet 5.5)*
+- The maintainer pushed `07e200e`; CI #29, Python #14 and Fuzz #7 green (fuzzing step too). Fuzz #6 and #7 logged:
+  1 h 10 min of 8 h.
+- Tests first: `tests/quantities.rs` (14) and `tests/unit_check.rs` (6), with the fixtures README's values and closed
+  forms worked inline (F1, F2 = F1 in metres, F4 not stated, F5, bulged rings under nested and mirrored placements,
+  arcs, non-uniform scale, a bow tie, zero sweep, non-plan and mirrored OCS, hatch with a hole and edge paths,
+  uninterpreted and unexpanded content, aggregation, units, budget and work limits; F3 exactly P1–P4 from its raw
+  handles `102` and `107`; P1–P4 boundaries).
+- Code: `src/measure.rs` (`measure`, `AnalysisOptions`, `Quantities`, `LayerTotals`, `Counts`, `Issue`, `Level`,
+  `Detail`, `Units`). Expansion streamed into it; local measures cached per block entity (validity once per block
+  entity, proven by a test with a 10-pair validity budget); area × |det|, length × s; geometry calls bracketed by a
+  `Reservation` of 256 bytes per vertex; Neumaier totals; aggregated, bounded issues.
+- Reader: uninterpreted entities are now counted by (type, layer, where) (`Where`, `Drawing::unsupported_where`);
+  `unsupported()` keeps its merged (type, layer) form, so X2 is unchanged. Expansion: `Placed` gains `block` and
+  `index`; a new `Event::Entered` per block placement (`Event` is now `#[non_exhaustive]`).
+- Mutation check: 9 on quantities (one equivalent: a zero-sweep ARC as a 0-radian sweep gives the same result through
+  GEOMETRY §8.8) and 6 on the unit check, all others caught. Two first-pass plants did not compile and were redone;
+  the planting script now tells "does not compile" apart from "passes".
+- Six details refining ADR 0016 recorded there for confirmation (uninterpreted content by place; LINE and DIMENSION
+  in WCS; hatch edge paths; two added limits; the placement factor; P4 formatting).
+- Local: fmt and clippy clean, 392 Rust tests pass, dependency rule OK, fuzz crate checks (lock unchanged).
 
 ### 2026-11-27 20:24 IST — Linear polygon cleaning; bounded block and MINSERT expansion (tests first) *(Claude Sonnet 5.5)*
 - The maintainer pushed `29d7230` (the §8.7 prefilter) and asked for expansion next.

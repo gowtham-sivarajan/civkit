@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:45 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:45 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Block and MINSERT expansion (D-28 / ADR 0016 §4): placements are streamed to a visitor, never
 //! collected into an expanded copy of the drawing. The walk is iterative (an explicit stack, at most
@@ -95,6 +95,10 @@ pub struct Placed<'d> {
     pub top_handle: Option<u64>,
     /// The handle of the INSERT that placed it directly (none at the top level).
     pub insert_handle: Option<u64>,
+    /// The block it belongs to, as a position in [`Drawing::blocks`] (none at the top level).
+    pub block: Option<usize>,
+    /// Its position in that block's entities (or in [`Drawing::entities`]).
+    pub index: usize,
 }
 
 impl Placed<'_> {
@@ -126,11 +130,24 @@ pub struct Skipped<'d> {
 
 /// What expansion reports to its visitor, in drawing order (depth first).
 #[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
 pub enum Event<'d> {
     /// An entity placed (every kind but INSERT, which expands instead).
     Placed(Placed<'d>),
     /// An INSERT not expanded.
     Skipped(Skipped<'d>),
+    /// A block placed once (one INSERT, or one MINSERT cell), before its entities: content the reader did not
+    /// interpret counts here, once per placement.
+    Entered {
+        /// The block, as a position in [`Drawing::blocks`].
+        block: usize,
+        /// The layer that layer `0` takes inside it.
+        layer: NameId,
+        /// Its nesting depth (1 for a block placed at the top level).
+        depth: usize,
+        /// Block coordinates to world coordinates for this placement.
+        transform: Affine2,
+    },
 }
 
 /// What an expansion did.
@@ -192,6 +209,8 @@ enum Step<'d> {
     Pop,
     Entity {
         entity: &'d Entity,
+        index: usize,
+        block: Option<usize>,
         transform: Affine2,
         inherit: Option<NameId>,
         depth: usize,
@@ -278,16 +297,18 @@ pub fn expand<'d>(
                 next,
                 transform,
                 inherit,
+                block,
                 depth,
                 top,
                 insert,
-                ..
             }) => match list.get(*next) {
                 None => Step::Pop,
                 Some(entity) => {
                     *next += 1;
                     Step::Entity {
                         entity,
+                        index: *next - 1,
+                        block: *block,
                         transform: *transform,
                         inherit: *inherit,
                         depth: *depth,
@@ -312,6 +333,8 @@ pub fn expand<'d>(
             }
             Step::Entity {
                 entity,
+                index,
+                block: in_block,
                 transform,
                 inherit,
                 depth,
@@ -335,6 +358,8 @@ pub fn expand<'d>(
                         depth,
                         top_handle: top,
                         insert_handle: insert,
+                        block: in_block,
+                        index,
                     }));
                     continue;
                 };
@@ -440,6 +465,12 @@ pub fn expand<'d>(
                 };
                 stats.placements += 1;
                 stats.max_depth = stats.max_depth.max(depth + 1);
+                visit(Event::Entered {
+                    block,
+                    layer,
+                    depth: depth + 1,
+                    transform: t,
+                });
                 stack.push(Frame::Entities {
                     list: &b.entities,
                     next: 0,

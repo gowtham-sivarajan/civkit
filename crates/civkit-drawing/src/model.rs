@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The parsed drawing: what the DXF reader keeps (ADR 0015, Q-C). It is the file's content in DXF terms, not results:
 //! coordinates in drawing units and in each entity's own coordinate system (OCS, by its extrusion), angles in degrees
@@ -315,6 +315,18 @@ pub enum Note {
     },
 }
 
+/// Where an uninterpreted entity was: model space, paper space, or a block definition (whose contents count only
+/// where the block is placed).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Where {
+    /// The ENTITIES section, model space.
+    ModelSpace,
+    /// The ENTITIES section, paper space (group 67 = 1).
+    PaperSpace,
+    /// A block definition.
+    Block(NameId),
+}
+
 /// What the header states. `None` means the file does not state it, never a default (ADR 0015, R3).
 #[derive(Debug, Default)]
 pub(crate) struct Header {
@@ -331,8 +343,8 @@ pub struct Drawing {
     pub(crate) layers: BVec<Layer>,
     pub(crate) blocks: BVec<Block>,
     pub(crate) entities: BVec<Entity>,
-    /// Counts of uninterpreted entities by (type, layer), in first-seen order.
-    pub(crate) unsupported: BVec<((NameId, NameId), u64)>,
+    /// Counts of uninterpreted entities by (type, layer, where), in first-seen order.
+    pub(crate) unsupported: BVec<((NameId, NameId, Where), u64)>,
     pub(crate) notes: BVec<Note>,
     /// Every name, once, in first-seen order; a [`NameId`] is a position here.
     pub(crate) names: BVec<BStr>,
@@ -385,10 +397,24 @@ impl Drawing {
         let mut out: Vec<(&str, &str, u64)> = self
             .unsupported
             .iter()
-            .map(|((kind, layer), n)| (self.name(*kind), self.name(*layer), *n))
+            .map(|((kind, layer, _), n)| (self.name(*kind), self.name(*layer), *n))
             .collect();
         out.sort_unstable();
-        out
+        // The same type and layer in several places is one entry.
+        let mut merged: Vec<(&str, &str, u64)> = Vec::with_capacity(out.len());
+        for (k, l, n) in out {
+            match merged.last_mut() {
+                Some(last) if last.0 == k && last.1 == l => last.2 += n,
+                _ => merged.push((k, l, n)),
+            }
+        }
+        merged
+    }
+
+    /// Entities 0.1 does not interpret, by type, layer and where they are, in first-seen order (D-28: content of a
+    /// block counts where the block is placed; paper space is listed, not measured).
+    pub fn unsupported_where(&self) -> &[((NameId, NameId, Where), u64)] {
+        &self.unsupported
     }
 
     /// What the reader could not fully read but did not fail on.

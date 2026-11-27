@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:40 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:40 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Block and MINSERT expansion (D-28 / ADR 0016 §4; gates A3, A5 and A6 in part).
 //!
@@ -116,6 +116,7 @@ fn run(
             layer: d.name(s.layer).to_owned(),
             handle: s.entity.handle,
         }),
+        _ => {}
     });
     (seen, skipped, r)
 }
