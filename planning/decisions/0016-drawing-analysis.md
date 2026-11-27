@@ -1,10 +1,10 @@
 # ADR 0016 — Drawing analysis: a versioned report, streaming expansion in the shared budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:59 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: every question Q-A … Q-I of
   [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended). Details settled while implementing
-  are listed below: items 1, 2, 4 and 5 confirmed (2026-11-27); 6 fixed after a second review, awaiting confirmation.
+  are listed below, all confirmed by the maintainer on 2026-11-27 (items 3, 4 and 6 after revision).
 - **Date:** 2026-11-27
 - **Decision ID:** D-28
 - **Relation to earlier decisions:**
@@ -119,8 +119,8 @@ The proposal's §3–§11 are the specification. In summary:
 
 Writing the code exposed points the accepted text did not settle. Each is implemented and tested; none changes a
 decision above. The maintainer reviewed them on 2026-11-27: items 1, 2 and 5 **confirmed**; item 3 resolved by
-implementing the accepted behaviour; item 4 revised and then **confirmed**; item 6 revised twice and **awaiting
-confirmation**.
+implementing the accepted behaviour; item 4 revised and then **confirmed**; item 6 revised twice and then
+**confirmed**.
 
 1. **Where uninterpreted entities count** (refines §10 "make their layer's row incomplete"). *Confirmed.* The
    reader records where each one is: model space, paper space, or a block definition.
@@ -163,7 +163,7 @@ confirmation**.
 5. **Placement factor:** under any non-degenerate placement, area is the local area × |det|; under a similarity,
    lengths are the local length × s. Straight-edged geometry under a non-uniform scale is re-measured from its
    placed vertices. *Confirmed.*
-6. **P4 formatting** (Autodesk's MTEXT codes). *Revised after two reviews; awaiting confirmation.* Before the
+6. **P4 formatting** (Autodesk's MTEXT codes). *Revised after two reviews; confirmed (2026-11-27).* Before the
    override is read as a number:
    - `\X` splits dimension text (what follows goes below the dimension line), so only the part before the first
      **unescaped** `\X` is read (in `\\X` the backslash is escaped and the `X` is text), and the `<>` placeholder

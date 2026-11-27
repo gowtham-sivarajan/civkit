@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities by effective layer (D-28 / ADR 0016 §6, §7, §10).
 //!
@@ -35,6 +35,11 @@ pub struct AnalysisOptions {
     pub max_handles: usize,
     /// Distinct issues kept; past it, one `DRAWING_REPORT_TRUNCATED`.
     pub max_issues: usize,
+    /// List every placed, measured entity (the report's `detail = "entity"`).
+    pub entity_rows: bool,
+    /// Rows kept in each list (text, dimensions, entities); past it, `DRAWING_REPORT_TRUNCATED`. Totals are
+    /// never truncated.
+    pub max_rows: usize,
 }
 
 impl Default for AnalysisOptions {
@@ -45,6 +50,8 @@ impl Default for AnalysisOptions {
             max_validity_pairs: 100_000_000,
             max_handles: 20,
             max_issues: 1000,
+            entity_rows: false,
+            max_rows: 100_000,
         }
     }
 }
@@ -202,6 +209,55 @@ const UNITS: [(i16, &str, f64); 10] = [
 /// but they never make a total incomplete.
 const NOT_QUANTITIES: [&str; 5] = ["ATTDEF", "ATTRIB", "MTEXT", "POINT", "VIEWPORT"];
 
+/// A TEXT placed in the world. Its value is drawing text, read from the drawing at `block` and `index`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TextRow {
+    /// Effective layer.
+    pub layer: NameId,
+    /// Handle.
+    pub handle: Option<u64>,
+    /// World x of its insertion point.
+    pub x: f64,
+    /// World y of its insertion point.
+    pub y: f64,
+    /// Its block, as a position in [`Drawing::blocks`] (none at the top level).
+    pub block: Option<usize>,
+    /// Its position in that block's entities (or in [`Drawing::entities`]).
+    pub index: usize,
+}
+
+/// A DIMENSION placed in the world, read from the drawing at `block` and `index`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DimensionRow {
+    /// Effective layer.
+    pub layer: NameId,
+    /// Handle.
+    pub handle: Option<u64>,
+    /// Its block (none at the top level).
+    pub block: Option<usize>,
+    /// Its position in that block's entities (or in [`Drawing::entities`]).
+    pub index: usize,
+}
+
+/// One placed, measured entity (`AnalysisOptions::entity_rows`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct EntityRow {
+    /// Effective layer.
+    pub layer: NameId,
+    /// `line`, `arc`, `circle`, `polyline_open`, `polyline_closed` or `hatch`.
+    pub kind: &'static str,
+    /// Handle.
+    pub handle: Option<u64>,
+    /// Handle of the top-level entity it comes from.
+    pub top_handle: Option<u64>,
+    /// Handle of the INSERT that placed it directly.
+    pub insert_handle: Option<u64>,
+    /// Length, circumference or perimeter, placed, in drawing units.
+    pub length: Option<f64>,
+    /// Area, placed, in drawing units (none when it has none or it was left out).
+    pub area: Option<f64>,
+}
+
 /// The quantities of a drawing.
 #[derive(Debug)]
 pub struct Quantities {
@@ -209,6 +265,10 @@ pub struct Quantities {
     issues: BVec<Issue>,
     units: Units,
     expansion: ExpandStats,
+    texts: BVec<TextRow>,
+    dimensions: BVec<DimensionRow>,
+    entities: BVec<EntityRow>,
+    entity_rows: bool,
 }
 
 impl Quantities {
@@ -230,6 +290,21 @@ impl Quantities {
     /// What expansion did.
     pub fn expansion(&self) -> ExpandStats {
         self.expansion
+    }
+
+    /// Placed TEXT, in drawing order (at most `max_rows`).
+    pub fn texts(&self) -> &[TextRow] {
+        &self.texts
+    }
+
+    /// Placed DIMENSION, in drawing order (at most `max_rows`).
+    pub fn dimensions(&self) -> &[DimensionRow] {
+        &self.dimensions
+    }
+
+    /// Placed, measured entities, when asked for (at most `max_rows`).
+    pub fn entities(&self) -> Option<&[EntityRow]> {
+        self.entity_rows.then_some(&*self.entities)
     }
 }
 
@@ -680,6 +755,11 @@ struct Collector<'d> {
     /// Closed areas by (row, kind) for the size check (P3), up to `MAX_AREA_SAMPLES`.
     areas: BVec<(u32, u8, f64, Option<u64>)>,
     areas_capped: bool,
+    texts: BVec<TextRow>,
+    dimensions: BVec<DimensionRow>,
+    entities: BVec<EntityRow>,
+    /// Rows left out of the text, dimension and entity lists.
+    rows_dropped: [u64; 3],
 }
 
 /// Closed areas kept for the size check (P3); past it the check covers the first ones and says so.
@@ -838,6 +918,33 @@ impl Collector<'_> {
         Ok(())
     }
 
+    /// Lists a placed, measured entity, when entity rows are asked for.
+    fn entity_row(
+        &mut self,
+        p: &Placed<'_>,
+        kind: &'static str,
+        length: Option<f64>,
+        area: Option<f64>,
+    ) -> Result<(), AnalysisError> {
+        if !self.options.entity_rows {
+            return Ok(());
+        }
+        if self.entities.len() >= self.options.max_rows {
+            self.rows_dropped[2] += 1;
+            return Ok(());
+        }
+        self.entities.push(EntityRow {
+            layer: p.layer,
+            kind,
+            handle: p.entity.handle,
+            top_handle: p.top_handle,
+            insert_handle: p.insert_handle,
+            length,
+            area,
+        })?;
+        Ok(())
+    }
+
     fn is_quantity_type(&self, kind: NameId) -> bool {
         !NOT_QUANTITIES.contains(&self.drawing.name(kind))
     }
@@ -867,6 +974,10 @@ pub fn measure(
         block_scales: BVec::filled(budget, drawing.blocks.len(), (f64::INFINITY, 0.0))?,
         areas: BVec::new(budget),
         areas_capped: false,
+        texts: BVec::new(budget),
+        dimensions: BVec::new(budget),
+        entities: BVec::new(budget),
+        rows_dropped: [0; 3],
     };
     let mut work = Work {
         used: 0,
@@ -999,6 +1110,22 @@ pub fn measure(
         to_metres: known.map(|k| k.2),
     };
     unit_check(&mut c, insunits)?;
+    for (dropped, list) in
+        c.rows_dropped
+            .into_iter()
+            .zip(["text rows", "dimension rows", "entity rows"])
+    {
+        if dropped > 0 {
+            c.issue(
+                "DRAWING_REPORT_TRUNCATED",
+                Level::Caution,
+                None,
+                Detail::Feature(list),
+                dropped,
+                None,
+            )?;
+        }
+    }
     if c.dropped > 0 {
         let dropped = c.dropped;
         c.options.max_issues = usize::MAX;
@@ -1037,6 +1164,10 @@ pub fn measure(
         issues: c.issues,
         units,
         expansion: stats,
+        texts: c.texts,
+        dimensions: c.dimensions,
+        entities: c.entities,
+        entity_rows: options.entity_rows,
     })
 }
 
@@ -1120,8 +1251,10 @@ fn place(
         ) else {
             return c.fail(Fail::Invalid, layer, handle);
         };
+        let length = (b.x - a.x).hypot(b.y - a.y);
         c.rows[r].counts.line += 1;
-        c.rows[r].sums[LINE].add((b.x - a.x).hypot(b.y - a.y));
+        c.rows[r].sums[LINE].add(length);
+        c.entity_row(p, "line", Some(length), None)?;
         if precision_limited(&t, &[(start.x, start.y), (end.x, end.y)]) {
             c.issue(
                 "ROUNDING_SENSITIVE",
@@ -1135,12 +1268,38 @@ fn place(
         return Ok(());
     }
     match &p.entity.kind {
-        EntityKind::Text(_) => {
+        EntityKind::Text(text) => {
             c.rows[r].counts.text += 1;
+            if c.texts.len() >= c.options.max_rows {
+                c.rows_dropped[0] += 1;
+                return Ok(());
+            }
+            let t = p.plan_transform().unwrap_or(p.transform);
+            let at = t
+                .apply(Point::new(text.point.x, text.point.y))
+                .unwrap_or(Point::new(f64::NAN, f64::NAN));
+            c.texts.push(TextRow {
+                layer,
+                handle,
+                x: at.x,
+                y: at.y,
+                block: p.block,
+                index: p.index,
+            })?;
             return Ok(());
         }
         EntityKind::Dimension(dim) => {
             c.rows[r].counts.dimension += 1;
+            if c.dimensions.len() >= c.options.max_rows {
+                c.rows_dropped[1] += 1;
+            } else {
+                c.dimensions.push(DimensionRow {
+                    layer,
+                    handle,
+                    block: p.block,
+                    index: p.index,
+                })?;
+            }
             return dimension_override(c, dim, layer, handle);
         }
         _ => {}
@@ -1190,6 +1349,7 @@ fn place(
             c.rows[r].sums[CIRCUMFERENCE].add(circumference * s);
             c.rows[r].sums[CIRCLE_AREA].add(area * det);
             c.sample(r, 0, area * det, handle)?;
+            c.entity_row(p, "circle", Some(circumference * s), Some(area * det))?;
             Notes::default()
         }
         Local::Arc { length, notes } => {
@@ -1198,6 +1358,7 @@ fn place(
             };
             c.rows[r].counts.arc += 1;
             c.rows[r].sums[ARC].add(length * s);
+            c.entity_row(p, "arc", Some(length * s), None)?;
             notes
         }
         Local::Open {
@@ -1215,6 +1376,7 @@ fn place(
             };
             c.rows[r].counts.polyline_open += 1;
             c.rows[r].sums[OPEN].add(length);
+            c.entity_row(p, "polyline_open", Some(length), None)?;
             notes
         }
         Local::Closed {
@@ -1240,6 +1402,12 @@ fn place(
                 }
                 Err(f) => c.fail(f, layer, handle)?,
             }
+            c.entity_row(
+                p,
+                "polyline_closed",
+                Some(perimeter),
+                area.ok().map(|a| a * det),
+            )?;
             notes
         }
         Local::Hatch {
@@ -1255,6 +1423,7 @@ fn place(
                     c.rows[r].counts.hatch += 1;
                     c.rows[r].sums[HATCH_AREA].add(a * det);
                     c.sample(r, 2, a * det, handle)?;
+                    c.entity_row(p, "hatch", None, Some(a * det))?;
                 }
                 Err(f) => return c.fail(f, layer, handle),
             }

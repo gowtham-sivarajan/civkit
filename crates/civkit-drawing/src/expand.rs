@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:45 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 19:45 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Block and MINSERT expansion (D-28 / ADR 0016 §4): placements are streamed to a visitor, never
 //! collected into an expanded copy of the drawing. The walk is iterative (an explicit stack, at most
@@ -35,6 +35,8 @@ impl Default for ExpandLimits {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum AnalysisError {
+    /// The DXF file could not be read ([`crate::analyze_dxf`]).
+    Read(ReadError),
     /// A reservation from the budget was refused, or the allocator refused memory the budget allowed.
     Memory(ReadError),
     /// A limit was reached: `"nesting"` (block depth) or `"placements"` (work).
@@ -49,7 +51,7 @@ pub enum AnalysisError {
 impl fmt::Display for AnalysisError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Memory(e) => write!(f, "{e}"),
+            Self::Read(e) | Self::Memory(e) => write!(f, "{e}"),
             Self::Limit { what, limit } => {
                 write!(f, "the drawing passes the {what} limit of {limit}")
             }
@@ -58,6 +60,27 @@ impl fmt::Display for AnalysisError {
 }
 
 impl std::error::Error for AnalysisError {}
+
+impl AnalysisError {
+    /// The contract error code (API_DESIGN §5): `DRAWING_LIMIT` when a limit was reached (input size,
+    /// per-item caps, the heap budget, nesting, placements, vertices), `DRAWING_UNREADABLE` when the file
+    /// is not readable DXF.
+    #[must_use]
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::Read(
+                ReadError::InputTooLarge { .. }
+                | ReadError::TooManyVertices { .. }
+                | ReadError::StringTooLong { .. }
+                | ReadError::BudgetExhausted { .. }
+                | ReadError::AllocationFailed { .. },
+            )
+            | Self::Memory(_)
+            | Self::Limit { .. } => "DRAWING_LIMIT",
+            Self::Read(_) => "DRAWING_UNREADABLE",
+        }
+    }
+}
 
 impl From<ReadError> for AnalysisError {
     fn from(e: ReadError) -> Self {

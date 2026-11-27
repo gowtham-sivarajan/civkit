@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The heap budget (ADR 0015, Q-D): every heap allocation the reader makes reserves its bytes here first, and
 //! releases them when freed, so the heap the reader has requested never passes the budget.
@@ -184,6 +184,22 @@ impl<T> BVec<T> {
         }
         self.items.push(value);
         Ok(())
+    }
+
+    /// Appends every element of a slice, each through [`BVec::push`].
+    pub(crate) fn extend_from_slice(&mut self, values: &[T]) -> Result<(), ReadError>
+    where
+        T: Copy,
+    {
+        for &v in values {
+            self.push(v)?;
+        }
+        Ok(())
+    }
+
+    /// The elements, handed over to the caller; the reservation is released.
+    pub(crate) fn into_vec(self) -> Vec<T> {
+        self.items
     }
 
     /// Removes and returns the last element; the capacity (and its charge) is kept.

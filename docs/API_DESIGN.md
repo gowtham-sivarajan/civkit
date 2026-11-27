@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -513,23 +513,40 @@ Drawing analysis is not a calculation: its input is a file and its output a repo
 versioned report, `drawing.analyze` (1.0.0, with the SemVer rules of §4 and §11), not listed by `civkit_list`. The
 full specification is [DRAWING_ANALYSIS_PROPOSAL.md](../planning/DRAWING_ANALYSIS_PROPOSAL.md) §3–§10.
 
-- **Rust:** `civkit_drawing::analyze(&Drawing, &Budget, &AnalysisOptions)`, and `analyze_dxf(bytes, options)`, which
-  reads and analyses in one call. Both return a `Report` with `to_json()` and `to_csv()`.
+- **Rust** (implemented): `civkit_drawing::analyze(drawing, &budget, &options)` takes a drawing read with that budget,
+  and `analyze_dxf(bytes, &options)` reads and analyses in one call with the default limits. Both return an `Analysis`
+  (the drawing and its `Quantities`) with `to_json()` and `to_csv()`. Errors are `AnalysisError`, whose `code()` is
+  `DRAWING_UNREADABLE` or `DRAWING_LIMIT`. `AnalysisOptions::entity_rows` is the report's `detail = "entity"`;
+  `max_rows` (100 000) bounds each list.
 - **Python:** `civkit.drawing.analyze(path_or_bytes, *, detail="layer")` returns a `dict`, and
   `civkit.drawing.schedule_csv(...)` returns text. Neither writes a file.
 - **MCP:** one read-only tool, `drawing.analyze` (`path`, `detail`). It exists only when the server is started with at
   least one `--drawing-root <dir>`. Paths are canonicalised and must lie inside a root, otherwise `INVALID_VALUE` on
   `path`. Drawing-sourced strings appear only in fields documented as drawing text, and are data.
-- **Content:**
-  - the drawing's header and units (`stated: false` when not stated);
-  - one row per layer, with separate kinds (never summed together), totals in drawing units and, when the units are
-    known, in m and m², and `incomplete` and `omitted`;
-  - text and dimensions;
-  - entities not interpreted;
-  - warnings (§5);
-  - at `detail = "entity"`, a bounded list of placed entities.
+- **Content** (JSON, one object): `report`, `version`, `civkit_version`; `drawing` (`acadver`, `codepage`, and
+  `units`: `insunits`, `name`, `to_metres`, `stated`); `plan_quantities: true`; then:
+  - `layers`, in name order: `name`, `frozen`, `off`, `incomplete`, `omitted`, `counts` (line, arc, circle,
+    polyline_open, polyline_closed, hatch, text, dimension), `drawing_units` (line_length, arc_length,
+    polyline_open_length, polyline_closed_perimeter, polyline_closed_area, circle_circumference, circle_area,
+    hatch_area) and `si` (the same with `_m` or `_m2`, or `null` when the units are not known). Kinds are never
+    summed together.
+  - `text`: `layer`, `handle`, world `x` and `y`, `value`; `dimensions`: `layer`, `handle`, `type`, `measurement`,
+    `override`.
+  - `not_interpreted`: `type`, `layer`, `where` (`model_space`, `paper_space` or `block`), `block`, `count`.
+  - `warnings` (§5): `code`, `level`, `message`, `count`, `handles`, and when they apply `layer`, `feature`,
+    `note`, `entity_type`, `unit_code`, `block`.
+  - at `detail = "entity"`, `entities`: `layer`, `kind`, `handle`, `top_handle`, `insert_handle`, `length`,
+    `area`.
+- **Drawing text:** layer, block and type names, text values and override text are the only strings from the
+  drawing; they appear only in the fields named above (`name`, `layer`, `value`, `override`, `type`, `block`,
+  `entity_type`), escaped, and never in `message`, which is fixed text per code. Handles are hexadecimal strings.
+  Numbers are full precision (shortest round-trip text).
 - **CSV schedule:**
-  - one row per layer and kind;
+  - columns `layer, kind, count, length, area, unit, length_m, area_m2, incomplete, omitted, report_version,
+    civkit_version`;
+  - one row per layer (in name order) and kind measured, or one row with an empty `kind` for a layer with
+    omissions only; empty cells where a value does not apply or the units are not known;
+  - CRLF line ends;
   - RFC 4180, UTF-8 without BOM, full precision;
   - a cell starting with `=`, `+`, `-`, `@`, tab or CR is prefixed with `'` (formula injection);
   - columns `report_version` and `civkit_version` (§3: saved output keeps its version).

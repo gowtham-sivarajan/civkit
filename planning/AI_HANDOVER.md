@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -15,7 +15,7 @@ Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`
 recommended); its code has started, tests first: `Affine2` and `region_area` in `435bb23` (CI #27, Python #12 green);
 the §8.7 sweep prefilter and `WorkLimit` in `29d7230`; linear polygon cleaning and bounded block and MINSERT
 expansion in `07e200e` (CI #29, Python #14, Fuzz #7 green); then quantities, drawing units and the unit check.
-Fuzzing: 1 h 10 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+Fuzzing: 1 h 30 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -173,9 +173,10 @@ git status                # confirm planning/ui-concepts/ is not staged
    `expand` (A3 complete; A5 in part), and `measure`: quantities by effective layer, drawing units and the unit check
    (A1 and A2 locally; A6 in part). Of the six implementation details in ADR 0016 ("Settled during
    implementation"), 1, 2 and 5 are confirmed; 3 now implements the accepted behaviour; 4 (vertex work 10⁸, with
-   timing evidence) is confirmed; **6 (P4's MTEXT codes) was fixed after a second review and awaits confirmation**. Next: A4's measured heap check for read + analyse
-   (it checks the 256-bytes-per-vertex reservation around geometry calls), then A9 (the fuzz target runs read +
-   analyse), then the CSV and JSON schedules and the drawing report, then Python and MCP (A8). The 8-hour fuzz
+   timing evidence) and 6 (P4's MTEXT codes, fixed after a second review) are confirmed: all six are settled. The JSON report and CSV
+   schedule are written in Rust (`src/report.rs`). Next: Python and MCP (A8: `civkit.drawing.analyze` and
+   `schedule_csv`; the MCP tool behind `--drawing-root`; parity tests), then A4's measured heap check for read +
+   analyse (it checks the 256-bytes-per-vertex reservation), then A9 (the fuzz target runs read + analyse). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -191,6 +192,26 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 22:05 IST — The drawing report (JSON) and the schedule (CSV), tests first *(Claude Sonnet 5.5)*
+- `e9dfa91` pushed by the maintainer: CI #32, Python #17, Fuzz #10 green; item 6 confirmed (ADR 0016: all six
+  settled). Fuzz #8 and #10 logged (#9 cancelled, not counted): 1 h 30 min of 8 h. The maintainer chose to keep
+  working on `main` in this checkout (not a separate worktree).
+- Tests first: `tests/report.rs` (11). JSON parsed with serde_json, CSV split by an RFC 4180 parser in the test:
+  F1 report (units, sorted layers, totals in drawing units and SI, text, dimension, not-interpreted by place); F4 (no
+  SI, `stated: false`); F3 (hex handles, names in fields, none in messages); drawing text round-trip; entity rows and
+  their bound; text rows' bound; determinism; F1 and F4 schedules; formula-injection and quoting; error codes.
+- Code: `src/report.rs` (`Analysis` owns the drawing and its quantities; `analyze`, `analyze_dxf`, `to_json`,
+  `to_csv`, `REPORT_ID`, `REPORT_VERSION`); `measure` gains text, dimension and entity rows (bounded by `max_rows`,
+  truncation reported) and `AnalysisOptions::entity_rows`; `AnalysisError::Read` and `code()`; `BVec` gains
+  `extend_from_slice` and `into_vec`. Outputs are built in a budgeted buffer.
+- Two first-run failures were test mistakes: a substring check ("DIM" inside "DIMLFAC"), and non-ASCII text in a
+  file without `$ACADVER`, which ADR 0015 rightly decodes as U+FFFD (the test file now states AC1032).
+- Mutation check: seven faults (CSV prefix, JSON quote escaping, SI without units, no omissions-only row, unsorted
+  layers, truncation unreported, entity rows unbounded): all caught.
+- Docs: API_DESIGN §13 (the implemented API, the JSON layout, the drawing-text fields, CSV columns), README,
+  ROADMAP, IMPLEMENTATION_PLAN, ACCEPTANCE_CRITERIA.
+- Local: fmt and clippy clean, 403 Rust tests pass, dependency rule OK, fuzz crate checks.
 
 ### 2026-11-27 21:44 IST — P4: the `<>` placeholder respects the first unescaped `\X` *(Claude Sonnet 5.5)*
 - The maintainer (after `7fec8ed`, pushed): item 4 confirmed (timings are estimates from the named machine, not

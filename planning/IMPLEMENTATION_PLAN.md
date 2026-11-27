@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -124,6 +124,9 @@ acceptance item is ticked with its evidence.
    by layer, drawing units and the unit check (`src/measure.rs`, `tests/quantities.rs` 14 and `tests/unit_check.rs`
    6; fifteen planted faults caught). Next: A4's measured heap check and A9's fuzzing of read + analyse, then the
    CSV and JSON schedules and the drawing report, then Python and MCP (A8).
+   **Report and schedule written (2026-11-27):** `src/report.rs` (`Analysis`, `analyze`, `analyze_dxf`, `to_json`,
+   `to_csv`), with `tests/report.rs` (11; seven planted faults caught). Next: Python and MCP parity (A8), then A4
+   and A9.
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).

@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 22:05 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit drawing: the CAD-neutral drawing model and CivKit's own DXF reader (D-12 / ADR 0002; D-27 / ADR 0015).
 //!
@@ -21,15 +21,18 @@ mod measure;
 mod model;
 mod pairs;
 mod reader;
+mod report;
 
 pub use budget::{BStr, BVec, Budget};
 pub use error::ReadError;
 pub use expand::{AnalysisError, Event, ExpandLimits, ExpandStats, Placed, Skip, Skipped, expand};
 pub use measure::{
-    AnalysisOptions, Counts, Detail, Issue, LayerTotals, Level, Quantities, Units, measure,
+    AnalysisOptions, Counts, Detail, DimensionRow, EntityRow, Issue, LayerTotals, Level,
+    Quantities, TextRow, Units, measure,
 };
 pub use model::{
     Block, Boundary, Dimension, Drawing, Edge, EdgeKind, Entity, EntityKind, Hatch, HatchPath,
     Insert, Layer, NameId, Note, Point2, Point3, Polyline, PolylineSource, Text, Vertex, Where,
 };
 pub use reader::{Limits, read_dxf, read_dxf_with};
+pub use report::{Analysis, REPORT_ID, REPORT_VERSION, analyze, analyze_dxf};
