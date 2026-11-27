@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,8 +8,13 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** Phase 2 is complete; CI run #11 passed on 87fa3d2 and the phase-2-done tag is on GitHub. **Next: Phase 3** (Python and MCP). D6 and engineering review remain open for the bulk review before 0.1.
-**Code written so far:** `civkit-core` (contract), `civkit-units` (2A), `civkit-geometry` (2B); seven registered engineering calculations covering the five D-20 families (2C complete; the beam's maximum shear and moment are deferred from 0.1, D-25)
+**Current phase:** **Phase 4** (drawing model and DXF → release 0.1). Phase 3 is complete: tag `phase-3-done` on
+`a94bf3f`, with CI #19 and Python #4 green (https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501337, https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501245). D6 and the engineering review remain open for the bulk
+review before 0.1.
+**Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
+D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`); the Python
+package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MCP parity (`tests/parity`); notebooks
+(`integrations/jupyter`); generated calculation pages (`docs/calculations`). No DXF code yet.
 
 ---
 
@@ -23,8 +28,8 @@
 
 ## 2. Working rules
 
-1. **Phases in order.** Phase 0 (planning) is complete (`plan-v1.0`); Phase 1 is complete. Work only on the current
-   phase's tasks ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)); every calculation needs its reference cases first.
+1. **Phases in order.** Phases 0–3 are complete (tags `plan-v1.0`, `phase-1-done`, `phase-2-done`, `phase-3-done`);
+   Phase 4 is current. Work only on the current phase's tasks ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)); every calculation needs its reference cases first.
 2. **Work only inside this repository folder.** Do not read or modify anything else on the maintainer's machine.
 3. **Provenance on every write.** Every file an AI creates or edits carries, near the top, a provenance line
    with model name, model ID and timestamp in IST; update "last edited" on every edit. Use a comment line in
@@ -47,25 +52,20 @@
 8. **Protect the engine's independence:** no AutoCAD, Python, network or AI dependency in `crates/` ([ARCHITECTURE.md](../docs/ARCHITECTURE.md)).
 9. **Reference cases are mandatory:** known input, documented method, independently verified result, edge-case tests ([ENGINEERING_STANDARDS.md](../docs/ENGINEERING_STANDARDS.md)).
 
-## 3. Where things stand (snapshot 2026-11-26)
+## 3. Where things stand (snapshot 2026-11-27)
 
 **Phases**
 - Phase 0 (planning): ✅, tag `plan-v1.0`.
 - Phase 1 (workspace, `civkit-core` contract, CI): ✅, tag `phase-1-done`.
-- Phase 2 runs in stages 2A → 2D ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)).
-  - **2A (units)**: ✅. `6d3d16a`, CI green ([run #4](https://github.com/gowtham-sivarajan/civkit/actions/runs/45598540213)).
-  - **2B (geometry)**: ✅. Specification accepted (D-22, [ADR 0010](decisions/0010-geometry-conventions.md)) after the
-    [review](GEOMETRY_SPEC_REVIEW.md); implemented in `8a93d58`, CI green
-    ([run #5](https://github.com/gowtham-sivarajan/civkit/actions/runs/45622288253)); the eight implementation items
-    confirmed by the maintainer. The follow-up (derived tolerances must be finite) passed the maintainer's Windows
-    check; it is committed together with 2C part 1.
-  - **2C (calculations)**: ✅ complete. Done: `fluids.open_channel.manning_trapezoidal` (C5) and
-    `structural.beam.simply_supported` (C6–C8: reactions, deflection, end slope). D-23 (list and choice inputs)
-    is accepted and committed (`e948bc6`, [ADR 0011](decisions/0011-list-and-choice-inputs.md)).
-    **`surveying.traverse.compass_rule` (C3) is implemented and committed** (`ddecbfb`). Levelling and earthwork are
-    committed and pushed (`948a49a`, CI green on all nine jobs). **The five D-20 calculation families are complete.**
-    The beam's maximum shear and moment are deferred from 0.1 (D-25). 2D review done; D-24 and D-25 decided
-    ([ADR 0012](decisions/0012-validity-basis-and-beam-scope.md)).
+- Phase 2 (units, geometry, calculations): ✅, tag `phase-2-done` on `87fa3d2` (CI run #11). 2A units, 2B geometry
+  (D-22), 2C the five D-20 families as seven calculations (D-23 lists and choices), 2D review with D-24 (validity
+  needs a cited basis) and D-25 (beam maximum shear and moment deferred). Details: IMPLEMENTATION_PLAN Phase 2.
+- Phase 3 (Python and MCP): ✅, tag `phase-3-done` on `a94bf3f` (CI #19, Python #4, 2026-11-27). Python package (D-26,
+  [ADR 0014](decisions/0014-python-package.md), gates P1–P5), MCP server (D-13,
+  [ADR 0013](decisions/0013-mcp-sdk-and-surface.md), gates G1–G3), parity across Rust, Python and MCP, three
+  notebooks, generated calculation pages, conditional requirements shown prominently. Every Phase 3 acceptance
+  item is ticked with its evidence.
+- **Phase 4 (drawing model and DXF): current, not started.** See §4.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-26.
@@ -76,7 +76,9 @@
 - `civkit-units`: named units, the formal unit grammar (one `/`), DMS (whole minutes) and bearings, all per
   [API_DESIGN.md §7.1](../docs/API_DESIGN.md).
 - `civkit-core`: contract with three unit roles (internal SI, default presentation, requested). Internal units are
-  enforced in values, trace and messages.
+  enforced in values, trace and messages. `check_descriptor` also limits IDs to 128 characters (MCP tool names)
+  and reserves the input names `version` and `output_units`. serde_json runs with `float_roundtrip`, so numbers
+  keep every bit through JSON (a parse bug found in Phase 3).
 - `civkit-geometry`: angles and direction, tolerance, polyline/arc/circle lengths, polygon area, orientation,
   centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
   [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
@@ -86,10 +88,26 @@
   `surveying.levelling.closure_adjustment`, `quantities.earthwork.average_end_area` (first choice input). The template
   `math.demo.weighted_mean` is registered only in tests.
 
+**Interfaces** (Phase 3)
+- `bindings/python`: the `civkit` package. Its own Cargo workspace (excluded from the root, so root CI never builds
+  PyO3); PyO3 `=0.30.1`, `abi3-py311`, maturin 1.16.0. The Rust layer is four functions over `call_json`; the rest
+  is plain Python. Build locally with `maturin develop` from the activated `.venv`. Stub: `tools/gen_stub.py`.
+- `integrations/mcp`: `civkit-mcp`, rmcp `=3.12.0`, stdio only, both protocol eras (2025-11-25 `initialize`,
+  2026-07-28 per-request `_meta`); one tool per calculation plus `civkit_list`, `civkit_describe`, `civkit_call`;
+  `--tools per-calc|generic|both`.
+- `tests/parity`: every reference case through Rust (`crates/civkit-core/examples/call_json.rs`), Python and MCP,
+  each in its own process, read with Python's `json`.
+- `docs/calculations` (generated by `tools/gen_calc_docs.py`) and `integrations/jupyter` (three notebooks); both
+  are checked in every Python CI job.
+
 **Repository**
 - Public at github.com/gowtham-sivarajan/civkit; private vulnerability reporting on.
-- CI: fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable; clippy; dependency rule; cargo-deny; DCO.
-  Dependabot is weekly. Actions are pinned by SHA.
+- CI (`ci.yml`): fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable (includes the MCP stdio tests); clippy;
+  dependency rule (engine crates, and no network crate in `civkit-mcp`); cargo-deny; DCO.
+- CI (`python.yml`): fmt, clippy, MSRV and cargo-deny for `bindings/python`; 13 wheel jobs (five targets; CPython
+  3.11–3.15 on Linux x86-64) with offline install and the Python tests; parity on Windows, macOS and Linux.
+- Dependabot is weekly. Actions are pinned by SHA. The AI cannot write `.github/`: workflow changes go to
+  `_move_to_dot_github/` for the maintainer to move.
 - `planning/ui-concepts/` exists on the maintainer's machine, untracked. It was not created by an AI session; leave it alone.
 - `.venv/` and `.vs/` (Jupyter environment, Visual Studio state) exist on the maintainer's machine; both are git-ignored.
 
@@ -104,31 +122,58 @@ cd C:\Users\Gowtham\Documents\03_Projects\CivKit
 cargo fmt --all --check
 cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo test --locked --workspace
-python tools/check_dependency_rule.py
+.venv\Scripts\python tools/check_dependency_rule.py   # `python` on this machine is the Store alias; use the venv
 cargo deny check          # if cargo-deny is installed locally; CI always runs it
 cargo doc --no-deps --workspace
+# Python package, parity and generated files (from the activated .venv):
+cd bindings\python; maturin develop --locked; cd ..\..
+cargo build --release --locked -p civkit-mcp
+cargo build --release --locked -p civkit-core --example call_json
+.venv\Scripts\python -m unittest discover -s bindings/python/tests
+.venv\Scripts\python -m unittest discover -s tests/parity
+.venv\Scripts\python tools/gen_calc_docs.py --check
+.venv\Scripts\python bindings/python/tools/gen_stub.py --check
 git status                # confirm planning/ui-concepts/ is not staged
 ```
 
 ## 4. Next actions
 
-1. **Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md): `rmcp` `=3.12.0`, both protocol eras, tool names and the result mapping, gates G1–G3) and D-26 ([ADR 0014](decisions/0014-python-package.md): CPython 3.11–3.15, PyO3 0.30.1 abi3 wheels for five targets, the thin binding layer, gates P1–P5). D-26 was the last open precondition.
-2. **Phase 3 implementation:** Python package code is done (`bindings/python`, see the log); **its gates P1–P5 are
-   met only when the `Python` workflow is green on GitHub.** The MCP server (`integrations/mcp`) is written, its G1–G3
-   tests pass locally, and MCP Inspector and the Python MCP SDK agree with the engine in both eras. G1–G3 are met
-   when `ci.yml` is green: **met** (CI #17 and Python #2 green on `0013681`). Parity: **met** (Python #3 green on
-   `972e085`). Notebooks, generated pages and conditional requirements: written, met when CI is green on their
-   commit. Then `phase-3-done` (tag only after green CI), then Phase 4.
-3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
-4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
-5. D5 (local cargo-deny) is optional; CI already checks it.
-6. Beam maximum shear and moment remain deferred from 0.1 (D-25); continue looking for a suitable open worked example. General prismoidal and soil phase relationships remain later-release work.
-7. The phase-2-done tag and CI gate are complete: run #11 passed on 87fa3d2 and the tag is on GitHub. Pushing is resumed; the maintainer runs Git commands and reports CI.
-8. Preserve planning/ui-concepts/; it is maintainer-owned and untracked.
+1. **Phase 4 (current) → release 0.1:** the neutral drawing model and DXF reader, drawing limits, quantity extraction
+   and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing
+   ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) Phase 4). As in Phase 3, interface and contract details are
+   proposed and accepted before code (geometry notes and unsupported-feature reporting first), and code is written
+   tests first.
+   **Task 1 proposed:** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27, Q-A … Q-F), awaiting the maintainer.
+2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
+   engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
+   `docs/calculations`). Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
+3. D5 (local cargo-deny) is optional; CI already checks it.
+4. Beam maximum shear and moment remain deferred from 0.1 (D-25); continue looking for a suitable open worked example.
+   General prismoidal and soil phase relationships remain later-release work.
+5. Git: the maintainer runs every command; the AI writes `_commit_msg.txt` and the commands, lists untracked files
+   before any `git add` of a new directory, and never uses `git add -A`. Phase tags wait for green CI on the tagged
+   commit.
+6. Preserve `planning/ui-concepts/`; it is maintainer-owned and untracked.
 
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 14:10 IST — Phase 4 started: DXF reader proposal (D-27) *(Claude Sonnet 5.5)*
+- Evaluated `dxf` 0.6.2, `cadkit-dxf`, `dxf-tools-rs`, `cadrender-dxf` (crates.io facts) and `dxf` hands-on in a scratch
+  crate: reads all 7 fixtures; 3 150 corrupted inputs, 0 panics, 0 slow parses; but no HATCH entity (F1's hatch is
+  dropped) and absent header variables come back as defaults (F4 reads as Unitless/English), and 30 crates incl. the
+  `image` decoder. Recommendation: own zero-dependency reader for the 0.1 subset, `dxf` as a test-only oracle; scope,
+  limits and fuzzing in the proposal. D-27 registered as Proposed. No code yet.
+
+### 2026-11-27 14:06 IST — Phase 3 complete; status sections updated *(Claude Sonnet 5.5)*
+- `a94bf3f` pushed; CI #19 and Python #4 green; the maintainer tagged `phase-3-done` (annotated) on `a94bf3f` and
+  pushed it. Acceptance item ticked.
+- README status and repository layout, and this file's header, §2 rule 1, §3 and §4, no longer describe Phase 2 or 3
+  as current. Phase 4 is current and not started.
+- **Provenance repair:** three files (ACCEPTANCE_CRITERIA, AI_HANDOVER, IMPLEMENTATION_PLAN) read "last edited …
+  by Claude Sonnet 5.5 (…) by OpenAI Codex (…)": the AI's stamping regex replaced only part of a line an earlier
+  Codex session had written. Repaired; Codex's edits remain in git history (`813b26b`).
 
 ### 2026-11-27 11:21 IST — Phase 3: notebooks, generated calculation pages, conditional requirements *(Claude Sonnet 5.5)*
 - `972e085` (parity) pushed; CI #18 and Python #3 green (https://github.com/gowtham-sivarajan/civkit/actions/runs/45947335314). Ticked: parity, offline wheel install (P1),

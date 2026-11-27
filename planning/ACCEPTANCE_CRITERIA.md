@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -39,7 +39,7 @@
 - [x] MCP gates G1–G3 of [ADR 0013](decisions/0013-mcp-sdk-and-surface.md) pass in CI: both protocol eras, tool-name rules, round-trip equality with `Registry::call_json` including contract errors. *(CI #17 green on `0013681`, 2026-11-27: https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436704)*
 - [x] Python gates P1–P5 of [ADR 0014](decisions/0014-python-package.md) pass in CI: offline install and a call on all five targets, CPython 3.11–3.15, parity with `Registry::call_json` (errors field by field), error details, no network. *(Python #2 green on `0013681`, 2026-11-27: https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436666)*
 - [x] Parity test: identical JSON output via Rust, Python and MCP for every reference case. *(`tests/parity`; Python #3 green on `972e085`, 2026-11-27: https://github.com/gowtham-sivarajan/civkit/actions/runs/45947335314. Per-job listing was blocked by the API rate limit; the run concluded success, which requires every job, including the unconditional `parity` job on 3 OSes)*
-- [ ] Tag `phase-3-done`.
+- [x] Tag `phase-3-done`. *On `a94bf3f`, after CI #19 and Python #4 were green (2026-11-27): https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501337, https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501245*
 
 ### Phase 4 — Drawing model + DXF → **Release 0.1**
 - [ ] Quantity extraction, unit checks and schedule export pass on all DXF fixtures.

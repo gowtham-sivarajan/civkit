@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -50,6 +50,9 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
 
 ## Phase 3 — Python and MCP
 
+**Phase 3: complete (2026-11-27).** Tag `phase-3-done` on `a94bf3f`, CI #19 and Python #4 green; every Phase 3
+acceptance item is ticked with its evidence.
+
 **Phase 3 preconditions: settled (2026-11-26).** D-13 ([ADR 0013](decisions/0013-mcp-sdk-and-surface.md)) and D-26 ([ADR 0014](decisions/0014-python-package.md)) are accepted; D-26 was the last open one. Phase 3 code can start, tests first. The D6 code review and human engineering review are bulk review gates after Phase 4 and before 0.1; they do not block Phase 3 coding.
 
 - **D-13 accepted** (2026-11-26, [ADR 0013](decisions/0013-mcp-sdk-and-surface.md)): `rmcp` `=3.12.0`, stdio, both protocol eras. The MCP server is done only
@@ -94,7 +97,11 @@ Beam maximum shear and moment: **deferred from 0.1** (D-25, [ADR 0012](decisions
 
 ## Phase 4 — Drawing model and DXF → 0.1
 
+**Current phase (from 2026-11-27).**
+
 1. Evaluate existing Rust DXF crates vs own reader; decide (new decision record).
+   **Proposed (2026-11-27):** [DXF_READER_PROPOSAL.md](DXF_READER_PROPOSAL.md) (D-27): own reader; `dxf` 0.6.2 as a test-only
+   cross-check. Awaiting the maintainer.
 2. `civkit-drawing`: neutral model, DXF import, limits.
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).

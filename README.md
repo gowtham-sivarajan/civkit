@@ -2,11 +2,14 @@
 
 **Engineering tools that work where engineers work.**
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 14:06 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 >
-> **Status:** Phase 2 (units, geometry, calculations) is complete: five calculation families, seven registered
-> calculations, all with reference cases. Next is Phase 3 (Python and MCP). There is no release yet (0.1 comes after
-> Phase 4). Exit criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
+> **Status:** Phase 3 (Python and MCP) is complete: tag `phase-3-done` on `a94bf3f`, with CI and the Python workflow
+> green. The engine has seven registered calculations in five families, each tested against published reference
+> cases. They can be used from Rust, from the `civkit` Python package and from the `civkit-mcp` server for AI
+> assistants, with identical results (both are built from source for now; nothing is on PyPI or crates.io yet).
+> **Current: Phase 4** (drawing model and DXF), which completes release 0.1. There is no release yet. Exit
+> criteria: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md); current state:
 > [planning/AI_HANDOVER.md](planning/AI_HANDOVER.md).
 
 CivKit is a free, open-source, offline-first engineering toolkit. It brings reliable civil-engineering
@@ -77,16 +80,17 @@ CivKit/
 ├── .github/         CI workflows, Dependabot, issue forms, pull request template
 ├── docs/            stable design documents
 ├── planning/        plans, decisions, handover (decision records in planning/decisions/)
-├── Cargo.toml       Rust workspace (Phase 1)
+├── Cargo.toml       Rust workspace
 ├── crates/          the engine — never depends on anything outside crates/
-├── tests/           reference cases (tests/reference/), DXF fixtures (tests/fixtures/dxf/)
-├── tools/           repository scripts (dependency-rule check)
+├── bindings/        python/ — the `civkit` Python package (PyO3; its own Cargo workspace)
+├── integrations/    mcp/ — the MCP server   jupyter/ — example notebooks
+├── tests/           reference cases (tests/reference/), Rust/Python/MCP parity (tests/parity/),
+│                    DXF fixtures (tests/fixtures/dxf/)
+├── tools/           repository scripts: dependency rule, calculation-page generator
 │
 │   created in later phases:
-├── bindings/        python/
-├── integrations/    mcp/  autocad/  civil3d/  matlab/  jupyter/
-├── apps/            desktop/
-└── (parity tests join tests/ in Phase 3)
+├── integrations/    autocad/  civil3d/  matlab/
+└── apps/            desktop/
 ```
 
 Details and the dependency rule: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
