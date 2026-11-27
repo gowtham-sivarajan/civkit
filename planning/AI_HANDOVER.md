@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 18:23 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -10,9 +10,10 @@
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
 **Current phase:** **Phase 4** (drawing model and DXF → release 0.1). Phase 3 is complete (`phase-3-done` on
 `a94bf3f`). Phase 4 task 1 is decided (D-27, ADR 0015); **task 2, the DXF reader, is in `main`** (`241b44c`, CI #23,
-Python #8 and Fuzz #1 green), with review follow-ups (fallible hash index, allocation-refusal test, stricter X2)
-awaiting their CI run. Next: the task 3 proposal. D6 and the engineering review remain open for the bulk review
-before 0.1.
+Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`4e41e7a`, `c740fd4`: CI #25, Python
+#10 and Fuzz #3 green). **Task 3 decided: D-28, [ADR 0016](decisions/0016-drawing-analysis.md)** (all questions as
+recommended); next is its code, tests first. Fuzzing: 30 min
+of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -163,8 +164,10 @@ git status                # confirm planning/ui-concepts/ is not staged
    a refused allocation) replaced by the fallible `BIndex`; a real allocation-refusal test; X2 tightened (layer,
    handle, extrusion and every field per entity, hatch edges in full, `$DWGCODEPAGE`, layer state, uninterpreted
    counts by type and layer both ways, a synthetic drawing always run, the corpus required in the fuzz job).
-   **Then: the task 3 proposal** (block expansion within one combined budget, transformations and OCS, lengths and
-   areas, the unit check, schedules, geometry notes and "not supported in 0.1"), before its code. The 8-hour fuzz
+   **Task 3 decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md), every question Q-A … Q-I of
+   [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Next: the code, tests
+   first**, in the order of the proposal's §13: `Affine2`, `region_area` and the sweep prefilter in `civkit-geometry`
+   (A3, A7); expansion and quantities (A1, A4–A6); the unit check (A2); schedules; Python and MCP (A8); fuzz (A9). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -180,6 +183,27 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 18:50 IST — D-28 accepted (ADR 0016): drawing analysis *(Claude Sonnet 5.5)*
+- The maintainer accepted every question Q-A … Q-I of the proposal as recommended.
+- Recorded: ADR 0016 with gates A1–A9; DECISIONS (D-28 Accepted, ADR index); the proposal's status and decision
+  column; GEOMETRY.md §11 rewritten (Affine2, the insert formula, extrusion, ARC start = end, regions) and §8.7's
+  sweep prefilter; API_DESIGN §5 (unknown warning codes accepted, `NOT_SUPPORTED`, drawing codes) and a new §13
+  (the drawing report); ADR 0010's Phase 4 items marked settled; IMPLEMENTATION_PLAN; ACCEPTANCE_CRITERIA (A1–A9).
+- No code yet. Correction to the proposal: the US survey foot exists in `civkit-units` as `ft_us`.
+
+### 2026-11-27 18:45 IST — Fuzz #3 green; task 3 proposal (D-28) written *(Claude Sonnet 5.5)*
+- Fuzz #3 on `c740fd4`: fuzzing 600 s green, X2 report step green, its summary empty (maintainer). FUZZ_LOG: 30 min
+  of 8 h. CI #25 and Python #10 green on the same commit.
+- [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md), D-28 registered as Proposed. Main points: a separate
+  versioned drawing report (not a registry calculation), MCP tool only with `--drawing-root`; expansion streams
+  placements over per-block cached measures, everything from the shared budget, plus work limits; `Affine2` and
+  OCS rules in `civkit-geometry`; ARC start = end as a zero-sweep arc; even-odd `region_area` for multi-path
+  hatches; P1–P4 as documented heuristics; CSV with formula-injection neutralising; one `NOT_SUPPORTED` code,
+  `incomplete` totals, the unknown-warning-codes rule.
+- Found while drafting: `polygon_area`'s self-intersection check tests all edge pairs and allocates ordinary `Vec`s.
+  With the reader's 1 000 000-vertex cap that is about 5 × 10¹¹ pair tests on one ring, so the proposal adds a
+  bounding-box sweep prefilter, a validity work limit, and a per-vertex budget reservation around geometry calls.
 
 ### 2026-11-27 18:19 IST — X2 amended to report-and-triage for the fuzz corpus; triage pass 1 *(Claude Sonnet 5.5)*
 - **Maintainer's decision:** report and triage. X2 strict for the fixtures and a curated well-formed corpus; fuzz-corpus

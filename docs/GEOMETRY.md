@@ -1,6 +1,6 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-25 19:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status: Accepted** (maintainer, 2026-11-25), after the review in
 > [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
@@ -264,7 +264,10 @@ no accuracy.
 
 - A bulged edge whose sagitta is at most ulp(M) is checked as its chord **(impl.)**. Below the representation
   limit, the arc and its chord cannot be told apart.
-- Every ring edge is still tested; the O(n²) cost is adequate for 0.1 sizes.
+- Every ring edge is still tested. **(D-28, Phase 4)** A sweep over the edges' bounding boxes, each inflated by ε,
+  is a prefilter: only pairs whose boxes overlap are tested exactly. A pair whose boxes do not overlap cannot
+  conflict, so results are identical to testing all pairs. The worst case stays O(n²); callers that need a time
+  bound (drawing analysis) pass a limit on pair tests, and exceeding it is reported, not a validity result.
 
 **Order of evaluation for a polygon:**
 
@@ -346,21 +349,40 @@ so nothing is rounded away (D8).
   8.1, before the other checks.
 - It is also an error when the ring is degenerate (8.6), not simple (8.7), or has undefined orientation.
 
-## 11. Conventions fixed now for Phase 4 (not implemented in 2B)
+## 11. Transformations and OCS (Phase 4, D-28)
 
-These are recorded so the drawing layer cannot drift from the geometry conventions.
+Fixed in 2B so the drawing layer could not drift; specified in full by [ADR 0016](../planning/decisions/0016-drawing-analysis.md)
+(D-28). Implemented in `civkit-geometry` in Phase 4.
 
-- **Block inserts:** each insert applies a 2D affine transform: scale (sx, sy), rotation θ (counter-clockwise),
-  translation, plus `MINSERT` arrays.
-  - A transform whose linear part has a negative determinant reverses orientation. That is a mirror, for example
-    sx < 0 as in fixture F5. Bulge signs are negated, and signed areas change sign.
-  - Lengths scale with the transform. A non-uniform scale turns a circular arc into an elliptical one, so arcs
-    under non-uniform scale are reported as not supported in 0.1, never approximated silently.
-- **Extrusion (OCS):** a planar entity with extrusion (0, 0, −1), common after mirroring, maps to world
-  coordinates by negating x (Autodesk arbitrary axis algorithm). Like a mirror, it reverses orientation and bulge
-  signs. Other extrusions are not plan entities and are reported.
-- **DXF ARC** (always counter-clockwise from start to end angle): Δ = (end − start) mod 2π. The case start = end
-  is defined in Phase 4.
+- **`Affine2`** `{a, b, c, d, tx, ty}` maps (x, y) to (a·x + b·y + tx, c·x + d·y + ty). It has composition, the
+  determinant, and a similarity test: the linear part's singular values σ₁ ≥ σ₂ satisfy σ₁ − σ₂ ≤ 10⁻⁹·σ₁. Under a
+  similarity, the scale is s = √|det|.
+- **Orientation:** a transform with det < 0 is a mirror. It negates bulges, and signed areas change sign. det = 0
+  is degenerate and is not applied (the drawing layer reports it).
+- **Block inserts:** a block point p is placed by `p' = P + R(θ)·((c·Δc, r·Δr) + S(sx, sy)·(p − B))`, where:
+  - B is the block base point and P the insertion point;
+  - θ is the rotation, counter-clockwise;
+  - Δc and Δr are the MINSERT column and row spacing, unscaled and along the rotated axes;
+  - c and r are the column and row indices (0 for a single INSERT).
+
+  Nested inserts compose, the outermost applied last.
+- **Lengths and areas under a transform:**
+  - area scales by |det| for any affine map;
+  - length scales by s under a similarity;
+  - under a non-uniform scale, straight segments are transformed and measured, but a circular arc would become
+    elliptical, so arcs, circles and bulged segments are **not supported in 0.1**, never approximated.
+- **Extrusion (OCS):**
+  - (0, 0, 1), within 10⁻⁹, is the plan itself.
+  - (0, 0, −1), common after mirroring, maps to world coordinates by negating x (Autodesk arbitrary axis
+    algorithm). Like a mirror, it reverses orientation and bulge signs.
+  - Any other extrusion is not a plan entity, and the drawing layer reports it.
+  - z (elevation, sz) is not used: quantities are plan quantities.
+- **DXF ARC** (always counter-clockwise from start to end angle): Δ = (end − start) mod 360°, computed exactly in
+  degrees as stated, then converted. Δ = 0 is a **zero-sweep arc**: length 0 with the note of §8.8, not a full
+  circle.
+- **Regions (`region_area`):** rings combined by even-odd nesting. A ring at nesting depth k counts with sign (−1)ᵏ.
+  Rings that cross or touch each other (within ε, by the relations of §8.7) are not supported. A ring's depth is
+  found by testing a point of it against the other rings.
 
 ## 12. How 2B is verified
 

@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 00:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -158,6 +158,22 @@ not about a list element); messages use the 1-based item number for people:
 
 **Warnings** do not stop it. Each has a `code`, `message` and `level` (`info` | `caution`). Typical:
 `OUTSIDE_VALIDITY_RANGE` (input outside the method's stated range), `ROUNDING_SENSITIVE`.
+
+**Clients accept unknown warning codes** (D-28) and treat an unknown code as level `caution`. A new warning code is
+therefore a compatible addition (§11).
+
+**`NOT_SUPPORTED`** (D-28): something 0.1 does not handle. It carries a `feature` string (for example `"curve under
+non-uniform scale"`). In a drawing report (§13) it is a warning and the rest of the drawing is still analysed;
+calculations may use it later as an error with the same code.
+
+**Drawing report codes** (D-28, §13).
+- Errors: `DRAWING_UNREADABLE` (the file cannot be read; the message gives the line) and `DRAWING_LIMIT` (a limit
+  was reached; the message names it).
+- Warnings: `DRAWING_UNITS_NOT_STATED`, `DRAWING_UNITS_CONFLICT`, `DRAWING_BLOCK_SCALE_MISMATCH`,
+  `DRAWING_SIZE_OUTLIER`, `DRAWING_DIMENSION_OVERRIDE`, `DRAWING_GEOMETRY_INVALID`, `DRAWING_GEOMETRY_NOTE`,
+  `DRAWING_BLOCK_MISSING`, `DRAWING_BLOCK_CYCLE`, `DRAWING_ZERO_SCALE`, `DRAWING_TEXT_NOT_DECODED`,
+  `DRAWING_HATCH_NOT_READ`, `DRAWING_REPORT_TRUNCATED`, plus `NOT_SUPPORTED` and `ROUNDING_SENSITIVE`.
+- Drawing warnings may also carry `count`, `layer`, `handles` (at most 20), `feature` and `note`.
 
 **Resolved: validity breaches.**
 - A mathematically invalid input is **always** an error (`OUT_OF_DOMAIN`).
@@ -489,3 +505,31 @@ Request processing:
 | 7 | Python quantities | String, tuple or `civkit.Q`; bare numbers only for dimensionless | §8 |
 | 8 | FFI ABI | `civkit_abi_version()` integer, checked at load | §9 |
 | 9 | MCP tool surface | `--tools` option, default `both`; revisit at ~40 calculations | §10 |
+
+## 13. Drawing report (D-28, [ADR 0016](../planning/decisions/0016-drawing-analysis.md))
+
+Drawing analysis is not a calculation: its input is a file and its output a report of variable size. It is one
+versioned report, `drawing.analyze` (1.0.0, with the SemVer rules of §4 and §11), not listed by `civkit_list`. The
+full specification is [DRAWING_ANALYSIS_PROPOSAL.md](../planning/DRAWING_ANALYSIS_PROPOSAL.md) §3–§10.
+
+- **Rust:** `civkit_drawing::analyze(&Drawing, &Budget, &AnalysisOptions)`, and `analyze_dxf(bytes, options)`, which
+  reads and analyses in one call. Both return a `Report` with `to_json()` and `to_csv()`.
+- **Python:** `civkit.drawing.analyze(path_or_bytes, *, detail="layer")` returns a `dict`, and
+  `civkit.drawing.schedule_csv(...)` returns text. Neither writes a file.
+- **MCP:** one read-only tool, `drawing.analyze` (`path`, `detail`). It exists only when the server is started with at
+  least one `--drawing-root <dir>`. Paths are canonicalised and must lie inside a root, otherwise `INVALID_VALUE` on
+  `path`. Drawing-sourced strings appear only in fields documented as drawing text, and are data.
+- **Content:**
+  - the drawing's header and units (`stated: false` when not stated);
+  - one row per layer, with separate kinds (never summed together), totals in drawing units and, when the units are
+    known, in m and m², and `incomplete` and `omitted`;
+  - text and dimensions;
+  - entities not interpreted;
+  - warnings (§5);
+  - at `detail = "entity"`, a bounded list of placed entities.
+- **CSV schedule:**
+  - one row per layer and kind;
+  - RFC 4180, UTF-8 without BOM, full precision;
+  - a cell starting with `=`, `+`, `-`, `@`, tab or CR is prefixed with `'` (formula injection);
+  - columns `report_version` and `civkit_version` (§3: saved output keeps its version).
+- Every report states its version and the CivKit version (§11).

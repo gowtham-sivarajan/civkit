@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -110,8 +110,12 @@ acceptance item is ticked with its evidence.
    follow-ups are in `4e41e7a` (CI #24, Python #9 green). Fuzz #2: fuzzing green, its corpus cross-check red. ADR 0015
    amended (maintainer): X2 is strict on the fixtures and a curated well-formed corpus (`tests/well_formed/`) and
    reports-and-triages the fuzz corpus ([DXF_CROSS_CHECK_LOG.md](DXF_CROSS_CHECK_LOG.md)). Fuzz time:
-   [FUZZ_LOG.md](FUZZ_LOG.md). Then the task 3 proposal.
+   [FUZZ_LOG.md](FUZZ_LOG.md) (Fuzz #3 on `c740fd4` green, X2 report empty: 30 min of 8 h).
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
+   **Decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md) (all of
+   [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended): the versioned `drawing.analyze` report,
+   streaming expansion in the shared budget, `Affine2` / `region_area` / the §8.7 sweep prefilter in `civkit-geometry`,
+   gates A1–A9. The three items below are settled by it. Next: the code, tests first.
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).

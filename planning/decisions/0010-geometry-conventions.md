@@ -1,6 +1,6 @@
 # ADR 0010 — Geometry conventions for 0.1
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-25 18:10 IST: "everything is accepted"). The items under
   "Settled during implementation" were added afterwards and **confirmed** by the maintainer on 2026-11-25
@@ -77,5 +77,8 @@ Writing the code exposed points the accepted text did not settle. Each is marked
   - OCS handling (GEOMETRY.md §11);
   - the contract representation of geometry notes, plus the "unknown warning codes" rule;
   - a code for "not supported in 0.1".
+
+  *Settled 2026-11-27 by D-28 ([ADR 0016](0016-drawing-analysis.md)): GEOMETRY §11 rewritten, the §8.7 sweep
+  prefilter, `DRAWING_GEOMETRY_NOTE`, `NOT_SUPPORTED` and the unknown-codes rule in API_DESIGN §5.*
 - 2C note: traverse must decide for itself when a misclosure counts as zero before it asks for a misclosure
   direction (GEOMETRY.md §7).

@@ -1,6 +1,6 @@
 # Decisions
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of HANDOFF.md) · last edited 2026-11-27 18:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 The register of every project decision. Status flow: **Proposed → Accepted** (or Rejected / Superseded).
 Every Accepted decision gets a short record in [`decisions/`](decisions/) (`NNNN-title.md`, template at the end).
@@ -48,6 +48,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | D-25 | P1 | Beam maximum shear and moment in 0.1? | **Deferred from 0.1.** The beam ships with reactions, deflection and end slope; the search for an open worked example continues; they return as new outputs (a pure addition) in a later release. | **Accepted** 2026-11-26 · [ADR 0012](decisions/0012-validity-basis-and-beam-scope.md) |
 | D-26 | P1 | Python package: versions, ABI, wheels, API layer? | CPython 3.11–3.15; PyO3 `=0.30.1` with `abi3-py311`; maturin 1.16.0; five abi3 wheels (manylinux2014 on Linux); thin Rust layer over `call_json`; `CivKitError`; no network calls or intentional writes (bytecode caches excluded); gates P1–P5. | **Accepted** 2026-11-26 · [ADR 0014](decisions/0014-python-package.md) |
 | D-27 | P0 | DXF reader: own reader or an existing crate? | CivKit's own zero-dependency reader in `civkit-drawing`; `undxf` =0.11.0 as a test-only cross-check (MINSERT arrays checked by fixture values); ASCII R12–R2018 scope; a 512 MiB heap budget every allocation reserves from, bounding reader-requested heap (not process memory), shared with expansion; fuzzing; gates X1–X6. | **Accepted** 2026-11-27 · [ADR 0015](decisions/0015-dxf-reader.md) |
+| D-28 | P0 | Drawing analysis: interface, expansion within the shared budget, transformations and OCS, quantities, units, unit check, schedules, warnings and unsupported geometry? | A separate versioned report `drawing.analyze` (Rust, Python, MCP with `--drawing-root`); streaming expansion over per-block cached measures, all from the shared budget, with work limits; `Affine2` and OCS rules; kinds never summed; even-odd `region_area`; P1–P4 as documented heuristics; JSON report and CSV schedule; `NOT_SUPPORTED`, `incomplete` totals, unknown warning codes accepted; gates A1–A9. | **Accepted** 2026-11-27 · [ADR 0016](decisions/0016-drawing-analysis.md) |
 | D-21 | P2 | Accept SI prefixes generally (`mN`, `µm`) and common Unicode notation (`m²`, `s⁻¹`) in unit strings? | Maintainer would eventually support both. **Not in 0.1**: [API_DESIGN.md §7.1](../docs/API_DESIGN.md) lists exactly what 0.1 accepts. Needs a grammar extension that stays unambiguous (e.g. `mm` vs milli-metre, `m` vs milli). | Proposed (after 0.1) |
 
 ## Decision record index
@@ -69,6 +70,7 @@ Priority: **P0** = must be decided to leave Phase 0 · **P1** = before the relev
 | [0013](decisions/0013-mcp-sdk-and-surface.md) | MCP SDK, pinned version and how the contract maps onto MCP | D-13 |
 | [0014](decisions/0014-python-package.md) | Python package: versions, wheels and the binding layer | D-26 |
 | [0015](decisions/0015-dxf-reader.md) | The DXF reader: CivKit's own, with a reserved heap budget | D-27 |
+| [0016](decisions/0016-drawing-analysis.md) | Drawing analysis: a versioned report, streaming expansion in the shared budget | D-28 |
 
 ## Template for a new decision record
 
