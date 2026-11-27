@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:38 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:38 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities by effective layer (D-28 / ADR 0016 §6–§7; gates A1, A6, A5 in part).
 //!
@@ -409,9 +409,23 @@ fn invalid_and_non_plan_geometry_is_reported() {
     close_rel(m.circle_area, 4.0 * PI, 1e-15, "mirrored-OCS circle");
 }
 
-/// HATCH: a polyline path with a hole (10 × 10 minus 2 × 2 = 96); an edge path of lines and a
-/// counter-clockwise arc (the top edge a semicircle outward: 100 + 25π/2); the same with the arc
-/// clockwise, which 0.1 does not read: omitted and named.
+/// HATCH: a polyline path with a hole (10 × 10 minus 2 × 2 = 96); edge paths of lines and arcs.
+///
+/// Arc edges: DXF states a clockwise arc (group 73 = 0) by complementary angles, so raw start s and
+/// end e mean the arc runs clockwise from angle −s to angle −e (ezdxf `ArcEdge.load_tags`: stored as
+/// the counter-clockwise arc from 360 − e to 360 − s, traversed backwards). It becomes a negative
+/// bulge (D-28 §6).
+/// - E: square path whose top edge runs from (10, 10) to (0, 10) about (5, 10), raw 0 → 180,
+///   counter-clockwise: through (5, 15), outward: 100 + 25π/2.
+/// - C: the same square, its top edge clockwise about (5, 15), radius 5√2, raw 45 → 135: from −45, the
+///   point (10, 10), to −135, the point (0, 10), through (5, 15 − 5√2), inward. The segment cut off is
+///   r²/2 (θ − sin θ) = 25 (π/2 − 1), so the area is 125 − 25π/2.
+/// - Q: (0, 0) → (0, 10), then clockwise about (0, 0), radius 10, raw 270 → 0: from −270 ≡ 90, the
+///   point (0, 10), to −0, the point (10, 0), through (5√2, 5√2); then back to (0, 0). A quarter disc:
+///   25π.
+///
+/// Read any other way (counter-clockwise from s to e, or clockwise from s to e), C's arc would end at
+/// (10, 20) and (0, 20) and Q's at (0, −10): the paths would not join.
 #[test]
 fn hatch_areas() {
     let poly_path = |pts: &[(f64, f64)]| {
@@ -428,11 +442,54 @@ fn hatch_areas() {
             paths.concat()
         )
     };
-    let edges = |ccw: i32| {
-        format!(
-            "92\n1\n93\n4\n72\n1\n10\n0\n20\n0\n11\n10\n21\n0\n72\n1\n10\n10\n20\n0\n11\n10\n21\n10\n\
-             72\n2\n10\n5\n20\n10\n40\n5\n50\n0\n51\n180\n73\n{ccw}\n72\n1\n10\n0\n20\n10\n11\n0\n21\n0\n97\n0\n"
+    let pairs = |p: &[String]| p.iter().map(|s| format!("{s}\n")).collect::<String>();
+    let line = |a: (f64, f64), b: (f64, f64)| {
+        pairs(
+            &[
+                "72",
+                "1",
+                "10",
+                &a.0.to_string(),
+                "20",
+                &a.1.to_string(),
+                "11",
+                &b.0.to_string(),
+                "21",
+                &b.1.to_string(),
+            ]
+            .map(str::to_owned),
         )
+    };
+    let arc = |c: (f64, f64), r: f64, s: f64, e: f64, ccw: i32| {
+        pairs(
+            &[
+                "72",
+                "2",
+                "10",
+                &c.0.to_string(),
+                "20",
+                &c.1.to_string(),
+                "40",
+                &r.to_string(),
+                "50",
+                &s.to_string(),
+                "51",
+                &e.to_string(),
+                "73",
+                &ccw.to_string(),
+            ]
+            .map(str::to_owned),
+        )
+    };
+    let edge_path =
+        |edges: &[String]| format!("92\n1\n93\n{}\n{}97\n0\n", edges.len(), edges.concat());
+    let square_with_top = |top: String| {
+        edge_path(&[
+            line((0.0, 0.0), (10.0, 0.0)),
+            line((10.0, 0.0), (10.0, 10.0)),
+            top,
+            line((0.0, 10.0), (0.0, 0.0)),
+        ])
     };
     let d = drawing(
         &metres(),
@@ -444,8 +501,29 @@ fn hatch_areas() {
                 poly_path(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]),
                 poly_path(&[(2.0, 2.0), (4.0, 2.0), (4.0, 4.0), (2.0, 4.0)]),
             ],
-        ) + &hatch("E", "B2", &[edges(1)])
-            + &hatch("C", "B3", &[edges(0)])),
+        ) + &hatch(
+            "E",
+            "B2",
+            &[square_with_top(arc((5.0, 10.0), 5.0, 0.0, 180.0, 1))],
+        ) + &hatch(
+            "C",
+            "B3",
+            &[square_with_top(arc(
+                (5.0, 15.0),
+                50.0_f64.sqrt(),
+                45.0,
+                135.0,
+                0,
+            ))],
+        ) + &hatch(
+            "Q",
+            "B4",
+            &[edge_path(&[
+                line((0.0, 0.0), (0.0, 10.0)),
+                arc((0.0, 0.0), 10.0, 270.0, 0.0, 0),
+                line((10.0, 0.0), (0.0, 0.0)),
+            ])],
+        )),
     );
     let q = measured(&d);
     let h = layer(&d, &q, "H");
@@ -455,16 +533,26 @@ fn hatch_areas() {
         layer(&d, &q, "E").hatch_area,
         100.0 + 25.0 * PI / 2.0,
         1e-14,
-        "edge path",
+        "counter-clockwise",
     );
-    let c = layer(&d, &q, "C");
-    assert_eq!((c.counts.hatch, c.omitted), (0, 1));
+    close_rel(
+        layer(&d, &q, "C").hatch_area,
+        125.0 - 25.0 * PI / 2.0,
+        1e-14,
+        "clockwise, inward",
+    );
+    close_rel(
+        layer(&d, &q, "Q").hatch_area,
+        25.0 * PI,
+        1e-14,
+        "clockwise quarter disc",
+    );
     assert!(
-        issues(&q, "NOT_SUPPORTED")
-            .iter()
-            .any(|i| i.detail == Detail::Feature("hatch clockwise arc edge")
-                && i.handles() == [0xB3])
+        q.layers().iter().all(|l| !l.incomplete()),
+        "{:?}",
+        q.issues()
     );
+    assert!(issues(&q, "NOT_SUPPORTED").is_empty());
 }
 
 /// Never silently omitted: an uninterpreted entity type in model space or in a placed block makes

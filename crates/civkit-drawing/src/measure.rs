@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 20:52 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Quantities by effective layer (D-28 / ADR 0016 §6, §7, §10).
 //!
@@ -41,7 +41,7 @@ impl Default for AnalysisOptions {
     fn default() -> Self {
         Self {
             expand: ExpandLimits::default(),
-            max_vertex_work: 200_000_000,
+            max_vertex_work: 100_000_000,
             max_validity_pairs: 100_000_000,
             max_handles: 20,
             max_issues: 1000,
@@ -498,28 +498,33 @@ fn path_ring(boundary: &Boundary) -> Result<Vec<GVertex>, Fail> {
                         ends.push(((start.x, start.y), (end.x, end.y)));
                     }
                     Edge::Arc {
-                        counter_clockwise: false,
-                        ..
-                    } => return Err(Fail::NotSupported("hatch clockwise arc edge")),
-                    Edge::Arc {
                         center,
                         radius,
                         start_deg,
                         end_deg,
-                        ..
+                        counter_clockwise,
                     } => {
+                        // The sweep's size is (e − s) mod 360 either way (360 when the ends differ
+                        // by whole turns, a full circle).
                         let mut sweep = (end_deg - start_deg).rem_euclid(360.0);
                         if sweep == 0.0 && end_deg - start_deg != 0.0 {
                             sweep = 360.0;
                         }
+                        // A clockwise edge (73 = 0) states complementary angles: it runs clockwise
+                        // from −s to −e (D-28 §6, as ezdxf's `ArcEdge.load_tags` reads it).
+                        let (from, to, turn) = if counter_clockwise {
+                            (start_deg, end_deg, 1.0)
+                        } else {
+                            (-start_deg, -end_deg, -1.0)
+                        };
                         let at = |deg: f64| {
                             let (s, c) = deg.to_radians().sin_cos();
                             (center.x + radius * c, center.y + radius * s)
                         };
-                        // Two halves, so a full circle (360°) is representable: bulge tan(Δ/8) each.
-                        let b = (sweep.to_radians() / 8.0).tan();
-                        let (p0, pm, p1) =
-                            (at(start_deg), at(start_deg + sweep / 2.0), at(end_deg));
+                        // Two halves, so a full circle (360°) is representable: bulge ±tan(Δ/8)
+                        // each, negative when clockwise.
+                        let b = turn * (sweep.to_radians() / 8.0).tan();
+                        let (p0, pm, p1) = (at(from), at(from + turn * sweep / 2.0), at(to));
                         ring.push(GVertex::new(p0.0, p0.1, b));
                         ring.push(GVertex::new(pm.0, pm.1, b));
                         ends.push((p0, p1));
@@ -1400,8 +1405,14 @@ enum Override {
     Other,
 }
 
-/// Reads an override, removing MTEXT formatting: braces, `\X…;` codes and the one-letter codes
-/// `\P`, `\L`, `\O`, `\K`, `\X`, `\~` (and their lower case).
+/// Reads an override as MTEXT (Autodesk's formatting codes):
+/// - `\X` splits dimension text; what follows it goes below the dimension line, so only the part
+///   before it is the value;
+/// - `\\`, `\{` and `\}` are a literal backslash and braces; other braces group formatting and go;
+/// - the one-letter codes `\P` (paragraph), `\L`, `\l`, `\O`, `\o`, `\K`, `\k` (underline, overline,
+///   strike-through on and off) go; `\~` is a space;
+/// - every other code (`\A`, `\C`, `\F`, `\f`, `\H`, `\Q`, `\S`, `\T`, `\W`, …) has a payload ending at
+///   `;`, and the code and its payload go.
 fn read_override(text: &str) -> Override {
     if text.trim().is_empty() || text.contains("<>") {
         return Override::Measured;
@@ -1412,7 +1423,10 @@ fn read_override(text: &str) -> Override {
         match ch {
             '{' | '}' => {}
             '\\' => match chars.next() {
-                Some('P' | 'p' | 'L' | 'l' | 'O' | 'o' | 'K' | 'k' | 'X' | 'x' | '~') | None => {}
+                Some('X') | None => break,
+                Some(c @ ('\\' | '{' | '}')) => plain.push(c),
+                Some('~') => plain.push(' '),
+                Some('P' | 'p' | 'L' | 'l' | 'O' | 'o' | 'K' | 'k') => {}
                 Some(_) => {
                     for c in chars.by_ref() {
                         if c == ';' {

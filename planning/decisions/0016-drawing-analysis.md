@@ -1,10 +1,10 @@
 # ADR 0016 — Drawing analysis: a versioned report, streaming expansion in the shared budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 18:50 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: every question Q-A … Q-I of
   [DRAWING_ANALYSIS_PROPOSAL.md](../DRAWING_ANALYSIS_PROPOSAL.md) as recommended). Details settled while implementing
-  are listed below, **awaiting the maintainer's confirmation**.
+  are listed below: items 1, 2 and 5 confirmed (2026-11-27); 4 and 6 revised after review, awaiting confirmation.
 - **Date:** 2026-11-27
 - **Decision ID:** D-28
 - **Relation to earlier decisions:**
@@ -115,34 +115,64 @@ The proposal's §3–§11 are the specification. In summary:
 | **A8 — parity and safety** | Rust, Python and MCP give identical JSON for every fixture. MCP refuses paths outside the roots, including through symlinks. CSV formula injection is neutralised |
 | **A9 — fuzzing** | The fuzz target runs read + analyse under the default budget. Its time counts toward ADR 0015's 8 hours |
 
-## Settled during implementation (awaiting confirmation)
+## Settled during implementation
 
 Writing the code exposed points the accepted text did not settle. Each is implemented and tested; none changes a
-decision above.
+decision above. The maintainer reviewed them on 2026-11-27: items 1, 2 and 5 **confirmed**; item 3 resolved by
+implementing the accepted behaviour; items 4 and 6 revised as below and **awaiting confirmation**.
 
-1. **Where uninterpreted entities count** (refines §10 "make their layer's row incomplete"). The reader now records
-   where each one is: model space, paper space, or a block definition.
+1. **Where uninterpreted entities count** (refines §10 "make their layer's row incomplete"). *Confirmed.* The
+   reader records where each one is: model space, paper space, or a block definition.
    - In model space, or in a block that is placed, it makes the (effective) layer incomplete, once per placement.
    - In paper space, or in a block never placed (a dimension's or hatch's own block, an unused definition), it is
      listed at level info and leaves totals complete. Otherwise every dimensioned drawing (MTEXT and SOLID in the
      dimension's block) and every layout (VIEWPORT) would show false "incomplete" totals.
    - Types that carry no length or area (ATTDEF, ATTRIB, MTEXT, POINT, VIEWPORT) are listed, never "incomplete".
 2. **LINE and DIMENSION points are world (block) coordinates** in DXF, so their extrusion does not move them; the
-   other plan entities go through their OCS (`Placed::plan_transform`).
-3. **Hatch edge paths:**
-   - consecutive edges must join within ε (GEOMETRY §5 over the path's points); otherwise `NOT_SUPPORTED`
-     (`feature: "hatch boundary not joined"`);
-   - clockwise arc edges (group 73 = 0) are `NOT_SUPPORTED` (`"hatch clockwise arc edge"`) in 0.1: how their angles
-     are stated differs between writers, and no fixture has one to check against;
-   - an arc edge becomes two half-arcs, so a full circle (360°) is representable.
-4. **Hard and soft limits added:** 200 000 000 vertices measured or transformed (hard, `DRAWING_LIMIT` "vertices"),
-   and the size check (P3) keeps at most 1 000 000 areas (beyond, an info `NOT_SUPPORTED` "size check sample
-   limit").
+   other plan entities go through their OCS (`Placed::plan_transform`). *Confirmed.*
+3. **Hatch edge paths.** *Resolved: the accepted behaviour (proposal §6, "negative when clockwise") is
+   implemented; this is not an amendment.*
+   - A clockwise arc edge (group 73 = 0) states complementary angles: raw start s and end e mean the arc runs
+     clockwise from angle −s to angle −e (as ezdxf's `ArcEdge.load_tags` reads it: the counter-clockwise arc from
+     360 − e to 360 − s, traversed backwards). It becomes a negative bulge. Tests: a clockwise inward arc
+     (125 − 25π/2) and a clockwise quarter disc (25π), whose raw angles read any other way would not join the path.
+   - Consecutive edges must join within ε (GEOMETRY §5 over the path's points); otherwise `NOT_SUPPORTED`
+     (`feature: "hatch boundary not joined"`).
+   - An arc edge becomes two half-arcs, so a full circle (360°) is representable.
+4. **Hard and soft limits added.** *Revised after review; awaiting confirmation.*
+   - **Vertex work, 100 000 000 (hard, `DRAWING_LIMIT` "vertices"; first proposed as 200 000 000).** It counts
+     vertices measured or transformed: a polyline's or hatch's vertices when first measured in its own coordinates
+     (once per block entity, since measures are cached), each vertex again when re-measured under a non-uniform
+     scale, 2 per LINE, and 1 per cached reuse.
+   - **Timing evidence** (`crates/civkit-drawing/tests/timing.rs`, release build, Intel Core Ultra 7 258V,
+     2026-11-27; run with `cargo test --release -p civkit-drawing --test timing -- --ignored --nocapture`):
+
+     | Counter | Worst case per unit | Default | Worst time |
+     |---|---|---|---|
+     | Placements (§4.4) | 65.8 ns (MINSERT cells of a one-line block) | 50 000 000 | ≈ 3.3 s |
+     | Validity pairs (§4.4) | 21.8 ns (every pair tested exactly: parallel diagonals) | 100 000 000 | ≈ 2.2 s |
+     | Vertex work | 38.1 ns (re-measure under a non-uniform scale) | 100 000 000 | ≈ 3.8 s |
+
+     The costliest unit, a first local measure (260 ns per vertex for a closed ring, validity included), is not
+     multiplied by placements (measures are cached), so it is bounded by the input limit, about 27 000 000
+     vertices in 256 MiB (≈ 7 s, the same order as reading such a file), not by this limit. At 200 000 000 the
+     re-measure case would have taken ≈ 7.6 s; 100 000 000 keeps all three limits to a few seconds.
+   - The size check (P3) keeps at most 1 000 000 areas; beyond, an info `NOT_SUPPORTED` "size check sample limit".
 5. **Placement factor:** under any non-degenerate placement, area is the local area × |det|; under a similarity,
    lengths are the local length × s. Straight-edged geometry under a non-uniform scale is re-measured from its
-   placed vertices.
-6. **P4 formatting:** braces, `\X…;` codes and the one-letter codes `\P \L \O \K \X \~` are removed before the
-   text is read as a number; `DIMLFAC` is not read (as §8 says).
+   placed vertices. *Confirmed.*
+6. **P4 formatting** (Autodesk's MTEXT codes). *Revised after review; awaiting confirmation.* Before the override is
+   read as a number:
+   - `\X` splits dimension text (what follows goes below the dimension line), so only the part before it is read;
+   - `\\`, `\{` and `\}` are a literal backslash and braces; other braces group formatting and are removed;
+   - the one-letter codes `\P`, `\L`, `\l`, `\O`, `\o`, `\K`, `\k` are removed; `\~` is a space;
+   - every other code (`\A`, `\C`, `\F`, `\f`, `\H`, `\Q`, `\S`, `\T`, `\W`, …) has a payload ending at `;`, and the
+     code and its payload are removed.
+
+   The first text ("`\X…;` codes" beside "`\X`" as a one-letter code) was ambiguous, and `\X` was dropped while
+   the text after it was kept, so `15\Xmm` read as "15mm". Regression tests: `15\Xmm` (caution), `12\XTYP` and
+   `12\X{\H0.7x;TYP}` (no finding), `{\H2.5;15}`, `\A1;15`, `\C1;12`, `\P15`, and an escaped backslash. `DIMLFAC`
+   is not read (as §8 says).
 
 ## Consequences
 

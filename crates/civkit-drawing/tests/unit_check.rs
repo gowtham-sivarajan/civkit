@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 21:00 IST · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 21:00 IST · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The unit check, F3's planted problems P1–P4 (D-28 / ADR 0016 §8; gate A2). Every finding is a
 //! caution-level warning, never an error: a drawing can be like this on purpose.
@@ -226,4 +226,17 @@ fn p4_dimension_override() {
     assert_eq!(level(12.0, None), None);
     assert_eq!(level(12.0, Some("")), None);
     assert_eq!(level(12.0, Some("TYP")), Some(Level::Info));
+    // `\X` splits dimension text: what follows goes below the dimension line, so only the part before
+    // it is the value (Autodesk MTEXT codes). 15 over "mm" is a wrong value; 12 over "TYP" is not.
+    assert_eq!(level(12.0, Some(r"15\Xmm")), Some(Level::Caution));
+    assert_eq!(level(12.0, Some(r"12\XTYP")), None);
+    // The lower text often has its own formatting; none of it is part of the value.
+    assert_eq!(level(12.0, Some(r"12\X{\H0.7x;TYP}")), None);
+    // Codes with a payload end at `;` (height, alignment, colour, font), wherever they are.
+    assert_eq!(level(12.0, Some(r"{\H2.5;15}")), Some(Level::Caution));
+    assert_eq!(level(12.0, Some(r"\A1;15")), Some(Level::Caution));
+    assert_eq!(level(12.0, Some(r"\C1;12")), None);
+    // A paragraph break before the value is removed; an escaped backslash is text.
+    assert_eq!(level(12.0, Some(r"\P15")), Some(Level::Caution));
+    assert_eq!(level(12.0, Some("12\\\\")), Some(Level::Info));
 }

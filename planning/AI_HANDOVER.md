@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:10 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 21:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -171,8 +171,9 @@ git status                # confirm planning/ui-concepts/ is not staged
    the order of the proposal's §13. Done in `civkit-geometry`: `Affine2` and `region_area` (A3's transform tests),
    the §8.7 sweep prefilter with `WorkLimit` (A7 complete), and linear polygon cleaning. Done in `civkit-drawing`:
    `expand` (A3 complete; A5 in part), and `measure`: quantities by effective layer, drawing units and the unit check
-   (A1 and A2 locally; A6 in part). **Six implementation details refine ADR 0016 and await the maintainer's
-   confirmation** (ADR 0016, "Settled during implementation"). Next: A4's measured heap check for read + analyse
+   (A1 and A2 locally; A6 in part). Of the six implementation details in ADR 0016 ("Settled during
+   implementation"), 1, 2 and 5 are confirmed; 3 now implements the accepted behaviour; **4 (vertex work 10⁸, with
+   timing evidence) and 6 (P4's MTEXT codes) were revised after review and await confirmation**. Next: A4's measured heap check for read + analyse
    (it checks the 256-bytes-per-vertex reservation around geometry calls), then A9 (the fuzz target runs read +
    analyse), then the CSV and JSON schedules and the drawing report, then Python and MCP (A8). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
@@ -190,6 +191,25 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 21:34 IST — Review of ADR 0016's implementation details: 3 implemented, 4 timed, 6 fixed *(Claude Sonnet 5.5)*
+- The maintainer (after `861f9fa`): confirm 1, 2, 5; item 3 (clockwise hatch arcs refused) changed the accepted scope;
+  item 4 (200 000 000 vertex work) lacked a definition and timing evidence; item 6: `\X` handling left the text after
+  it in the value, and no test covered it.
+- Item 3: clockwise arc edges now become negative bulges as the proposal says. Convention from ezdxf's
+  `ArcEdge.load_tags` (read by a web-fetch agent, MIT source): raw s, e mean clockwise from −s to −e. Tests first; my
+  first two clockwise cases were cusps (zero-angle fold-backs) that §8.7 rightly refuses, replaced by a clockwise
+  inward arc (125 − 25π/2) and a clockwise quarter disc (25π) whose raw angles read any other way do not join.
+- Item 6: `\X` now ends the value (text after it is the line below the dimension line); `\\`, `\{`, `\}` are literal;
+  one-letter codes and payload codes as documented. Regression tests, including `12\X{\H0.7x;TYP}`, which a
+  planted "payload code" reading would otherwise have passed.
+- Item 4: `tests/timing.rs` (ignored; release): placements 65.8 ns per unit (≈ 3.3 s at 5 × 10⁷), validity pairs
+  21.8 ns worst (≈ 2.2 s at 10⁸), vertex re-measure 38.1 ns (≈ 7.6 s at 2 × 10⁸). Default lowered to 10⁸ (≈ 3.8 s);
+  first local measures (260 ns per vertex) are cached, so bounded by the input limit, not this one.
+- Planted faults: clockwise angles not negated, clockwise bulge positive, `\X` as a payload code, escaped backslash
+  as a code: all caught.
+- ADR 0016's section records 1, 2, 5 confirmed, 3 resolved, 4 and 6 revised and awaiting confirmation.
+- Local: fmt and clippy clean, 392 Rust tests pass. Next, after confirmation: schedules and the drawing report.
 
 ### 2026-11-27 21:10 IST — Quantities by layer, drawing units and the unit check (tests first) *(Claude Sonnet 5.5)*
 - The maintainer pushed `07e200e`; CI #29, Python #14 and Fuzz #7 green (fuzzing step too). Fuzz #6 and #7 logged:
