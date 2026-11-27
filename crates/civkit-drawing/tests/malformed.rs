@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:23 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0015 gate X5: malformed input gives a clean error naming the problem and its line; limits are enforced;
 //! encodings and unsupported content are reported, not guessed or dropped.
@@ -340,4 +340,103 @@ proptest! {
         let bytes = mutate(&fixture_bytes(ALL_FIXTURES[f]), kind, a, b);
         let _ = read_dxf(&bytes, &Budget::new(Limits::DEFAULT_BUDGET_BYTES));
     }
+}
+
+/// A value stated twice is ambiguous, so it is refused rather than one of them chosen (found by the fuzz corpus
+/// cross-check: CivKit kept the last y of a vertex, undxf the first).
+#[test]
+fn a_repeated_value_is_refused_not_chosen() {
+    let cases = [
+        // a vertex with two y values
+        (
+            "0\nLWPOLYLINE\n8\nL\n90\n2\n10\n0\n20\n1\n20\n2\n10\n3\n20\n4\n",
+            16,
+        ),
+        // a y before any vertex
+        ("0\nLWPOLYLINE\n8\nL\n20\n1\n10\n0\n20\n0\n", 10),
+        // two bulges for one vertex
+        ("0\nLWPOLYLINE\n8\nL\n10\n0\n20\n0\n42\n0.5\n42\n0.25\n", 16),
+        // a LINE with two start x values
+        ("0\nLINE\n8\nL\n10\n1\n10\n2\n20\n0\n11\n1\n21\n1\n", 12),
+        // two layers
+        ("0\nCIRCLE\n8\nA\n8\nB\n10\n0\n20\n0\n40\n1\n", 10),
+        // an INSERT with two scales in x
+        ("0\nINSERT\n8\nL\n2\nB\n41\n2\n41\n3\n", 14),
+        // an uninterpreted entity with two layers: its count would be ambiguous
+        ("0\nMTEXT\n8\nA\n8\nB\n", 10),
+    ];
+    for (body, line) in cases {
+        let r = read_text(&entities(body));
+        assert!(
+            matches!(r, Err(ReadError::Malformed { line: l, .. }) if l == line),
+            "{body:?}: {r:?}"
+        );
+    }
+    // A header variable stated twice.
+    let header =
+        "0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nEOF\n";
+    assert!(
+        matches!(
+            read_text(header),
+            Err(ReadError::Malformed { line: 10, .. })
+        ),
+        "{:?}",
+        read_text(header)
+    );
+    // One variable with two values (found by the corpus cross-check: CivKit kept the last, undxf the first).
+    let header = "0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n6\n70\n1\n0\nENDSEC\n0\nEOF\n";
+    assert!(
+        matches!(
+            read_text(header),
+            Err(ReadError::Malformed { line: 10, .. })
+        ),
+        "{:?}",
+        read_text(header)
+    );
+    // Repeats inside 102 application groups and in extended data (codes 1000 and up) are not entity values.
+    let ok = "0\nLINE\n8\nL\n102\n{ACAD_REACTORS\n330\n1F\n330\n20\n102\n}\n10\n0\n20\n0\n11\n1\n21\n1\n1001\nAPP\n1000\na\n1000\nb\n";
+    assert!(read_text(&entities(ok)).is_ok());
+}
+
+/// A layer or block defined twice is ambiguous (the definitions can differ), so it is refused (found by the fuzz-corpus
+/// triage: CivKit kept both layer records, undxf one).
+#[test]
+fn a_layer_or_block_defined_twice_is_refused() {
+    let layers = "0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\nA\n70\n0\n0\nLAYER\n2\nA\n70\n1\n0\nENDTAB\n0\nENDSEC\n0\nEOF\n";
+    let r = read_text(layers);
+    assert!(
+        matches!(r, Err(ReadError::Malformed { line: 18, .. })),
+        "{r:?}"
+    );
+    let blocks = "0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n2\nB\n0\nENDBLK\n0\nBLOCK\n2\nB\n0\nENDBLK\n0\nENDSEC\n0\nEOF\n";
+    let r = read_text(blocks);
+    assert!(
+        matches!(r, Err(ReadError::Malformed { line: 14, .. })),
+        "{r:?}"
+    );
+    // Different names, including names differing only in case, are separate definitions here.
+    let ok = "0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n0\nLAYER\n2\nA\n0\nLAYER\n2\na\n0\nENDTAB\n0\nENDSEC\n0\nEOF\n";
+    assert_eq!(read_text(ok).expect("reads").layers().len(), 2);
+}
+
+/// Fuzz #2 (CI) input `2712f99c02149f916ce1cbd1770f5ea2952c775b`: the fuzzer spliced header values ($LIMMAX 420, 297) and
+/// an empty text into a TEXT entity of the BricsCAD fixture, so the entity stated its position, height and text twice.
+/// CivKit (then) kept the last values and undxf the first; now it is refused (DXF_CROSS_CHECK_LOG RA-4).
+#[test]
+fn a_text_with_spliced_second_values_is_refused() {
+    let original = fixture_bytes("insert_bricscad_level_1.dxf");
+    let text = String::from_utf8_lossy(&original).replace("\r\n", "\n");
+    let needle = "1\nrotation = 90\n";
+    let at = text
+        .find("5\n11E\n")
+        .and_then(|s| text[s..].find(needle).map(|i| s + i + needle.len()))
+        .expect("TEXT 11E");
+    let spliced = format!(
+        "{}10\n420.0\n20\n297.0\n40\n0.0\n1\n\n{}",
+        &text[..at],
+        &text[at..]
+    );
+    let r = read_text(&spliced);
+    assert!(matches!(r, Err(ReadError::Malformed { .. })), "{r:?}");
+    assert!(read_text(&text).is_ok(), "the unspliced file reads");
 }

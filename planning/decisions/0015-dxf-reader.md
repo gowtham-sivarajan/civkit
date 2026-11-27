@@ -1,9 +1,10 @@
 # ADR 0015 — The DXF reader: CivKit's own, with a reserved heap budget
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:50 IST · last edited 2026-11-27 14:50 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 14:50 IST · last edited 2026-11-27 18:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 - **Status:** Accepted (maintainer, 2026-11-27: revision 2 of [DXF_READER_PROPOSAL.md](../DXF_READER_PROPOSAL.md),
-  with two changes, both applied: Q-D tightened; the malformed-input evidence described as a smoke-test pass)
+  with two changes, both applied: Q-D tightened; the malformed-input evidence described as a smoke-test pass).
+  Amended 2026-11-27 by the maintainer: the fuzz corpus is cross-checked in report-and-triage mode (X2, below).
 - **Date:** 2026-11-27
 - **Decision ID:** D-27
 - **Relation to earlier decisions:** settles the open question of D-12 ([ADR 0002](0002-neutral-drawing-model.md)):
@@ -29,9 +30,11 @@ fuzzing, which neither crate was shown to meet.
 
 1. **Own reader (Q-A).** `civkit-drawing` gets its own DXF reader, no dependencies, `forbid(unsafe_code)`. It produces
    a parsed drawing; block expansion, transformations and results are analysis (task 3).
-2. **Cross-check (Q-B).** `undxf = "=0.11.0"` as a **dev-dependency only**, never shipped. Tests read every fixture and
-   the fuzz corpus with both readers and compare what both support. `undxf` cannot validate MINSERT arrays (first
-   placement only): **the fixtures' expected values (F5: 13 bays) are the check for those.**
+2. **Cross-check (Q-B; amended 2026-11-27, see below).** `undxf = "=0.11.0"` as a **dev-dependency only**, never
+   shipped. Tests read every fixture and every case of a curated set of well-formed DXF files with both readers and
+   compare what both support, strictly. The fuzz corpus is compared too, in **report-and-triage** mode (see the
+   amendment). `undxf` cannot validate MINSERT arrays (first placement only): **the fixtures' expected values (F5: 13
+   bays) are the check for those.**
 3. **Scope for 0.1 (Q-C).** ASCII DXF R12–R2018; binary DXF detected and reported as not supported; UTF-8 (R2007+) and
    `ANSI_1252` with `\U+XXXX` escapes, other code pages reported as not supported; HEADER (`$ACADVER`, `$INSUNITS`,
    `$MEASUREMENT`, `$DWGCODEPAGE`, "not stated" kept distinct), TABLES (LAYER), BLOCKS, ENTITIES; LINE, LWPOLYLINE,
@@ -61,11 +64,28 @@ fuzzing, which neither crate was shown to meet.
 | Gate | What must be shown |
 |---|---|
 | **X1 — fixtures** | Every fixture reads with its expected entities and header values, including F4's units not stated and F5's MINSERT (13 bays once expanded in task 3; the reader keeps rows, columns and spacing). |
-| **X2 — cross-check** | For every fixture and corpus file, what both readers support agrees with `undxf` 0.11.0 (MINSERT compared on its first placement only). |
+| **X2 — cross-check** | **Strict:** for every fixture and every file of the curated well-formed corpus (`crates/civkit-drawing/tests/well_formed/`), what both readers support agrees with `undxf` 0.11.0 (MINSERT compared on its first placement only). **Report and triage:** for every fuzz-corpus file both readers accept, disagreements are recorded (input hash and differing fields) and the job passes; it fails only on a crash, a hang, a budget overrun or an allocation failure. |
 | **X3 — budget accounting** | A counting allocator (dev-dependency) measures the heap requested during each read of every fixture and of adversarial inputs (many tiny entities; unrecognised entities with many distinct types and layers; long polylines; long strings; many layers and blocks). **Measured peak ≤ reserved peak + a small fixed slack** in every case, showing no allocation escapes the reservation. |
 | **X4 — budget exhaustion** | Each fixture and adversarial input, read under budgets from a few bytes upward, ends in success or the budget error: never a panic, abort or overrun (measured peak ≤ budget + slack). |
 | **X5 — malformed input** | Truncation, wrong group codes, non-numeric values, NaN and infinity, missing EOF and every limit exceeded give clean errors. |
 | **X6 — fuzzing** | The CI fuzz job runs as Q-E states, under the budget and heap check; the 8-hour record exists before 0.1. |
+
+## Amendment (2026-11-27): the fuzz corpus is compared in report-and-triage mode
+
+The maintainer decided this after Fuzz #2. Fuzz-generated inputs are mostly malformed, and two readers can be
+differently tolerant of the same damage without either being wrong (example: a corrupted subclass marker, where
+`undxf` drops the layer that follows and CivKit keeps it). A strict comparison would push CivKit to copy `undxf`'s
+recovery choices. So:
+
+- **Strict X2** covers the hand-authored fixtures and a curated set of well-formed DXF files. Any disagreement there
+  fails.
+- **Fuzz corpus:** every file both readers accept is compared; each disagreement is recorded with the input's hash and
+  the differing fields (in the CI job summary), and the job still passes. It fails on a crash, a hang, a budget overrun
+  or an allocation failure.
+- **Triage:** a disagreement on a valid DXF is promoted into the strict corpus (and fixed). A disagreement caused by
+  ambiguity CivKit should refuse (a value stated twice) is fixed by refusing it, with a test. A tolerance difference on
+  malformed input is logged as reviewed in [DXF_CROSS_CHECK_LOG.md](../DXF_CROSS_CHECK_LOG.md); CivKit does not copy
+  `undxf`'s recovery choice. Malformed-input behaviour stays covered by CivKit's own refusal and safety tests (X3–X6).
 
 ## Consequences
 

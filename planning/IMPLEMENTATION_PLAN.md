@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -107,8 +107,10 @@ acceptance item is ticked with its evidence.
    **Reader written (2026-11-27):** X1 fixtures, X2 `undxf` cross-check, X3 budget accounting, X4 budget exhaustion and
    X5 malformed input pass locally (34 tests, plus property tests); X3 was shown to catch three accounting faults.
    In `main` as `241b44c` (2026-11-27): CI #23, Python #8 and Fuzz #1 green, so X6's 10-minute run has passed once. Review
-   follow-ups (fallible hash index, allocation-refusal test, stricter X2 with a synthetic drawing and the corpus
-   required in the fuzz job) await their CI run. The 8-hour fuzz record is due before 0.1.
+   follow-ups are in `4e41e7a` (CI #24, Python #9 green). Fuzz #2: fuzzing green, its corpus cross-check red. ADR 0015
+   amended (maintainer): X2 is strict on the fixtures and a curated well-formed corpus (`tests/well_formed/`) and
+   reports-and-triages the fuzz corpus ([DXF_CROSS_CHECK_LOG.md](DXF_CROSS_CHECK_LOG.md)). Fuzz time:
+   [FUZZ_LOG.md](FUZZ_LOG.md). Then the task 3 proposal.
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept

@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 22:54 IST by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 18:02 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 What gets built, in what order. Task breakdown: [planning/IMPLEMENTATION_PLAN.md](planning/IMPLEMENTATION_PLAN.md).
 Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTANCE_CRITERIA.md).
@@ -11,12 +11,24 @@ Exit criteria for each phase: [planning/ACCEPTANCE_CRITERIA.md](planning/ACCEPTA
 |---|---|---|---|
 | **0** | Planning *(done — tag `plan-v1.0`)* | Decisions, API design, engineering standards, reference worked examples | — |
 | **1** | Architecture and Rust core *(done — tag `phase-1-done`)* | Cargo workspace, `civkit-core` registry and contract, CI on Windows/macOS/Linux | — |
-| **2** | Units, geometry, calculations, validation *(complete; CI run #11 green on 87fa3d2; tag phase-2-done created)* | civkit-units, civkit-geometry, the 0.1 calculation set with reference tests | — |
-| **3** | Python bindings + local MCP server *(next)* | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
-| **4** | Drawing model + DXF analysis | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
+| **2** | Units, geometry, calculations, validation *(done — tag `phase-2-done`)* | civkit-units, civkit-geometry, the 0.1 calculation set with reference tests | — |
+| **3** | Python bindings + local MCP server *(done — tag `phase-3-done`)* | `bindings/python`, `integrations/mcp`, cross-interface parity tests | — |
+| **4** | Drawing model + DXF analysis *(current: the DXF reader is done; the analysis layer is next, proposal first)* | `civkit-drawing`: quantities, unit checks, schedules from DXF | **0.1** |
 | **5** | AutoCAD / Civil 3D integration | `civkit-ffi`, AutoCAD 2027 plugin (read-only), Civil 3D extension | **0.2** |
 | **6** | Standalone desktop app | Tauri 2 app with forms generated from the registry; SQLite history | 0.3 |
 | **7** | Expansion and community | Design codes, MATLAB wrapper, more domains, external contributors | 0.4+ |
+
+## Path to 0.1
+
+1. Finish Phase 4: the analysis layer (block and MINSERT expansion, transformations, quantities, unit checks,
+   schedules, warnings and unsupported geometry), proposed and accepted before its code, then exposed through Python
+   and MCP.
+2. Fuzz the DXF reader for 8 hours in total ([planning/FUZZ_LOG.md](planning/FUZZ_LOG.md)).
+3. Bulk human review: the D6 code review and, separately, the engineering review of the calculations; the DXF results
+   and fixtures; the generated documentation.
+4. Release notes and checksums; tag `v0.1.0`.
+
+After 0.1, Phase 5 (AutoCAD / Civil 3D) leads to 0.2.
 
 ## Changes from the original proposal
 

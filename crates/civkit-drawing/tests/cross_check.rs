@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0015 gate X2: what CivKit's reader and `undxf` 0.11.0 both support agrees, for every input both accept:
 //! - header: `$ACADVER`, `$INSUNITS`, `$MEASUREMENT`, `$DWGCODEPAGE`, each including its absence;
@@ -22,7 +22,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use civkit_drawing::{
-    Boundary, Budget, Drawing, Edge, Entity, EntityKind, Limits, Point3, read_dxf,
+    Boundary, Budget, Drawing, Edge, Entity, EntityKind, Limits, Point3, ReadError, read_dxf,
 };
 use common::*;
 use uncad_model::model::{Entity as U, HatchBoundaryPath, HatchEdge, Point3D, Ref, TextOverride};
@@ -537,86 +537,157 @@ fn every_fixture_agrees_with_undxf() {
     }
 }
 
-/// A synthetic drawing that exercises what the fixtures do not: hatch line and arc edges and an unsupported edge,
-/// attributes, uninterpreted types on several layers, an old 3D polyline, layer state, rotated text, an aligned
-/// dimension with an override, mirrored (negative extrusion) entities, elevation, and ANSI_1252 text.
-fn synthetic() -> Vec<(&'static str, Vec<u8>)> {
-    let mut b = b"0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$DWGCODEPAGE\n3\nANSI_1252\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n".to_vec();
-    b.extend_from_slice(
-        b"0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n3\n\
-0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n\
-0\nLAYER\n2\nOFF_LAYER\n70\n0\n62\n-3\n6\nCONTINUOUS\n\
-0\nLAYER\n2\nFROZEN_LAYER\n70\n1\n62\n5\n6\nCONTINUOUS\n\
-0\nENDTAB\n0\nENDSEC\n\
-0\nSECTION\n2\nBLOCKS\n\
-0\nBLOCK\n8\n0\n2\nTAG_BLOCK\n70\n2\n10\n0\n20\n0\n30\n0\n3\nTAG_BLOCK\n\
-0\nCIRCLE\n5\n2A\n8\n0\n10\n0\n20\n0\n30\n0\n40\n1.5\n\
-0\nATTDEF\n5\n2B\n8\n0\n10\n0\n20\n0\n30\n0\n40\n1\n1\nX\n2\nTAG\n3\nPrompt\n70\n0\n\
-0\nENDBLK\n5\n2C\n8\n0\n0\nENDSEC\n\
-0\nSECTION\n2\nENTITIES\n\
-0\nHATCH\n5\n30\n8\nOFF_LAYER\n10\n0\n20\n0\n30\n2.5\n210\n0\n220\n0\n230\n1\n2\nSOLID\n70\n1\n71\n0\n91\n2\n\
-92\n1\n93\n3\n72\n1\n10\n0\n20\n0\n11\n4\n21\n0\n72\n2\n10\n4\n20\n2\n40\n2\n50\n270\n51\n90\n73\n1\n72\n1\n10\n4\n20\n4\n11\n0\n21\n0\n97\n0\n\
-92\n1\n93\n1\n72\n3\n10\n10\n20\n10\n11\n3\n21\n0\n40\n0.5\n50\n0\n51\n360\n73\n1\n97\n0\n\
-75\n0\n76\n1\n98\n0\n\
-0\nINSERT\n5\n31\n8\nFROZEN_LAYER\n66\n1\n2\nTAG_BLOCK\n10\n5\n20\n6\n30\n0\n41\n-1\n42\n1\n43\n1\n50\n30\n210\n0\n220\n0\n230\n-1\n\
-0\nATTRIB\n5\n32\n8\nFROZEN_LAYER\n10\n5\n20\n6\n30\n0\n40\n1\n1\nvalue\n2\nTAG\n70\n0\n\
-0\nSEQEND\n5\n33\n8\nFROZEN_LAYER\n\
-0\nMTEXT\n5\n34\n8\nOFF_LAYER\n10\n1\n20\n1\n30\n0\n40\n1\n1\nnote\n\
-0\nMTEXT\n5\n35\n8\nOFF_LAYER\n10\n2\n20\n1\n30\n0\n40\n1\n1\nnote 2\n\
-0\nPOLYLINE\n5\n37\n8\nP3D\n66\n1\n10\n0\n20\n0\n30\n0\n70\n8\n\
-0\nVERTEX\n5\n38\n8\nP3D\n10\n0\n20\n0\n30\n1\n70\n32\n0\nVERTEX\n5\n39\n8\nP3D\n10\n1\n20\n1\n30\n2\n70\n32\n\
-0\nSEQEND\n5\n3A\n8\nP3D\n\
-0\nTEXT\n5\n3B\n8\n0\n10\n7\n20\n8\n30\n0\n40\n2.5\n1\ncaf\xE9 \\U+00B0\n50\n45\n\
-0\nDIMENSION\n5\n3C\n8\n0\n2\n*D9\n10\n0\n20\n-1\n30\n0\n11\n2\n21\n-1\n31\n0\n70\n33\n42\n4.242640687119285\n1\n<> mm\n\
-13\n0\n23\n0\n33\n0\n14\n3\n24\n3\n34\n0\n\
-0\nLWPOLYLINE\n5\n3D\n8\nOFF_LAYER\n90\n3\n70\n1\n38\n1.5\n10\n0\n20\n0\n42\n-0.25\n10\n2\n20\n0\n10\n2\n20\n2\n210\n0\n220\n0\n230\n-1\n\
-0\nARC\n5\n3E\n8\n0\n10\n1\n20\n1\n30\n0\n40\n3\n50\n350\n51\n10\n210\n0\n220\n0\n230\n-1\n\
-0\nENDSEC\n0\nEOF\n",
-    );
-    vec![("synthetic R2000, ANSI_1252", b)]
+/// The curated well-formed corpus (ADR 0015 X2, strict): hand-authored DXF files that exercise what the fixtures do
+/// not. A disagreement on a valid DXF found in the fuzz corpus is promoted here.
+fn well_formed() -> Vec<(String, Vec<u8>)> {
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/well_formed");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .expect("tests/well_formed")
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().is_some_and(|x| x == "dxf"))
+        .collect();
+    files.sort();
+    assert!(files.len() >= 3, "the curated corpus is missing files");
+    files
+        .into_iter()
+        .map(|p| {
+            (
+                p.file_name().expect("name").to_string_lossy().into_owned(),
+                std::fs::read(&p).expect("read"),
+            )
+        })
+        .collect()
 }
 
 #[test]
-fn synthetic_drawings_agree_with_undxf() {
-    for (name, bytes) in synthetic() {
+fn every_well_formed_case_agrees_with_undxf() {
+    for (name, bytes) in well_formed() {
         let d = read_dxf(&bytes, &Budget::new(Limits::DEFAULT_BUDGET_BYTES))
             .unwrap_or_else(|e| panic!("{name}: {e}"));
-        // The drawing must exercise what it is for, or the comparison proves little.
-        assert!(
-            !d.unsupported().is_empty() && !d.layers().is_empty() && d.entities().len() >= 5,
-            "{name}"
-        );
-        check(name, &bytes, &d);
+        // Each case must exercise something, or the comparison proves little.
+        assert!(!d.layers().is_empty() && d.entities().len() >= 4, "{name}");
+        check(&name, &bytes, &d);
     }
 }
 
+/// FNV-1a, 64-bit: a stable name for an input in the report (libFuzzer also names corpus files by their SHA-1).
+fn fnv64(bytes: &[u8]) -> u64 {
+    bytes.iter().fold(0xcbf2_9ce4_8422_2325, |h, b| {
+        (h ^ u64::from(*b)).wrapping_mul(0x0100_0000_01b3)
+    })
+}
+
+/// The fuzz corpus (ADR 0015 X2, amended: report and triage). Every file both readers accept is compared; each
+/// disagreement is recorded with the input's hash and the first differing field (printed, and appended to the CI job
+/// summary), and the test passes. It fails only on what CivKit must never do: a panic (this test would abort), a read
+/// slower than 10 s (a hang), or a budget or allocation failure on an input of at most 1 MiB. `CIVKIT_REQUIRE_CORPUS`
+/// makes a missing or empty corpus a failure (the fuzz workflow sets it).
 #[test]
-fn every_corpus_file_both_readers_accept_agrees() {
+fn fuzz_corpus_disagreements_are_reported() {
+    use std::io::Write;
     let required = std::env::var_os("CIVKIT_REQUIRE_CORPUS").is_some();
     let corpus = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fuzz/corpus/read_dxf");
-    let entries: Vec<PathBuf> = match std::fs::read_dir(&corpus) {
+    let mut entries: Vec<PathBuf> = match std::fs::read_dir(&corpus) {
         Ok(dir) => dir.flatten().map(|e| e.path()).collect(),
         Err(_) => Vec::new(),
     };
+    entries.sort();
     assert!(
         !required || !entries.is_empty(),
         "CIVKIT_REQUIRE_CORPUS is set but {} is missing or empty",
         corpus.display()
     );
-    let mut checked = 0;
-    for path in entries {
-        let bytes = std::fs::read(&path).expect("corpus file");
-        let Ok(d) = read_dxf(&bytes, &Budget::new(Limits::DEFAULT_BUDGET_BYTES)) else {
-            continue;
+    let (mut compared, mut disagreements) = (0usize, Vec::new());
+    // Comparison failures are recorded, not shown as panics.
+    let quiet = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    for path in &entries {
+        let bytes = std::fs::read(path).expect("corpus file");
+        let name = path
+            .file_name()
+            .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+        let start = std::time::Instant::now();
+        let ours = read_dxf(&bytes, &Budget::new(Limits::DEFAULT_BUDGET_BYTES));
+        let took = start.elapsed();
+        assert!(
+            took.as_secs() < 10,
+            "{name}: reading took {took:?} (a hang)"
+        );
+        let d = match ours {
+            Ok(d) => d,
+            Err(e @ (ReadError::BudgetExhausted { .. } | ReadError::AllocationFailed { .. })) => {
+                std::panic::set_hook(quiet);
+                panic!(
+                    "{name} ({} bytes): {e}: a budget or allocation failure on a small input",
+                    bytes.len()
+                );
+            }
+            Err(_) => continue, // CivKit refuses it: covered by its own refusal and safety tests
         };
-        if undxf::read_bytes(&bytes).is_err() {
+        let accepted =
+            std::panic::catch_unwind(|| undxf::read_bytes(&bytes).is_ok()).unwrap_or(false);
+        if !accepted {
             continue;
         }
-        check(&path.display().to_string(), &bytes, &d);
-        checked += 1;
+        compared += 1;
+        if let Err(e) =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| check(&name, &bytes, &d)))
+        {
+            let message = e
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| e.downcast_ref::<&str>().map(|s| (*s).to_owned()))
+                .unwrap_or_default();
+            let first: String = message
+                .lines()
+                .take(3)
+                .collect::<Vec<_>>()
+                .join(" / ")
+                .chars()
+                .take(400)
+                .collect();
+            disagreements.push(format!(
+                "| `{name}` | `{:016x}` | {} | {} |",
+                fnv64(&bytes),
+                bytes.len(),
+                first.replace('|', r"\|")
+            ));
+        }
+    }
+    std::panic::set_hook(quiet);
+    let mut report = format!(
+        "### X2 fuzz-corpus cross-check (report and triage)\n\n{} corpus files; {compared} accepted by both \
+         readers; {} disagreements.\n",
+        entries.len(),
+        disagreements.len()
+    );
+    if !disagreements.is_empty() {
+        report.push_str("\n| Input | FNV-1a 64 | Bytes | First difference |\n|---|---|---|---|\n");
+        for line in disagreements.iter().take(100) {
+            report.push_str(line);
+            report.push('\n');
+        }
+        if disagreements.len() > 100 {
+            report.push_str(&format!("\n… and {} more.\n", disagreements.len() - 100));
+        }
+        report.push_str(
+            "\nTriage each one (ADR 0015, amendment): a valid DXF goes into tests/well_formed/; an ambiguity \
+             CivKit should refuse gets a refusal and a test; a tolerance difference on malformed input is logged \
+             in planning/DXF_CROSS_CHECK_LOG.md.\n",
+        );
+    }
+    println!("{report}");
+    if let Some(summary) = std::env::var_os("GITHUB_STEP_SUMMARY")
+        && let Ok(mut f) = std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(summary)
+    {
+        let _ = f.write_all(report.as_bytes());
     }
     assert!(
-        !required || checked > 0,
+        !required || compared > 0,
         "CIVKIT_REQUIRE_CORPUS is set but no corpus file was readable by both readers"
     );
 }

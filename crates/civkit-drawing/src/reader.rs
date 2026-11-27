@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 18:19 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit's DXF reader (D-27, ADR 0015): ASCII DXF R12–R2018 into a [`Drawing`], under a [`Budget`].
 //!
@@ -67,6 +67,52 @@ pub fn read_dxf_with(input: &[u8], budget: &Budget, limits: &Limits) -> Result<D
     reader.finish()
 }
 
+/// Group codes every entity states at most once: handle, layer, paper space, extrusion.
+const COMMON_ONCE: &[i32] = &[5, 8, 67, 210, 220, 230];
+
+/// Group codes already seen in the current entity or record (codes 0–1023; others are never tracked).
+#[derive(Default)]
+struct Seen([u64; 16]);
+
+impl Seen {
+    /// Marks `code`; returns whether it was already marked.
+    fn set(&mut self, code: i32) -> bool {
+        let Ok(c) = usize::try_from(code) else {
+            return false;
+        };
+        let Some(word) = self.0.get_mut(c / 64) else {
+            return false;
+        };
+        let bit = 1u64 << (c % 64);
+        let was = *word & bit != 0;
+        *word |= bit;
+        was
+    }
+}
+
+/// A layer or block name defined a second time.
+fn defined_twice(line: u64) -> ReadError {
+    ReadError::Malformed {
+        line,
+        expected: "each layer and block defined once",
+    }
+}
+
+/// The position of the next list entry, as an index id.
+fn position(len: usize, budget: &Budget) -> Result<u32, ReadError> {
+    u32::try_from(len).map_err(|_| ReadError::BudgetExhausted {
+        requested: 0,
+        limit: budget.limit(),
+    })
+}
+
+fn repeated(p: &Pair) -> ReadError {
+    ReadError::Malformed {
+        line: p.line,
+        expected: "one value for each group code of this entity",
+    }
+}
+
 /// Fields every entity has.
 struct Common {
     layer: NameId,
@@ -100,16 +146,19 @@ struct Reader<'a, 'l> {
     name_index: BIndex,
     /// Lookup of `drawing.unsupported` by (type, layer), while reading only.
     unsupported_index: BIndex,
+    /// Layers and blocks defined so far, by name, so a second definition is refused.
+    layer_index: BIndex,
+    block_index: BIndex,
 }
 
 /// Header variables 0.1 reads.
 #[derive(Clone, Copy)]
 enum Var {
-    AcadVer,
-    InsUnits,
-    Measurement,
-    CodePage,
-    Other,
+    AcadVer = 1,
+    InsUnits = 2,
+    Measurement = 3,
+    CodePage = 4,
+    Other = 0,
 }
 
 impl<'a, 'l> Reader<'a, 'l> {
@@ -134,6 +183,8 @@ impl<'a, 'l> Reader<'a, 'l> {
             layer0: NameId(0),
             name_index: BIndex::new(budget),
             unsupported_index: BIndex::new(budget),
+            layer_index: BIndex::new(budget),
+            block_index: BIndex::new(budget),
         };
         reader.layer0 = reader.intern_str("0")?;
         Ok(reader)
@@ -273,6 +324,7 @@ impl<'a, 'l> Reader<'a, 'l> {
 
     fn header(&mut self) -> Result<(), ReadError> {
         let mut var = Var::Other;
+        let mut seen = Seen::default();
         loop {
             let p = self.pairs.expect()?;
             match p.code {
@@ -290,29 +342,47 @@ impl<'a, 'l> Reader<'a, 'l> {
                         b"$MEASUREMENT" => Var::Measurement,
                         b"$DWGCODEPAGE" => Var::CodePage,
                         _ => Var::Other,
+                    };
+                    if !matches!(var, Var::Other) && seen.set(var as i32) {
+                        return Err(repeated(&p));
                     }
                 }
-                code => match (var, code) {
-                    (Var::AcadVer, 1) => {
-                        let v = self.intern_bytes(
-                            p.trimmed(),
-                            p.line,
-                            self.limits.max_type_name_bytes,
-                        )?;
-                        self.drawing.header.acadver = Some(v);
+                // Each variable's name appears once (checked above), so a value already set here is a second value
+                // for the same variable: ambiguous, refused.
+                code => {
+                    let h = &self.drawing.header;
+                    let already = match (var, code) {
+                        (Var::AcadVer, 1) => h.acadver.is_some(),
+                        (Var::InsUnits, 70) => h.insunits.is_some(),
+                        (Var::Measurement, 70) => h.measurement.is_some(),
+                        (Var::CodePage, 3) => h.codepage.is_some(),
+                        _ => false,
+                    };
+                    if already {
+                        return Err(repeated(&p));
                     }
-                    (Var::InsUnits, 70) => self.drawing.header.insunits = Some(p.int()?),
-                    (Var::Measurement, 70) => self.drawing.header.measurement = Some(p.int()?),
-                    (Var::CodePage, 3) => {
-                        let v = self.intern_bytes(
-                            p.trimmed(),
-                            p.line,
-                            self.limits.max_type_name_bytes,
-                        )?;
-                        self.drawing.header.codepage = Some(v);
+                    match (var, code) {
+                        (Var::AcadVer, 1) => {
+                            let v = self.intern_bytes(
+                                p.trimmed(),
+                                p.line,
+                                self.limits.max_type_name_bytes,
+                            )?;
+                            self.drawing.header.acadver = Some(v);
+                        }
+                        (Var::InsUnits, 70) => self.drawing.header.insunits = Some(p.int()?),
+                        (Var::Measurement, 70) => self.drawing.header.measurement = Some(p.int()?),
+                        (Var::CodePage, 3) => {
+                            let v = self.intern_bytes(
+                                p.trimmed(),
+                                p.line,
+                                self.limits.max_type_name_bytes,
+                            )?;
+                            self.drawing.header.codepage = Some(v);
+                        }
+                        _ => {}
                     }
-                    _ => {}
-                },
+                }
             }
         }
     }
@@ -388,15 +458,30 @@ impl<'a, 'l> Reader<'a, 'l> {
 
     fn layer_record(&mut self) -> Result<(), ReadError> {
         let (mut name, mut flags, mut color) = (None, 0i32, 0i32);
-        while let Some(p) = self.pairs.field()? {
+        let mut seen = Seen::default();
+        while let Some(p) = self.field_once(&mut seen, &[2, 70, 62])? {
             match p.code {
-                2 => name = Some(self.name(&p)?),
+                2 => name = Some((self.name(&p)?, p.line)),
                 70 => flags = p.int()?,
                 62 => color = p.int()?,
                 _ => {}
             }
         }
-        if let Some(name) = name {
+        if let Some((name, line)) = name {
+            let layers = &self.drawing.layers;
+            let hash = self.layer_index.hash(&name.0);
+            if self
+                .layer_index
+                .find(hash, |i| layers[i as usize].name == name)
+                .is_some()
+            {
+                return Err(defined_twice(line));
+            }
+            let id = position(layers.len(), &self.budget)?;
+            self.layer_index.insert(hash, id, |h, old| {
+                use std::hash::BuildHasher;
+                h.hash_one(layers[old as usize].name.0)
+            })?;
             self.drawing.layers.push(Layer {
                 name,
                 frozen: flags & 1 != 0,
@@ -428,19 +513,34 @@ impl<'a, 'l> Reader<'a, 'l> {
                 });
             }
             let (mut name, mut base) = (None, Point3::default());
-            while let Some(f) = self.pairs.field()? {
+            let mut seen = Seen::default();
+            while let Some(f) = self.field_once(&mut seen, &[2, 10, 20, 30])? {
                 match f.code {
-                    2 if name.is_none() => name = Some(self.name(&f)?),
+                    2 if name.is_none() => name = Some((self.name(&f)?, f.line)),
                     10 => base.x = f.f64()?,
                     20 => base.y = f.f64()?,
                     30 => base.z = f.f64()?,
                     _ => {}
                 }
             }
-            let name = match name {
+            let (name, line) = match name {
                 Some(n) => n,
-                None => self.intern_str("")?,
+                None => (self.intern_str("")?, p.line),
             };
+            let blocks = &self.drawing.blocks;
+            let hash = self.block_index.hash(&name.0);
+            if self
+                .block_index
+                .find(hash, |i| blocks[i as usize].name == name)
+                .is_some()
+            {
+                return Err(defined_twice(line));
+            }
+            let id = position(blocks.len(), &self.budget)?;
+            self.block_index.insert(hash, id, |h, old| {
+                use std::hash::BuildHasher;
+                h.hash_one(blocks[old as usize].name.0)
+            })?;
             let mut entities = BVec::new(&self.budget);
             self.entities(b"ENDBLK", &mut entities)?;
             self.drawing.blocks.push(Block {
@@ -551,7 +651,8 @@ impl<'a, 'l> Reader<'a, 'l> {
         let kind = match kw {
             b"LINE" => {
                 let (mut s, mut e) = (Point3::default(), Point3::default());
-                while let Some(p) = self.pairs.field()? {
+                let mut seen = Seen::default();
+                while let Some(p) = self.field_once(&mut seen, &[10, 20, 30, 11, 21, 31])? {
                     if self.common(&mut c, &p)? {
                         continue;
                     }
@@ -570,7 +671,8 @@ impl<'a, 'l> Reader<'a, 'l> {
             b"CIRCLE" | b"ARC" => {
                 let (mut center, mut radius, mut start_deg, mut end_deg) =
                     (Point3::default(), 0.0, 0.0, 0.0);
-                while let Some(p) = self.pairs.field()? {
+                let mut seen = Seen::default();
+                while let Some(p) = self.field_once(&mut seen, &[10, 20, 30, 40, 50, 51])? {
                     if self.common(&mut c, &p)? {
                         continue;
                     }
@@ -597,7 +699,10 @@ impl<'a, 'l> Reader<'a, 'l> {
             }
             b"LWPOLYLINE" => {
                 let (mut vertices, mut flags, mut elevation) = (BVec::new(&self.budget), 0i32, 0.0);
-                while let Some(p) = self.pairs.field()? {
+                // Whether the current vertex already has its y (20) and its bulge (42).
+                let (mut has_y, mut has_bulge) = (true, true);
+                let mut seen = Seen::default();
+                while let Some(p) = self.field_once(&mut seen, &[70, 38])? {
                     if self.common(&mut c, &p)? {
                         continue;
                     }
@@ -609,18 +714,23 @@ impl<'a, 'l> Reader<'a, 'l> {
                                 y: 0.0,
                                 bulge: 0.0,
                             })?;
+                            (has_y, has_bulge) = (false, false);
                         }
                         20 => {
                             let y = p.f64()?;
-                            if let Some(v) = vertices.last_mut() {
-                                v.y = y;
+                            match vertices.last_mut() {
+                                Some(v) if !has_y => v.y = y,
+                                _ => return Err(repeated(&p)),
                             }
+                            has_y = true;
                         }
                         42 => {
                             let b = p.f64()?;
-                            if let Some(v) = vertices.last_mut() {
-                                v.bulge = b;
+                            match vertices.last_mut() {
+                                Some(v) if !has_bulge => v.bulge = b,
+                                _ => return Err(repeated(&p)),
                             }
+                            has_bulge = true;
                         }
                         70 => flags = p.int()?,
                         38 => elevation = p.f64()?,
@@ -641,7 +751,8 @@ impl<'a, 'l> Reader<'a, 'l> {
             b"TEXT" => {
                 let (mut point, mut height, mut rotation_deg, mut value) =
                     (Point3::default(), 0.0, 0.0, None);
-                while let Some(p) = self.pairs.field()? {
+                let mut seen = Seen::default();
+                while let Some(p) = self.field_once(&mut seen, &[10, 20, 30, 40, 50, 1])? {
                     if self.common(&mut c, &p)? {
                         continue;
                     }
@@ -677,7 +788,10 @@ impl<'a, 'l> Reader<'a, 'l> {
                     second_point: Point3::default(),
                     block: None,
                 };
-                while let Some(p) = self.pairs.field()? {
+                let mut seen = Seen::default();
+                while let Some(p) =
+                    self.field_once(&mut seen, &[2, 70, 42, 1, 13, 23, 33, 14, 24, 34])?
+                {
                     if self.common(&mut c, &p)? {
                         continue;
                     }
@@ -699,7 +813,8 @@ impl<'a, 'l> Reader<'a, 'l> {
             }
             other => {
                 let kind = self.intern_bytes(other, line, self.limits.max_type_name_bytes)?;
-                while let Some(p) = self.pairs.field()? {
+                let mut seen = Seen::default();
+                while let Some(p) = self.field_once(&mut seen, &[])? {
                     self.common(&mut c, &p)?;
                 }
                 return self.count_unsupported(kind, c.layer);
@@ -712,7 +827,8 @@ impl<'a, 'l> Reader<'a, 'l> {
     /// spline-fitted polylines are counted as unsupported (their vertices consumed, not kept).
     fn old_polyline(&mut self, c: &mut Common) -> Result<Option<EntityKind>, ReadError> {
         let (mut flags, mut elevation) = (0i32, 0.0);
-        while let Some(p) = self.pairs.field()? {
+        let mut seen = Seen::default();
+        while let Some(p) = self.field_once(&mut seen, &[70, 30])? {
             if self.common(c, &p)? {
                 continue;
             }
@@ -739,7 +855,8 @@ impl<'a, 'l> Reader<'a, 'l> {
                 Some(p) if p.code == 0 && p.is("VERTEX") => {
                     self.pairs.next()?;
                     let (mut v, mut vflags) = (Vertex::default(), 0i32);
-                    while let Some(f) = self.pairs.field()? {
+                    let mut seen = Seen::default();
+                    while let Some(f) = self.field_once(&mut seen, &[10, 20, 42, 70])? {
                         match f.code {
                             10 => v.x = f.f64()?,
                             20 => v.y = f.f64()?,
@@ -793,7 +910,11 @@ impl<'a, 'l> Reader<'a, 'l> {
             row_spacing: 0.0,
         };
         let (mut block, mut attributes) = (None, false);
-        while let Some(p) = self.pairs.field()? {
+        let mut seen = Seen::default();
+        while let Some(p) = self.field_once(
+            &mut seen,
+            &[2, 10, 20, 30, 41, 42, 43, 50, 70, 71, 44, 45, 66],
+        )? {
             if self.common(&mut c, &p)? {
                 continue;
             }
@@ -826,7 +947,8 @@ impl<'a, 'l> Reader<'a, 'l> {
                     Some(p) if p.code == 0 && p.is("ATTRIB") => {
                         self.pairs.next()?;
                         let mut a = self.new_common();
-                        while let Some(f) = self.pairs.field()? {
+                        let mut seen = Seen::default();
+                        while let Some(f) = self.field_once(&mut seen, &[])? {
                             self.common(&mut a, &f)?;
                         }
                         self.count_unsupported(attrib, a.layer)?;
@@ -849,7 +971,8 @@ impl<'a, 'l> Reader<'a, 'l> {
         let (mut pattern, mut solid, mut elevation) = (None, false, 0.0);
         let mut paths = BVec::new(&self.budget);
         let mut stated_paths = None;
-        while let Some(p) = self.pairs.field()? {
+        let mut seen = Seen::default();
+        while let Some(p) = self.field_once(&mut seen, &[2, 70, 30])? {
             if self.common(c, &p)? {
                 continue;
             }
@@ -883,6 +1006,18 @@ impl<'a, 'l> Reader<'a, 'l> {
             elevation,
             paths,
         }))
+    }
+
+    /// The next field of the current entity or record. A repeat of a common code (handle, layer, paper space,
+    /// extrusion) or of one of `once` is refused: two values would be ambiguous, and CivKit does not choose.
+    fn field_once(&mut self, seen: &mut Seen, once: &[i32]) -> Result<Option<Pair<'a>>, ReadError> {
+        let Some(p) = self.pairs.field()? else {
+            return Ok(None);
+        };
+        if (COMMON_ONCE.contains(&p.code) || once.contains(&p.code)) && seen.set(p.code) {
+            return Err(repeated(&p));
+        }
+        Ok(Some(p))
     }
 
     /// The next field if it has `code`; `None` (and the field consumed) otherwise.

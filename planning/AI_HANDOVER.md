@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 18:23 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -180,6 +180,45 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 18:19 IST — X2 amended to report-and-triage for the fuzz corpus; triage pass 1 *(Claude Sonnet 5.5)*
+- **Maintainer's decision:** report and triage. X2 strict for the fixtures and a curated well-formed corpus; fuzz-corpus
+  disagreements recorded (input hash, differing field) without failing; the job fails only on a crash, hang, budget
+  overrun or allocation failure. Disagreements on valid DXF are promoted to the strict corpus; malformed-input
+  behaviour stays covered by CivKit's own refusal and safety tests; the subclass-marker case is a reviewed tolerance
+  difference. **ADR 0015 amended first** (status line, Q-B text, X2 gate row, an Amendment section), then the code.
+- **Strict corpus** `crates/civkit-drawing/tests/well_formed/` (three files: the synthetic R2000 ANSI_1252 drawing moved
+  out of the test code, an R12 LF file, an R2018 UTF-8 file); test `every_well_formed_case_agrees_with_undxf`.
+- **Report mode** `fuzz_corpus_disagreements_are_reported`: compares every corpus file both readers accept; writes a
+  table (input, FNV-1a 64, bytes, first difference) to stdout and `GITHUB_STEP_SUMMARY`; fails only on a panic, a
+  read over 10 s, or a budget/allocation failure; `CIVKIT_REQUIRE_CORPUS` still fails a missing or empty corpus.
+  `fuzz.yml` runs it (workflow in `_move_to_dot_github/`). Verified locally on the 3 007-file stand-in corpus: passes
+  and lists the disagreements.
+- **Triage pass 1** ([DXF_CROSS_CHECK_LOG.md](DXF_CROSS_CHECK_LOG.md)): RA-1, RA-2 (repeated values, refused earlier),
+  RA-3 (a layer or block defined twice: now refused, test `a_layer_or_block_defined_twice_is_refused`, checked with
+  the fallible hash index, so linear on hostile tables); TD-1 (corrupted subclass marker, 3 inputs) and TD-2 (a header
+  variable's value under the wrong group code) reviewed as tolerance differences, not copied.
+- **Fuzz #2's actual cause** (from the job log the maintainer pasted; the AI's guess of an early build error was
+  wrong: the runner compiled the tests in 7.5 s): a real disagreement on TEXT `11E` of the BricsCAD fixture, into
+  which the fuzzer had spliced header values (`$LIMMAX` 420, 297) and an empty text. CivKit kept the last values,
+  undxf the first. Covered by the repeated-value refusal; regression test
+  `a_text_with_spliced_second_values_is_refused`; logged as RA-4.
+- Local: fmt and clippy clean, 320 Rust tests, fuzz crate type-checks.
+
+### 2026-11-27 18:10 IST — Fuzz #2: fuzzing green, corpus cross-check red; two ambiguity fixes *(Claude Sonnet 5.5)*
+- `4e41e7a`: CI #24 and Python #9 green. Fuzz #2: the 10-minute fuzzing step passed (counted in FUZZ_LOG, now 20 min);
+  the new mandatory X2 corpus step failed in 8 s (exit 101). Job logs need admin rights, so the cause was reproduced
+  locally with a mutated corpus (3 000 files from the fixtures).
+- **Two genuine ambiguities, now refused (tests first, `a_repeated_value_is_refused_not_chosen`):** an LWPOLYLINE vertex
+  with two y values (CivKit kept the last, undxf the first), and a header variable with two values. Rule: a group code
+  that is single-valued for an entity (common codes 5, 8, 67, 210/220/230, and each entity's own list), a vertex's 20 or
+  42 (only after its 10), and the four header variables read are each stated at most once; a repeat is `Malformed`.
+  Application groups (102) and extended data (1000+) are not checked.
+- **A third class is not an ambiguity:** a corrupted subclass marker (`100 1e5`); undxf reads group codes by subclass
+  and drops the layer after an unknown one, CivKit ignores markers (R12 has none) and keeps it. undxf's diagnostics do
+  not flag any of these files, so "compare only clean files" is not available. **Decision for the maintainer:** how the
+  fuzz-corpus comparison should treat tolerance differences on malformed inputs (see the turn's question).
+- Local: fmt and clippy clean, 319 Rust tests. The task 3 proposal waits for a green Fuzz run.
 
 ### 2026-11-27 17:40 IST — Reader review follow-ups: fallible index, allocation refusal, stricter X2 *(Claude Sonnet 5.5)*
 - The maintainer pushed `241b44c`; CI #23 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081486), Python #8 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081408) and Fuzz #1 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081372) all green. X6's 10-minute
