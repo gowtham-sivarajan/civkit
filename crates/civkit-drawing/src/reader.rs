@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! CivKit's DXF reader (D-27, ADR 0015): ASCII DXF R12–R2018 into a [`Drawing`], under a [`Budget`].
 //!
@@ -7,12 +7,11 @@
 //! never silently dropped.
 
 use crate::ReadError;
-use crate::budget::{BMap, BStr, BVec, Budget, Scratch};
+use crate::budget::{BIndex, BStr, BVec, Budget, Scratch};
 use crate::decode::{Encoding, decode, decoded_len};
 use crate::model::{
     Block, Boundary, Dimension, Drawing, Edge, EdgeKind, Entity, EntityKind, Hatch, HatchPath,
-    Header, Insert, Layer, NameId, Names, Note, Point2, Point3, Polyline, PolylineSource, Text,
-    Vertex,
+    Header, Insert, Layer, NameId, Note, Point2, Point3, Polyline, PolylineSource, Text, Vertex,
 };
 use crate::pairs::{Pair, Pairs};
 
@@ -97,6 +96,10 @@ struct Reader<'a, 'l> {
     scratch: Scratch,
     undecodable: u64,
     layer0: NameId,
+    /// Lookup of `drawing.names` by text, while reading only.
+    name_index: BIndex,
+    /// Lookup of `drawing.unsupported` by (type, layer), while reading only.
+    unsupported_index: BIndex,
 }
 
 /// Header variables 0.1 reads.
@@ -116,12 +119,9 @@ impl<'a, 'l> Reader<'a, 'l> {
             layers: BVec::new(budget),
             blocks: BVec::new(budget),
             entities: BVec::new(budget),
-            unsupported: BMap::new(budget),
+            unsupported: BVec::new(budget),
             notes: BVec::new(budget),
-            names: Names {
-                list: BVec::new(budget),
-                index: BMap::new(budget),
-            },
+            names: BVec::new(budget),
         };
         let mut reader = Self {
             pairs: Pairs::new(input),
@@ -132,6 +132,8 @@ impl<'a, 'l> Reader<'a, 'l> {
             scratch: Scratch::new(budget),
             undecodable: 0,
             layer0: NameId(0),
+            name_index: BIndex::new(budget),
+            unsupported_index: BIndex::new(budget),
         };
         reader.layer0 = reader.intern_str("0")?;
         Ok(reader)
@@ -145,21 +147,25 @@ impl<'a, 'l> Reader<'a, 'l> {
             scratch,
             drawing,
             budget,
+            name_index,
             ..
         } = self;
         let text = scratch.as_str();
-        if let Some(&id) = drawing.names.index.get(text) {
+        let names = &mut drawing.names;
+        let hash = name_index.hash(text);
+        if let Some(id) = name_index.find(hash, |id| &*names[id as usize] == text) {
             return Ok(NameId(id));
         }
-        let id =
-            u32::try_from(drawing.names.list.len()).map_err(|_| ReadError::BudgetExhausted {
-                requested: 0,
-                limit: budget.limit(),
-            })?;
-        let stored = BStr::build(budget, text.len(), |s| s.push_str(text))?;
-        let key = BStr::build(budget, text.len(), |s| s.push_str(text))?;
-        drawing.names.list.push(stored)?;
-        drawing.names.index.insert_new(key, id)?;
+        let id = u32::try_from(names.len()).map_err(|_| ReadError::BudgetExhausted {
+            requested: 0,
+            limit: budget.limit(),
+        })?;
+        names.push(BStr::build(budget, text.len(), |s| s.push_str(text))?)?;
+        let names = &*names;
+        name_index.insert(hash, id, |h, old| {
+            use std::hash::BuildHasher;
+            h.hash_one(&*names[old as usize])
+        })?;
         Ok(NameId(id))
     }
 
@@ -507,12 +513,27 @@ impl<'a, 'l> Reader<'a, 'l> {
     }
 
     fn count_unsupported(&mut self, kind: NameId, layer: NameId) -> Result<(), ReadError> {
-        if let Some(n) = self.drawing.unsupported.get_mut(&(kind, layer)) {
-            *n += 1;
-            Ok(())
-        } else {
-            self.drawing.unsupported.insert_new((kind, layer), 1)
+        let counts = &mut self.drawing.unsupported;
+        let key = (kind.0, layer.0);
+        let hash = self.unsupported_index.hash(&key);
+        if let Some(i) = self
+            .unsupported_index
+            .find(hash, |i| counts[i as usize].0 == (kind, layer))
+        {
+            counts[i as usize].1 += 1;
+            return Ok(());
         }
+        let id = u32::try_from(counts.len()).map_err(|_| ReadError::BudgetExhausted {
+            requested: 0,
+            limit: self.budget.limit(),
+        })?;
+        counts.push(((kind, layer), 1))?;
+        let counts = &*counts;
+        self.unsupported_index.insert(hash, id, |h, old| {
+            use std::hash::BuildHasher;
+            let ((k, l), _) = counts[old as usize];
+            h.hash_one((k.0, l.0))
+        })
     }
 
     fn vertex_cap(&self, count: usize, line: u64) -> Result<(), ReadError> {

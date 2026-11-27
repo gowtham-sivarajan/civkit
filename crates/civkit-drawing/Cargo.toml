@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 15:26 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 [package]
 name = "civkit-drawing"
 description = "CivKit drawing: CAD-neutral drawing model and DXF import"
@@ -22,5 +22,6 @@ workspace = true
 undxf = "=0.11.0"
 uncad-model = "=0.12.0"
 peak_alloc = "=0.3.0"
+cap = "=0.1.2"
 serde_json.workspace = true
 proptest = { version = "1", default-features = false, features = ["std"] }

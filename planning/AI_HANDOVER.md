@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 15:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -8,13 +8,17 @@
 **Project:** CivKit
 **Maintainer:** Gowtham
 **Repository:** public on GitHub from day one (D-17) · licence Apache-2.0
-**Current phase:** **Phase 4** (drawing model and DXF → release 0.1). Phase 3 is complete: tag `phase-3-done` on
-`a94bf3f`, with CI #19 and Python #4 green (https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501337, https://github.com/gowtham-sivarajan/civkit/actions/runs/45949501245). D6 and the engineering review remain open for the bulk
-review before 0.1.
+**Current phase:** **Phase 4** (drawing model and DXF → release 0.1). Phase 3 is complete (`phase-3-done` on
+`a94bf3f`). Phase 4 task 1 is decided (D-27, ADR 0015); **task 2, the DXF reader, is in `main`** (`241b44c`, CI #23,
+Python #8 and Fuzz #1 green), with review follow-ups (fallible hash index, allocation-refusal test, stricter X2)
+awaiting their CI run. Next: the task 3 proposal. D6 and the engineering review remain open for the bulk review
+before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
-D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`); the Python
-package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MCP parity (`tests/parity`); notebooks
-(`integrations/jupyter`); generated calculation pages (`docs/calculations`). No DXF code yet.
+D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
+`civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
+(`integrations/mcp`); Rust/Python/MCP parity (`tests/parity`); notebooks (`integrations/jupyter`); generated
+calculation pages (`docs/calculations`). No drawing analysis yet (task 3), and drawings are not yet exposed through
+Python or MCP (task 4).
 
 ---
 
@@ -65,7 +69,9 @@ package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MC
   [ADR 0013](decisions/0013-mcp-sdk-and-surface.md), gates G1–G3), parity across Rust, Python and MCP, three
   notebooks, generated calculation pages, conditional requirements shown prominently. Every Phase 3 acceptance
   item is ticked with its evidence.
-- **Phase 4 (drawing model and DXF): current, not started.** See §4.
+- **Phase 4 (drawing model and DXF): current.** Task 1 decided (D-27, ADR 0015). Task 2, the reader, in `main`
+  (`241b44c`); gates X1–X5 pass locally and in CI, X6's 10-minute fuzz run passed (Fuzz #1); the 8-hour fuzz record
+  is due before 0.1. Task 3 (analysis) is next, proposal first. See §4.
 
 **Decisions**
 - All P0 and P1 decisions needed so far are accepted: D-1 … D-7, D-10 … D-13, D-15 … D-20, D-22 … D-27.
@@ -79,6 +85,12 @@ package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MC
   enforced in values, trace and messages. `check_descriptor` also limits IDs to 128 characters (MCP tool names)
   and reserves the input names `version` and `output_units`. serde_json runs with `float_roundtrip`, so numbers
   keep every bit through JSON (a parse bug found in Phase 3).
+- `civkit-drawing`: CivKit's DXF reader (ADR 0015): ASCII R12–R2018 into a parsed drawing (header values with "not
+  stated" kept, layers, blocks, LINE, CIRCLE, ARC, LWPOLYLINE and old 2D POLYLINE, TEXT, INSERT with MINSERT arrays,
+  HATCH boundaries, DIMENSION; everything else counted by type and layer). No dependencies, `forbid(unsafe_code)`.
+  Every allocation reserves from a `Budget` first (`BVec`, `BStr`, `Scratch`, and `BIndex`, an open-addressing hash
+  index whose slots are a `BVec`); a refused allocation is a clean `AllocationFailed`. Angles kept in degrees as
+  stated. Tests: X1–X5 plus an allocation-refusal test and property tests; fuzz target in `fuzz/`.
 - `civkit-geometry`: angles and direction, tolerance, polyline/arc/circle lengths, polygon area, orientation,
   centroid (straight edges), the self-intersection check with exact arc relations. Every item cites
   [GEOMETRY.md](../docs/GEOMETRY.md). Rust only: no contract calculations (D-22).
@@ -104,6 +116,8 @@ package (`bindings/python`); the MCP server (`integrations/mcp`); Rust/Python/MC
 - Public at github.com/gowtham-sivarajan/civkit; private vulnerability reporting on.
 - CI (`ci.yml`): fmt; build/test on Windows/macOS/Linux × Rust 1.98/stable (includes the MCP stdio tests); clippy;
   dependency rule (engine crates, and no network crate in `civkit-mcp`); cargo-deny; DCO.
+- CI (`fuzz.yml`): cargo-fuzz on nightly, Linux, the DXF reader seeded with the fixtures, 10 minutes per push to main
+  and daily (longer on demand), then the grown corpus is cross-checked against `undxf` (X2, corpus required).
 - CI (`python.yml`): fmt, clippy, MSRV and cargo-deny for `bindings/python`; 13 wheel jobs (five targets; CPython
   3.11–3.15 on Linux x86-64) with offline install and the Python tests; parity on Windows, macOS and Linux.
 - Dependabot is weekly. Actions are pinned by SHA. The AI cannot write `.github/`: workflow changes go to
@@ -144,9 +158,14 @@ git status                # confirm planning/ui-concepts/ is not staged
    proposed and accepted before code (geometry notes and unsupported-feature reporting first), and code is written
    tests first.
    **Task 1 decided (2026-11-27):** D-27, [ADR 0015](decisions/0015-dxf-reader.md): own reader, `undxf` =0.11.0 as a test-only
-   cross-check, a reserved heap budget, gates X1–X6. **Task 2 (the reader) written**, X1–X5 passing locally, X6 (fuzzing)
-   written for CI. Next: CI on it, then the task 3 proposal (expansion within one combined budget, transformations
-   and OCS, lengths and areas, the unit check, schedules, geometry notes and "not supported in 0.1").
+   cross-check, a reserved heap budget, gates X1–X6. **Task 2, the reader, in `main`** (`241b44c`: CI #23, Python #8
+   and Fuzz #1 green). Review follow-ups done locally and awaiting CI: `BMap` (a `BTreeMap`, whose insert cannot report
+   a refused allocation) replaced by the fallible `BIndex`; a real allocation-refusal test; X2 tightened (layer,
+   handle, extrusion and every field per entity, hatch edges in full, `$DWGCODEPAGE`, layer state, uninterpreted
+   counts by type and layer both ways, a synthetic drawing always run, the corpus required in the fuzz job).
+   **Then: the task 3 proposal** (block expansion within one combined budget, transformations and OCS, lengths and
+   areas, the unit check, schedules, geometry notes and "not supported in 0.1"), before its code. The 8-hour fuzz
+   record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
    `docs/calculations`). Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
@@ -161,6 +180,29 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 17:40 IST — Reader review follow-ups: fallible index, allocation refusal, stricter X2 *(Claude Sonnet 5.5)*
+- The maintainer pushed `241b44c`; CI #23 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081486), Python #8 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081408) and Fuzz #1 (https://github.com/gowtham-sivarajan/civkit/actions/runs/45993081372) all green. X6's 10-minute
+  run has passed once; the 8-hour total remains due before 0.1.
+- **Finding 1 (BMap):** `BMap` charged the budget and then called `BTreeMap::insert`, which cannot report a refused
+  allocation, so ADR 0015's "a refused allocation ends reading with a clean error" was not kept. Replaced with
+  `BIndex`: open addressing, slots in a `BVec` grown with `try_reserve_exact` (new table reserved before the old is
+  released), std's randomly keyed hasher (no forced collisions; results do not depend on the hash). The index lives
+  only while reading; the drawing keeps plain lists. This also replaces the old per-entry cost estimate with exact
+  capacity charging. **New test `tests/alloc_refusal.rs`:** a capped global allocator (`cap` =0.1.2, dev-only) refuses
+  allocations past an allowance swept from 0 upward; every read ends in success or `AllocationFailed`. Shown to
+  matter: with one `String::with_capacity` put back, the process aborted ("memory allocation of 13 bytes failed").
+- **Finding 2 (X2):** now compares each entity's layer, handle and extrusion (where `undxf` keeps one) and all its
+  fields (text height and rotation, polyline elevation, dimension type and points, hatch solid/elevation and every
+  edge's endpoints, centre, radius, angles and direction), `$DWGCODEPAGE`, layer off/frozen, and uninterpreted
+  counts by (type, layer) in both directions. `undxf`'s `Ref::name` returns "" for unresolved references, so the
+  test reads the written name instead (found when a dimension pointed at an undefined block). A synthetic R2000
+  ANSI_1252 drawing (hatch line/arc/ellipse edges, attributes, MTEXT, a 3D polyline, layer state, mirrored
+  entities) always runs. The corpus check fails under `CIVKIT_REQUIRE_CORPUS=1` when missing or empty; `fuzz.yml`
+  runs it after fuzzing (workflow in `_move_to_dot_github/`). Planted faults (hatch arc direction, hatch line end,
+  frozen flag, count layer, code page) were each caught.
+- **Finding 3:** the header, §3 and §4 of this file no longer say "No DXF code yet" or "not started".
+- Local: fmt and clippy clean; 318 Rust tests; `civkit-drawing` on Rust 1.98; fuzz crate type-checks.
 
 ### 2026-11-27 15:40 IST — Phase 4 task 2: CivKit's DXF reader (`civkit-drawing`), tests first *(Claude Sonnet 5.5)*
 - **Tests first** (all red before the reader existed): `tests/fixtures.rs` (X1, 12), `tests/cross_check.rs` (X2, against

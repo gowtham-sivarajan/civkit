@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The heap budget (ADR 0015, Q-D): every heap allocation the reader makes reserves its bytes here first, and
 //! releases them when freed, so the heap the reader has requested never passes the budget.
@@ -143,6 +143,28 @@ impl<T> BVec<T> {
         }
     }
 
+    /// A vector of `len` copies of `value`, reserved in one step.
+    pub(crate) fn filled(budget: &Budget, len: usize, value: T) -> Result<Self, ReadError>
+    where
+        T: Clone,
+    {
+        let size = std::mem::size_of::<T>();
+        let bytes = len
+            .checked_mul(size)
+            .ok_or_else(|| allocation_failed(usize::MAX))?;
+        let mut charge = Charge::empty(budget);
+        charge.grow(bytes)?;
+        let mut items = Vec::new();
+        items
+            .try_reserve_exact(len)
+            .map_err(|_| allocation_failed(bytes))?;
+        if items.capacity() > len {
+            charge.grow((items.capacity() - len) * size)?;
+        }
+        items.resize(len, value);
+        Ok(Self { items, charge })
+    }
+
     /// Appends, growing the capacity explicitly (never by an unreserved implicit doubling).
     pub(crate) fn push(&mut self, value: T) -> Result<(), ReadError> {
         if self.items.len() == self.items.capacity() {
@@ -242,33 +264,6 @@ impl fmt::Debug for BStr {
     }
 }
 
-// Ordered and looked up as its text, so a map keyed by `BStr` can be searched with a `&str`.
-impl PartialEq for BStr {
-    fn eq(&self, other: &Self) -> bool {
-        self.text == other.text
-    }
-}
-
-impl Eq for BStr {}
-
-impl PartialOrd for BStr {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for BStr {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.text.cmp(&other.text)
-    }
-}
-
-impl std::borrow::Borrow<str> for BStr {
-    fn borrow(&self) -> &str {
-        &self.text
-    }
-}
-
 /// A reusable text buffer for decoding a value before it is looked up; its capacity is reserved.
 pub(crate) struct Scratch {
     text: String,
@@ -308,61 +303,84 @@ impl Scratch {
     }
 }
 
-/// A sorted map whose entries are reserved from a budget at a stated cost each (key heap bytes are reserved by the
-/// key's own storage). The cost covers the standard B-tree's nodes at their minimum fill; the first node is reserved
-/// when the map gets its first entry. Gate X3 measures that this covers what is actually allocated.
-pub(crate) struct BMap<K, V> {
-    map: std::collections::BTreeMap<K, V>,
-    charge: Charge,
+/// An open-addressing hash index of entry numbers (into a list kept elsewhere). Its slots are a [`BVec`], so every
+/// growth is reserved first and a refused allocation is a clean error (ADR 0015, Q-D). The hasher is std's randomly
+/// keyed one, so a hostile file cannot force collisions; nothing read depends on the hash, so results stay
+/// deterministic. Kept at most half full.
+pub(crate) struct BIndex {
+    slots: BVec<u32>,
+    used: usize,
+    hasher: std::hash::RandomState,
+    budget: Budget,
 }
 
-/// Reserved per entry: a leaf holds at least 5 of its 11 slots after a split, plus a share of internal nodes.
-const MAP_ENTRY_COST: usize = 96;
-/// Reserved with the first entry: the first leaf is allocated whole.
-const MAP_FIRST_NODE: usize = 512;
+const EMPTY: u32 = u32::MAX;
 
-impl<K: Ord, V> BMap<K, V> {
+impl BIndex {
     pub(crate) fn new(budget: &Budget) -> Self {
         Self {
-            map: std::collections::BTreeMap::new(),
-            charge: Charge::empty(budget),
+            slots: BVec::new(budget),
+            used: 0,
+            hasher: std::hash::RandomState::new(),
+            budget: budget.clone(),
         }
     }
 
-    pub(crate) fn get<Q: Ord + ?Sized>(&self, key: &Q) -> Option<&V>
-    where
-        K: std::borrow::Borrow<Q>,
-    {
-        self.map.get(key)
+    /// The hash of a key.
+    pub(crate) fn hash<T: std::hash::Hash + ?Sized>(&self, key: &T) -> u64 {
+        use std::hash::BuildHasher;
+        self.hasher.hash_one(key)
     }
 
-    pub(crate) fn get_mut<Q: Ord + ?Sized>(&mut self, key: &Q) -> Option<&mut V>
-    where
-        K: std::borrow::Borrow<Q>,
-    {
-        self.map.get_mut(key)
+    /// The entry with this hash for which `is` holds, if any.
+    pub(crate) fn find(&self, hash: u64, mut is: impl FnMut(u32) -> bool) -> Option<u32> {
+        if self.slots.is_empty() {
+            return None;
+        }
+        let mask = self.slots.len() - 1;
+        let mut i = (hash as usize) & mask;
+        loop {
+            let slot = self.slots[i];
+            if slot == EMPTY {
+                return None;
+            }
+            if is(slot) {
+                return Some(slot);
+            }
+            i = (i + 1) & mask;
+        }
     }
 
-    /// Inserts a key that is not yet present, reserving its entry first.
-    pub(crate) fn insert_new(&mut self, key: K, value: V) -> Result<(), ReadError> {
-        let cost = MAP_ENTRY_COST
-            + if self.map.is_empty() {
-                MAP_FIRST_NODE
-            } else {
-                0
-            };
-        self.charge.grow(cost)?;
-        self.map.insert(key, value);
+    /// Adds entry `id` (not yet present) with `hash`. When the table grows, `rehash(hasher, id)` gives each existing
+    /// entry's hash.
+    pub(crate) fn insert(
+        &mut self,
+        hash: u64,
+        id: u32,
+        rehash: impl Fn(&std::hash::RandomState, u32) -> u64,
+    ) -> Result<(), ReadError> {
+        if (self.used + 1) * 2 > self.slots.len() {
+            let len = self.slots.len().saturating_mul(2).max(16);
+            // The new table is reserved in full while the old one is still charged; the old is released when dropped.
+            let mut fresh = BVec::filled(&self.budget, len, EMPTY)?;
+            for &old in self.slots.iter() {
+                if old != EMPTY {
+                    place(&mut fresh, rehash(&self.hasher, old), old);
+                }
+            }
+            self.slots = fresh;
+        }
+        place(&mut self.slots, hash, id);
+        self.used += 1;
         Ok(())
-    }
-
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
-        self.map.iter()
     }
 }
 
-impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for BMap<K, V> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_map().entries(self.map.iter()).finish()
+fn place(slots: &mut [u32], hash: u64, id: u32) {
+    let mask = slots.len() - 1;
+    let mut i = (hash as usize) & mask;
+    while slots[i] != EMPTY {
+        i = (i + 1) & mask;
     }
+    slots[i] = id;
 }

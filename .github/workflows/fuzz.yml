@@ -1,6 +1,7 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:39 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # Fuzzing the DXF reader (ADR 0015 gate X6, Q-E): cargo-fuzz on nightly Rust, Linux, seeded with the DXF fixtures,
-# 10 minutes per run (on every push to main, daily, and on demand). Longer recorded runs for the 8 hours required
+# 10 minutes per run (on every push to main, daily, and on demand). After fuzzing, the corpus it grew is cross-checked
+# against undxf (gate X2), and an empty corpus fails. Longer recorded runs for the 8 hours required
 # before 0.1: run this workflow by hand with a larger `seconds` (a job may last at most 6 hours).
 # Actions are pinned to commit SHAs (docs/SECURITY.md).
 name: Fuzz
@@ -42,3 +43,7 @@ jobs:
         env:
           SECONDS_TO_RUN: ${{ github.event.inputs.seconds || '600' }}
         run: cargo fuzz run read_dxf -- -max_total_time="$SECONDS_TO_RUN" -rss_limit_mb=4096 -max_len=1048576
+      - name: Cross-check the corpus against undxf (X2)
+        env:
+          CIVKIT_REQUIRE_CORPUS: "1"
+        run: cargo test --locked -p civkit-drawing --test cross_check -- every_corpus_file_both_readers_accept_agrees

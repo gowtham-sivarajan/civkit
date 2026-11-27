@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 15:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -106,8 +106,9 @@ acceptance item is ticked with its evidence.
 2. `civkit-drawing`: neutral model, DXF import, limits. Tests first, to ADR 0015's gates X1–X6.
    **Reader written (2026-11-27):** X1 fixtures, X2 `undxf` cross-check, X3 budget accounting, X4 budget exhaustion and
    X5 malformed input pass locally (34 tests, plus property tests); X3 was shown to catch three accounting faults.
-   X6: the fuzz target and its workflow are written; it needs nightly Rust and runs in CI only. Met when CI is green
-   and the fuzz job has run.
+   In `main` as `241b44c` (2026-11-27): CI #23, Python #8 and Fuzz #1 green, so X6's 10-minute run has passed once. Review
+   follow-ups (fallible hash index, allocation-refusal test, stricter X2 with a synthetic drawing and the corpus
+   required in the fuzz job) await their CI run. The 8-hour fuzz record is due before 0.1.
 3. Analysis: entities by layer, lengths/areas, unit consistency, schedules (CSV/JSON).
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept

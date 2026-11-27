@@ -1,10 +1,10 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The parsed drawing: what the DXF reader keeps (ADR 0015, Q-C). It is the file's content in DXF terms, not results:
 //! coordinates in drawing units and in each entity's own coordinate system (OCS, by its extrusion), angles in degrees
 //! as the file states them. Block expansion, transformations and lengths and areas are analysis (Phase 4 task 3).
 
-use crate::budget::{BMap, BStr, BVec};
+use crate::budget::{BStr, BVec};
 
 /// A name the drawing uses (layer, block, entity type, header string), looked up with [`Drawing::name`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -324,13 +324,6 @@ pub(crate) struct Header {
     pub(crate) codepage: Option<NameId>,
 }
 
-/// Names, interned: each is stored once with its lookup entry.
-#[derive(Debug)]
-pub(crate) struct Names {
-    pub(crate) list: BVec<BStr>,
-    pub(crate) index: BMap<BStr, u32>,
-}
-
 /// A DXF drawing as read.
 #[derive(Debug)]
 pub struct Drawing {
@@ -338,15 +331,17 @@ pub struct Drawing {
     pub(crate) layers: BVec<Layer>,
     pub(crate) blocks: BVec<Block>,
     pub(crate) entities: BVec<Entity>,
-    pub(crate) unsupported: BMap<(NameId, NameId), u64>,
+    /// Counts of uninterpreted entities by (type, layer), in first-seen order.
+    pub(crate) unsupported: BVec<((NameId, NameId), u64)>,
     pub(crate) notes: BVec<Note>,
-    pub(crate) names: Names,
+    /// Every name, once, in first-seen order; a [`NameId`] is a position here.
+    pub(crate) names: BVec<BStr>,
 }
 
 impl Drawing {
     /// A name by its id.
     pub fn name(&self, id: NameId) -> &str {
-        self.names.list.get(id.0 as usize).map_or("", |s| s)
+        self.names.get(id.0 as usize).map_or("", |s| s)
     }
 
     /// `$ACADVER`, if stated (e.g. `AC1032`).
