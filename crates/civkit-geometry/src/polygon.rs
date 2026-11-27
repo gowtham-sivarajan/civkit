@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! Polygon area, orientation and centroid (docs/GEOMETRY.md §8, §10).
 
@@ -67,6 +67,53 @@ fn segment_lengths(p: Point, q: Point, b: f64) -> (f64, f64) {
 fn is_zero_length(p: Point, q: Point, b: f64, eps: f64) -> bool {
     let (c, s) = segment_lengths(p, q, b);
     c <= eps && s <= eps
+}
+
+/// Cleaning (§10): repeatedly drop the start vertex of the first zero-length segment, in ring
+/// order, until none remains. Done in one linear pass with the same result **(D-28)**: every
+/// segment before the scan position is known not to be zero-length; dropping a vertex changes only
+/// its predecessor's segment, so the scan steps back one vertex (or, when the first vertex is
+/// dropped, restarts at the new first vertex, the only one before which nothing is known). Each
+/// step either advances or drops a vertex, so there are at most 2n steps.
+fn clean(ring: Vec<(usize, Point, f64)>, eps: f64) -> Vec<(usize, Point, f64)> {
+    let n = ring.len();
+    if n == 0 {
+        return ring;
+    }
+    let mut next: Vec<usize> = (0..n).map(|i| (i + 1) % n).collect();
+    let mut prev: Vec<usize> = (0..n).map(|i| (i + n - 1) % n).collect();
+    let mut head = 0;
+    let mut alive = n;
+    let mut at = head;
+    loop {
+        let after = next[at];
+        if is_zero_length(ring[at].1, ring[after].1, ring[at].2, eps) {
+            if alive == 1 {
+                return Vec::new();
+            }
+            let before = prev[at];
+            next[before] = after;
+            prev[after] = before;
+            alive -= 1;
+            if at == head {
+                head = after;
+                at = head;
+            } else {
+                at = before;
+            }
+        } else if after == head {
+            break;
+        } else {
+            at = after;
+        }
+    }
+    let mut out = Vec::with_capacity(alive);
+    let mut k = head;
+    for _ in 0..alive {
+        out.push(ring[k]);
+        k = next[k];
+    }
+    out
 }
 
 /// The steps of §8 in the order of §8 ("Order of evaluation for a polygon").
@@ -146,20 +193,7 @@ fn prepare(
     }
 
     // Cleaning (§10): drop the start vertex of each zero-length segment until none remains.
-    let mut ring: Vec<(usize, Point, f64)> = (0..n).map(|i| (i, points[i], bulges[i])).collect();
-    loop {
-        let m = ring.len();
-        let zero = (0..m).find(|&i| {
-            let (_, p, b) = ring[i];
-            is_zero_length(p, ring[(i + 1) % m].1, b, eps)
-        });
-        match zero {
-            Some(i) => {
-                ring.remove(i);
-            }
-            None => break,
-        }
-    }
+    let ring = clean((0..n).map(|i| (i, points[i], bulges[i])).collect(), eps);
 
     // 8.5 too few vertices.
     let m = ring.len();
@@ -341,4 +375,55 @@ pub fn polygon_centroid(
         tolerance: p.tolerance,
         notes: p.notes,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::*;
+
+    use super::*;
+
+    /// The cleaning loop as first written (§10): drop the start vertex of the first zero-length
+    /// segment, search again from the start, until none remains. Quadratic; kept as the reference.
+    fn clean_reference(mut ring: Vec<(usize, Point, f64)>, eps: f64) -> Vec<(usize, Point, f64)> {
+        loop {
+            let m = ring.len();
+            let zero = (0..m).find(|&i| {
+                let (_, p, b) = ring[i];
+                is_zero_length(p, ring[(i + 1) % m].1, b, eps)
+            });
+            match zero {
+                Some(i) => {
+                    ring.remove(i);
+                }
+                None => break,
+            }
+        }
+        ring
+    }
+
+    proptest! {
+        /// The linear pass gives exactly the reference loop's ring: same vertices, same order. Rings are
+        /// drawn from few points with many repeats and near repeats (within and beyond ε), with bulges.
+        #[test]
+        fn linear_cleaning_equals_the_reference(
+            v in prop::collection::vec(
+                (
+                    0_usize..4,
+                    prop::sample::select(vec![0.0, 0.5e-3, 2e-3]),
+                    prop::sample::select(vec![0.0, 0.0, 0.5, -1.0, 1e6]),
+                ),
+                0..40,
+            )
+        ) {
+            let eps = 1e-3;
+            let base = [(0.0, 0.0), (5.0, 0.0), (5.0, 5.0), (0.0, 5.0)];
+            let ring: Vec<(usize, Point, f64)> = v
+                .iter()
+                .enumerate()
+                .map(|(i, &(k, d, b))| (i, Point::new(base[k].0 + d, base[k].1), b))
+                .collect();
+            prop_assert_eq!(clean(ring.clone(), eps), clean_reference(ring, eps));
+        }
+    }
 }

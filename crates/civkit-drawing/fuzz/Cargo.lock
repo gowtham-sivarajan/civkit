@@ -29,6 +29,9 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 [[package]]
 name = "civkit-drawing"
 version = "0.0.0"
+dependencies = [
+ "civkit-geometry",
+]
 
 [[package]]
 name = "civkit-drawing-fuzz"
@@ -38,6 +41,10 @@ dependencies = [
  "libfuzzer-sys",
  "peak_alloc",
 ]
+
+[[package]]
+name = "civkit-geometry"
+version = "0.0.0"
 
 [[package]]
 name = "find-msvc-tools"

@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 [package]
 name = "civkit-drawing"
 description = "CivKit drawing: CAD-neutral drawing model and DXF import"
@@ -10,8 +10,9 @@ repository.workspace = true
 authors.workspace = true
 publish.workspace = true
 
-# No dependencies: CivKit's own DXF reader (D-27, ADR 0015).
+# CivKit's own DXF reader (D-27, ADR 0015): no outside dependencies. Analysis uses the geometry crate (D-28).
 [dependencies]
+civkit-geometry.workspace = true
 
 [lints]
 workspace = true

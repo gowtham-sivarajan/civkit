@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -119,8 +119,9 @@ acceptance item is ticked with its evidence.
    **Code, tests first (from 2026-11-27):** `Affine2` (with `InsertPlacement`) and `region_area` written in
    `civkit-geometry`, with `tests/transforms.rs` and `tests/regions.rs` (26 tests; three planted faults caught). Then
    the §8.7 sweep prefilter and `WorkLimit` (`src/sweep.rs`, `tests/sweep.rs`: 12 tests; six planted faults caught),
-   completing A7. Next: bounded block and MINSERT expansion in `civkit-drawing`, then quantities, the unit check,
-   schedules and the report.
+   completing A7. Then polygon cleaning made linear (it was O(n²)), and bounded block and MINSERT expansion in
+   `civkit-drawing` (`src/expand.rs`, `tests/expansion.rs`: 11 tests; six planted faults caught). Next: quantities
+   and their aggregation, the unit check, schedules and the drawing report.
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).

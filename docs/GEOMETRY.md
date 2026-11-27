@@ -1,6 +1,6 @@
 # Geometry specification (Phase 2B, `civkit-geometry`)
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 19:18 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 16:10 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status: Accepted** (maintainer, 2026-11-25), after the review in
 > [planning/GEOMETRY_SPEC_REVIEW.md](../planning/GEOMETRY_SPEC_REVIEW.md). Recorded as D-22 in
@@ -317,6 +317,9 @@ The first error found is returned.
 - The start vertex of each zero-length segment (8.2), including the explicit closing duplicate (8.4), is removed.
 - The segment before it then ends at the next kept vertex and keeps its own bulge.
 - Cleaning repeats until no zero-length segment remains.
+- **(impl., D-28)** Cleaning is one linear pass with the same result as repeating "remove the first zero-length
+  segment's start vertex": removing a vertex changes only the segment before it, so the scan steps back one vertex
+  (or restarts at the new first vertex). At most 2n steps; a property test compares it with the repeated search.
 
 Area and centroid are computed on the vertices **as given**. A zero-length segment contributes its tiny exact share,
 so nothing is rounded away (D8).
@@ -471,6 +474,9 @@ the repository, or a result from another program. Each records where it came fro
     - the first crossing in order is reported for a ring and for a region with two crossings;
     - mutation check: unwidened boxes, ignored arc extremes, charging only y-overlaps, an unenforced limit, and
       reporting the first crossing found (ring or region) each make a test fail.
+11. **Linear cleaning (§10, D-28):** a property test against the repeated-search loop (few points, many exact and
+    near repeats, bulges); a triangle with every vertex repeated 300 000 times cleans to area 1/2. Stepping forward
+    instead of back after a removal makes the property test fail.
 
 ## 13. Decisions
 

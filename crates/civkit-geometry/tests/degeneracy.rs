@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-25 19:00 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 18:37 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! One test per row of docs/GEOMETRY.md §8, plus the self-intersection cases of the review.
 
@@ -315,4 +315,27 @@ fn derived_tolerance_that_overflows_is_an_error() {
         polyline_length(&vast, false, None),
         Err(GeometryError::Overflow)
     );
+}
+
+// 8.2 cleaning, at scale (D-28: no hang on hostile input) ---------------------------------------
+
+/// A triangle whose every vertex is repeated 300 000 times: 899 997 zero-length segments are
+/// cleaned, leaving the triangle (area 1/2). Cleaning by repeated search and removal would take about
+/// 4 × 10¹¹ steps; it must be linear.
+#[test]
+fn many_repeated_vertices_clean_in_linear_time() {
+    let repeat = 300_000;
+    let mut v = Vec::with_capacity(3 * repeat);
+    for &(x, y) in &[(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)] {
+        v.extend(std::iter::repeat_n(Vertex::straight(x, y), repeat));
+    }
+    let a = polygon_area(&v, None).expect("valid input");
+    exact(a.area, 0.5);
+    assert_eq!(a.orientation, Orientation::CounterClockwise);
+    let zero = a
+        .notes
+        .iter()
+        .filter(|n| matches!(n, Note::ZeroLengthSegment { .. }))
+        .count();
+    assert_eq!(zero, 3 * repeat - 3);
 }

@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 17:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The heap budget (ADR 0015, Q-D): every heap allocation the reader makes reserves its bytes here first, and
 //! releases them when freed, so the heap the reader has requested never passes the budget.
@@ -172,6 +172,11 @@ impl<T> BVec<T> {
         }
         self.items.push(value);
         Ok(())
+    }
+
+    /// Removes and returns the last element; the capacity (and its charge) is kept.
+    pub(crate) fn pop(&mut self) -> Option<T> {
+        self.items.pop()
     }
 
     /// Grows the capacity. While the allocator moves the elements, the old and the new buffer can both exist, so the

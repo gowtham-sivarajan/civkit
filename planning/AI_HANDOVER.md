@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 19:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 20:24 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -13,7 +13,8 @@
 Python #8 and Fuzz #1 green); review follow-ups and the X2 amendment followed (`4e41e7a`, `c740fd4`: CI #25, Python
 #10 and Fuzz #3 green). **Task 3 decided: D-28, [ADR 0016](decisions/0016-drawing-analysis.md)** (all questions as
 recommended); its code has started, tests first: `Affine2` and `region_area` in `435bb23` (CI #27, Python #12 green);
-the §8.7 sweep prefilter and `WorkLimit` written after it. Fuzzing: 50 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
+the §8.7 sweep prefilter and `WorkLimit` in `29d7230`; then linear polygon cleaning and bounded block and MINSERT
+expansion. Fuzzing: 50 min of 8 h. D6 and the engineering review remain open for the bulk review before 0.1.
 **Code written so far:** the engine (`civkit-core`: contract and seven registered calculations covering the five
 D-20 families, the beam's maximum shear and moment deferred, D-25; `civkit-units`; `civkit-geometry`;
 `civkit-drawing`: CivKit's DXF reader, ADR 0015); the Python package (`bindings/python`); the MCP server
@@ -167,14 +168,10 @@ git status                # confirm planning/ui-concepts/ is not staged
    **Task 3 decided (2026-11-27):** D-28, [ADR 0016](decisions/0016-drawing-analysis.md), every question Q-A … Q-I of
    [DRAWING_ANALYSIS_PROPOSAL.md](DRAWING_ANALYSIS_PROPOSAL.md) as recommended; gates A1–A9. **Code, tests first**, in
    the order of the proposal's §13. Done in `civkit-geometry`: `Affine2` and `region_area` (A3's transform tests),
-   the §8.7 sweep prefilter with `WorkLimit` (A7 complete). Next, in `civkit-drawing`: first make the polygon
-   cleaning loop linear (below), then bounded block and MINSERT expansion with `Affine2` in the shared budget (F5's
-   13 placements, the nested and mirrored BricsCAD fixture), quantities (A1, A4–A6), the unit check (A2), schedules
-   and the report; Python and MCP (A8); fuzz (A9).
-   **Known time hazard, not yet fixed:** `prepare` in `civkit-geometry/src/polygon.rs` cleans zero-length segments by
-   searching from the start and calling `Vec::remove` until none is left: O(n²). A ring of 1 000 000 repeated
-   vertices (allowed by the reader) would effectively hang, which gate A5 forbids. It needs a linear pass that gives
-   the identical cleaned ring, proven against the current loop by a property test. The 8-hour fuzz
+   the §8.7 sweep prefilter with `WorkLimit` (A7 complete), and linear polygon cleaning. Done in `civkit-drawing`:
+   `expand` (A3 complete; A5 in part). Next: quantities per placed entity and their aggregation by layer and kind
+   (A1, A4–A6: per-block caches, the per-vertex budget reservation around geometry calls, `incomplete` totals), the
+   unit check (A2), schedules and the drawing report; Python and MCP (A8); fuzz read + analyse (A9). The 8-hour fuzz
    record and the bulk human review stay pre-0.1 gates.
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
@@ -190,6 +187,31 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 20:24 IST — Linear polygon cleaning; bounded block and MINSERT expansion (tests first) *(Claude Sonnet 5.5)*
+- The maintainer pushed `29d7230` (the §8.7 prefilter) and asked for expansion next.
+- Cleaning (`civkit-geometry/src/polygon.rs`): the O(n²) repeated search-and-remove is now one linear pass with the
+  same result. Tests first: a property test against the old loop (kept as the reference in the test module) and a
+  triangle with every vertex repeated 300 000 times (0.2 s). Planted fault (step forward instead of back) caught.
+- Expansion (`civkit-drawing/src/expand.rs`, new dependency on `civkit-geometry`): `expand(drawing, budget, limits,
+  visit)` streams `Event::Placed` (entity, block-to-world `Affine2`, effective layer, depth, top and direct insert
+  handles) and `Event::Skipped` (`MissingBlock`, `Cycle`, `ZeroScale`, `NonPlanExtrusion`, `NotFinite`). Explicit
+  stack in a budgeted `BVec` (`BVec::pop` added); block lookup table from the budget; work = entities visited + cells;
+  a MINSERT whose cells exceed the remaining work is refused before any is placed; nesting > 32 refused; model space
+  only; layer `0` inherits through nesting. `Placed::plan_transform` composes the entity's OCS, except for LINE and
+  DIMENSION, whose points DXF states in world (block) coordinates.
+- Tests first (`tests/expansion.rs`, 11): F5 (13 bays, 4 trees, README totals 175 / 200 / 52 / 20, hand-computed
+  stripe starts and tree centres, the one mirrored bay, the MINSERT's 3 cells); BricsCAD (324 lines, 144 mirrored,
+  three nested positions worked by hand from the raw INSERT records); work at its boundary (10) and one below; a
+  10⁹ × 10⁹ MINSERT; 32 vs 33 deep; cycle, missing block, zero scale, non-plan extrusion reported once each with the
+  inserting layer; negative extrusion mirrors; layer 0 through nesting; budget 0 fails cleanly and everything is
+  released; paper space not placed.
+- Mutation check: layer 0 not inherited (4 tests fail), MINSERT offset ignored (1), composition reversed (2), cycle
+  check removed (1), MINSERT pre-check removed (1), nesting off by one (1).
+- Independent values: ezdxf is not installed in `.venv` (installing it would be a download), so positions were worked
+  by hand from the fixtures' raw records, read by a separate script.
+- `crates/civkit-drawing/fuzz/Cargo.lock` gains the `civkit-geometry` path entry only (no registry change).
+- Local: fmt and clippy clean, 372 Rust tests pass, dependency rule OK.
 
 ### 2026-11-27 19:18 IST — §8.7 sweep prefilter and work limit (tests first); A7 complete *(Claude Sonnet 5.5)*
 - The maintainer pushed `435bb23` (CI #27, Python #12 green) and asked for the prefilter, then expansion.
