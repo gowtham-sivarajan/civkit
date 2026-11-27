@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-28 00:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0015 gate X2: what CivKit's reader and `undxf` 0.11.0 both support agrees, for every input both accept:
 //! - header: `$ACADVER`, `$INSUNITS`, `$MEASUREMENT`, `$DWGCODEPAGE`, each including its absence;
@@ -647,6 +647,14 @@ fn fuzz_corpus_disagreements_are_reported() {
                 .chars()
                 .take(400)
                 .collect();
+            // Keep the input for triage: the fuzz corpus lives only as long as the CI runner, so the workflow
+            // uploads this folder as an artifact.
+            if let Some(dir) = std::env::var_os("CIVKIT_X2_DISAGREEMENTS") {
+                let dir = PathBuf::from(dir);
+                if std::fs::create_dir_all(&dir).is_ok() {
+                    let _ = std::fs::write(dir.join(&name), &bytes);
+                }
+            }
             disagreements.push(format!(
                 "| `{name}` | `{:016x}` | {} | {} |",
                 fnv64(&bytes),
