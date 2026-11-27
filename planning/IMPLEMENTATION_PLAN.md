@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:21 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -127,7 +127,9 @@ acceptance item is ticked with its evidence.
    **Report and schedule written (2026-11-27):** `src/report.rs` (`Analysis`, `analyze`, `analyze_dxf`, `to_json`,
    `to_csv`), with `tests/report.rs` (11; seven planted faults caught). Then Python (`civkit.drawing`) and MCP
    (`drawing.analyze` behind `--drawing-root`), with parity for every DXF fixture and path-restriction tests (A8,
-   complete once its checks pass in CI). Next: A4, then A9.
+   complete once its checks pass in CI: done, CI #34 and Python #19). Then A4 (`tests/analysis_memory.rs`: it found and
+   fixed three budget escapes) and A9 (the fuzz target runs read + analyse + report + schedule). Next: close A5 and A6
+   against ADR 0016, then the remaining fuzz hours and the 0.1 release checklist.
    - Add the 2D transformations and OCS handling of [GEOMETRY.md §11](../docs/GEOMETRY.md) to `civkit-geometry` (D-22).
    - Before exposing drawing results through the contract: decide how geometry notes reach users, add "clients accept
      unknown warning codes" to API_DESIGN §5, and add a code for "not supported in 0.1" (D-22, D3).
