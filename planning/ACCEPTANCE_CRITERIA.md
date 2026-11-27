@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 23:44 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-27 10:51 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -36,8 +36,8 @@
 ### Phase 3 — Python + MCP
 - [ ] `pip install` of the built wheel works offline on Windows, macOS, Linux.
 - [ ] MCP server works with MCP Inspector and at least one MCP client, fully offline, stdio only.
-- [ ] MCP gates G1–G3 of [ADR 0013](decisions/0013-mcp-sdk-and-surface.md) pass in CI: both protocol eras, tool-name rules, round-trip equality with `Registry::call_json` including contract errors.
-- [ ] Python gates P1–P5 of [ADR 0014](decisions/0014-python-package.md) pass in CI: offline install and a call on all five targets, CPython 3.11–3.15, parity with `Registry::call_json` (errors field by field), error details, no network.
+- [x] MCP gates G1–G3 of [ADR 0013](decisions/0013-mcp-sdk-and-surface.md) pass in CI: both protocol eras, tool-name rules, round-trip equality with `Registry::call_json` including contract errors. *(CI #17 green on `0013681`, 2026-11-27: https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436704)*
+- [x] Python gates P1–P5 of [ADR 0014](decisions/0014-python-package.md) pass in CI: offline install and a call on all five targets, CPython 3.11–3.15, parity with `Registry::call_json` (errors field by field), error details, no network. *(Python #2 green on `0013681`, 2026-11-27: https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436666)*
 - [ ] Parity test: identical JSON output via Rust, Python and MCP for every reference case.
 - [ ] Tag `phase-3-done`.
 

@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 10:51 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`) by OpenAI Codex (GPT-6; runtime model ID unavailable)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -116,7 +116,9 @@ git status                # confirm planning/ui-concepts/ is not staged
 2. **Phase 3 implementation:** Python package code is done (`bindings/python`, see the log); **its gates P1–P5 are
    met only when the `Python` workflow is green on GitHub.** The MCP server (`integrations/mcp`) is written, its G1–G3
    tests pass locally, and MCP Inspector and the Python MCP SDK agree with the engine in both eras. G1–G3 are met
-   when `ci.yml` is green. Next: parity tests across Rust, Python and MCP, notebooks and generated documentation.
+   when `ci.yml` is green: **met** (CI #17 and Python #2 green on `0013681`). Parity test written (`tests/parity`),
+   met when its CI job is green. Next: notebooks and generated documentation, then `phase-3-done` (tag only after
+   green CI), then Phase 4.
 3. **Phase 4 to complete 0.1:** implement the neutral drawing model and DXF reader, drawing limits, quantity extraction and unit checks, schedules, geometry transformations and OCS, DXF fixtures and fuzzing. Resolve geometry-note and unsupported-feature contract details before exposure.
 4. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate engineering review of C1–C9, Phase 4 DXF results and fixtures, and generated documentation review. Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
 5. D5 (local cargo-deny) is optional; CI already checks it.
@@ -127,6 +129,24 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 10:51 IST — Phase 3: cross-interface parity (Rust, Python, MCP) *(Claude Sonnet 5.5)*
+- `0013681` (MCP server) was pushed by the maintainer, with the `.pdb` untracked; CI #17 and Python #2 both green
+  (https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436704, https://github.com/gowtham-sivarajan/civkit/actions/runs/45944436666). The maintainer set the order: parity only after both pass. Acceptance items for gates G1–G3 and
+  P1–P5 are ticked, citing those runs.
+- **Parity** (`tests/parity/test_parity.py`, unittest): 13 reference cases + 7 error cases + 3 rounding cases, each
+  through Rust `Registry::call_json` (new `crates/civkit-core/examples/call_json.rs`, JSON lines in and out), the
+  installed Python package, and `civkit-mcp` in both eras via its own tool and `civkit_call` (a minimal stdio
+  JSON-RPC client, no SDK). Separate processes; every answer read with Python's `json` (correctly rounding).
+- **The 0.013 regression:** `0.013` itself parses correctly with either serde_json parser (short decimals take an
+  exact path); the bug was the output: with n = 0.013 the velocity is `1.8276944379471094`, which MCP re-read and
+  emitted as `…096`. Cases: that Manning call (SI and ft/s), plus a 17-digit input that must come back bit-exact
+  (`sum_backsights` of `[1.8276944379471094, 0.0]`, exact on every platform).
+- **Shown to catch it:** with `float_roundtrip` removed from both workspaces and all three interfaces rebuilt, parity
+  failed 15 times (both rounding cases in both eras, the input case, and MCP on 5 reference cases: Manning ×2, beam,
+  rise-and-fall, traverse). Restored; green.
+- **CI:** a `parity` job (Ubuntu, Windows, macOS) added to `python.yml`, written to `_move_to_dot_github/` for the
+  maintainer to move.
 
 ### 2026-11-27 00:24 IST — Phase 3: the MCP server (`integrations/mcp`), tests first *(Claude Sonnet 5.5)*
 - The maintainer reported the Python workflow green (24/24 jobs) after `929c052` and asked for the MCP server next.

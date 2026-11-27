@@ -1,8 +1,9 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 10:50 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # The Python package (D-26, planning/decisions/0014-python-package.md): gates P1-P5 in CI.
 #   P1  each of the five targets builds its abi3 wheel, installs it offline and runs a calculation
 #   P2  the test suite on CPython 3.11-3.15 (all five on Linux x86-64; the lowest and highest elsewhere)
 #   P3-P5 and the stub drift check (Q-E) are tests in bindings/python/tests, run on every target and version
+# parity: Rust call_json, the Python package and the MCP server agree on every reference case (tests/parity).
 # Also: rustfmt, clippy, the MSRV build and cargo-deny for bindings/python, which is its own Cargo workspace and so is
 # not covered by ci.yml. Actions are pinned to commit SHAs (docs/SECURITY.md).
 name: Python
@@ -93,3 +94,35 @@ jobs:
       - name: P2-P5 and the stub check - the test suite against the installed wheel
         shell: bash
         run: '"$VPY" -m unittest discover -s bindings/python/tests -v'
+
+  parity:
+    name: parity Rust/Python/MCP (${{ matrix.os }})
+    # IMPLEMENTATION_PLAN Phase 3 task 3: every reference case, plus error and rounding cases, through Rust
+    # call_json, the Python package and the MCP server (both eras), each in its own process, read with Python's json.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Build the Rust runner and the MCP server
+        run: |
+          cargo build --release --locked -p civkit-core --example call_json
+          cargo build --release --locked -p civkit-mcp
+      - name: Build and install the Python package
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          if [ "$RUNNER_OS" = "Windows" ]; then VPY="$RUNNER_TEMP/venv/Scripts/python.exe"; else VPY="$RUNNER_TEMP/venv/bin/python"; fi
+          echo "VPY=$VPY" >> "$GITHUB_ENV"
+          "$VPY" -m pip install maturin==1.16.0
+          (cd bindings/python && "$VPY" -m maturin build --release --locked --out dist)
+          "$VPY" -m pip install --no-index --find-links bindings/python/dist civkit
+      - name: Parity
+        shell: bash
+        run: '"$VPY" -m unittest discover -s tests/parity -v'
