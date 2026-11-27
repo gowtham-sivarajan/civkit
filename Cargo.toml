@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-27 01:38 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:55 IST · last edited 2026-11-27 15:39 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 [workspace]
 resolver = "3"
 members = [
@@ -9,7 +9,10 @@ members = [
     "crates/civkit-ffi",
     "integrations/mcp",
 ]
-exclude = ["bindings/python"]   # its own workspace: PyO3 needs a Python to build (ADR 0014)
+exclude = [
+    "bindings/python",              # its own workspace: PyO3 needs a Python to build (ADR 0014)
+    "crates/civkit-drawing/fuzz",   # its own workspace: cargo-fuzz needs nightly Rust (ADR 0015)
+]
 
 [workspace.package]
 version = "0.0.0"

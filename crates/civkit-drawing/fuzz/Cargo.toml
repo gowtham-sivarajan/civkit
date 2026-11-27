@@ -1,0 +1,27 @@
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+# Fuzzing the DXF reader (ADR 0015 gate X6): `cargo +nightly fuzz run read_dxf`. Its own workspace, excluded from the
+# root one (cargo-fuzz needs nightly Rust); never shipped. libfuzzer-sys is (MIT OR Apache-2.0) AND NCSA (LLVM's
+# permissive licence), test tooling only.
+[package]
+name = "civkit-drawing-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "Apache-2.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+civkit-drawing = { path = ".." }
+libfuzzer-sys = "=0.4.13"
+peak_alloc = "=0.3.0"
+
+[[bin]]
+name = "read_dxf"
+path = "fuzz_targets/read_dxf.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

@@ -1,4 +1,4 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 00:13 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-24 23:41 IST · last edited 2026-11-27 15:39 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 # Rust
 /target/
@@ -11,6 +11,9 @@ __pycache__/
 *.so
 *.dylib
 *.pdb
+# Fuzzing: the corpus grows locally and in CI (seeded from tests/fixtures/dxf); crash inputs become tests
+crates/civkit-drawing/fuzz/corpus/
+crates/civkit-drawing/fuzz/artifacts/
 .venv/
 venv/
 *.egg-info/

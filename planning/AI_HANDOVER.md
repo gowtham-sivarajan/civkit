@@ -1,6 +1,6 @@
 # AI Handover
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 14:50 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as HANDOFF.md) · last edited 2026-11-27 15:40 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Read this first** when picking the project up — the maintainer after a break, a new collaborator, or an AI
 > assistant starting a fresh session. **Update it at the end of every working session.**
@@ -144,8 +144,9 @@ git status                # confirm planning/ui-concepts/ is not staged
    proposed and accepted before code (geometry notes and unsupported-feature reporting first), and code is written
    tests first.
    **Task 1 decided (2026-11-27):** D-27, [ADR 0015](decisions/0015-dxf-reader.md): own reader, `undxf` =0.11.0 as a test-only
-   cross-check, a reserved heap budget, gates X1–X6. **Next: task 2**, the reader, tests first. Task 3's proposal must
-   use one combined budget for the parsed drawing and its expansion.
+   cross-check, a reserved heap budget, gates X1–X6. **Task 2 (the reader) written**, X1–X5 passing locally, X6 (fuzzing)
+   written for CI. Next: CI on it, then the task 3 proposal (expansion within one combined budget, transformations
+   and OCS, lengths and areas, the unit check, schedules, geometry notes and "not supported in 0.1").
 2. **Bulk human review before 0.1:** after Phase 4 code is complete, bundle the D6 code review, the separate
    engineering review of C1–C9, Phase 4 DXF results and fixtures, and the generated documentation (now in
    `docs/calculations`). Keep D6 and engineering approval as separate records. D6 remains open until a human signs off.
@@ -160,6 +161,32 @@ git status                # confirm planning/ui-concepts/ is not staged
 ## 5. Session log
 
 Newest first. One short entry per session: what changed, what was decided, what is next.
+
+### 2026-11-27 15:40 IST — Phase 4 task 2: CivKit's DXF reader (`civkit-drawing`), tests first *(Claude Sonnet 5.5)*
+- **Tests first** (all red before the reader existed): `tests/fixtures.rs` (X1, 12), `tests/cross_check.rs` (X2, against
+  `undxf` =0.11.0 and `uncad-model` =0.12.0, dev-dependencies), `tests/memory.rs` (X3 and X4, one test so the counting
+  allocator `peak_alloc` =0.3.0 measures one thread), `tests/malformed.rs` (X5, 17 incl. two property tests),
+  `tests/roundtrip.rs` (written drawings read back bit for bit). Fixture expectations come from the fixtures README and
+  from the files via a separate script, not from the reader.
+- **Reader** (`src/`, no dependencies, `forbid(unsafe_code)`): `budget.rs` (Budget, RAII Charge, BVec/BStr/BMap/Scratch:
+  the only storage), `pairs.rs` (pairs in place, correctly rounded numbers), `decode.rs` (UTF-8 R2007+, ANSI_1252,
+  `\U+XXXX`), `reader.rs` (iterative sections and entities), `model.rs`, `error.rs` (no heap in errors).
+- **X3 found a real escape** on its first run: growing a vector reallocates with old and new buffers both alive;
+  only the new was reserved (50 000 LINEs: 16.5 MB requested, 11.0 MB reserved). Fixed by reserving the new buffer
+  in full before releasing the old. A mutation check then showed X3 catches under-charged map entries,
+  unreserved strings and the dropped transient. X3 also runs over 420 corrupted fixtures (the fuzz check, locally).
+- **Choices made in implementation (for review):** angles kept in degrees as stated (`*_deg`; radians belong to
+  task 3, GEOMETRY §11); a missing `0 EOF` is an error; no `$ACADVER` ≥ AC1021 and no `ANSI_1252` means only ASCII is
+  decoded (others become U+FFFD with a note, never guessed); old POLYLINEs that are 3D, meshes, polyface or fitted
+  are counted as `POLYLINE (3D)` etc.; INSERT attributes are counted as ATTRIB; a MINSERT count below 1 is read as
+  1; a HATCH whose boundary structure is unexpected is kept without paths and noted (`HatchNotRead`); parsed types
+  are not `Clone` (a clone would allocate outside the budget); map entries are charged 96 bytes each plus 512 for
+  the first node (measured by X3).
+- **X6:** `crates/civkit-drawing/fuzz` (own workspace, excluded from the root; libfuzzer-sys is (MIT OR Apache-2.0)
+  AND NCSA, test tooling only) and `fuzz.yml` (nightly, Linux, 10 minutes per push and daily, longer on demand),
+  written to `_move_to_dot_github/`. **Not run locally:** no nightly toolchain or cargo-fuzz here; the target
+  type-checks on stable.
+- Workspace: fmt and clippy clean; 316 Rust tests; `civkit-drawing` builds on Rust 1.98; dependency rule OK.
 
 ### 2026-11-27 14:50 IST — D-27 accepted (ADR 0015): CivKit's own DXF reader *(Claude Sonnet 5.5)*
 - The maintainer accepted revision 2 (own reader; `undxf` =0.11.0 as a test-only cross-check; Q-C scope and Q-E

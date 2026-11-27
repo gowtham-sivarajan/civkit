@@ -1,6 +1,29 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-25 10:54 IST
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:54 IST · last edited 2026-11-27 15:40 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
-//! CivKit drawing: a CAD-neutral drawing model (lines, polylines, arcs, circles, blocks, layers,
-//! dimensions, drawing units) and a DXF reader. All drawing analysis is written against this model.
+//! CivKit drawing: the CAD-neutral drawing model and CivKit's own DXF reader (D-12 / ADR 0002; D-27 / ADR 0015).
 //!
-//! Empty until Phase 4 (ADR 0002). Test drawings: `tests/fixtures/dxf/`.
+//! [`read_dxf`] reads ASCII DXF (R12–R2018) into a [`Drawing`]: header values (with "not stated" kept apart from any
+//! stated value), layers, blocks and the entities 0.1 reads (LINE, CIRCLE, ARC, LWPOLYLINE and old 2D POLYLINE,
+//! TEXT, INSERT including MINSERT arrays, HATCH boundaries, DIMENSION). Every other entity is counted by type and
+//! layer ([`Drawing::unsupported`]); what could not be fully read is noted ([`Drawing::notes`]).
+//!
+//! Memory: every heap allocation the reader makes is reserved from a [`Budget`] first, so the heap it requests never
+//! passes the budget. That is a bound on reader-requested heap, not on process memory. Analysis of the drawing (Phase
+//! 4 task 3) reserves from the same budget.
+//!
+//! Test drawings: `tests/fixtures/dxf/`.
+
+mod budget;
+mod decode;
+mod error;
+mod model;
+mod pairs;
+mod reader;
+
+pub use budget::{BStr, BVec, Budget};
+pub use error::ReadError;
+pub use model::{
+    Block, Boundary, Dimension, Drawing, Edge, EdgeKind, Entity, EntityKind, Hatch, HatchPath,
+    Insert, Layer, NameId, Note, Point2, Point3, Polyline, PolylineSource, Text, Vertex,
+};
+pub use reader::{Limits, read_dxf, read_dxf_with};

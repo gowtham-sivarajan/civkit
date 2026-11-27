@@ -1,0 +1,44 @@
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-27 15:40 IST
+# Fuzzing the DXF reader (ADR 0015 gate X6, Q-E): cargo-fuzz on nightly Rust, Linux, seeded with the DXF fixtures,
+# 10 minutes per run (on every push to main, daily, and on demand). Longer recorded runs for the 8 hours required
+# before 0.1: run this workflow by hand with a larger `seconds` (a job may last at most 6 hours).
+# Actions are pinned to commit SHAs (docs/SECURITY.md).
+name: Fuzz
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: "Fuzzing time in seconds"
+        required: false
+        default: "600"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  read_dxf:
+    name: fuzz read_dxf
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install nightly --profile minimal && rustup default nightly
+      - run: cargo install cargo-fuzz --version 0.13.2 --locked
+      - name: Seed the corpus with the fixtures
+        run: |
+          mkdir -p crates/civkit-drawing/fuzz/corpus/read_dxf
+          cp tests/fixtures/dxf/*.dxf tests/fixtures/dxf/third_party/ezdxf/*.dxf crates/civkit-drawing/fuzz/corpus/read_dxf/
+      - name: Fuzz
+        working-directory: crates/civkit-drawing
+        env:
+          SECONDS_TO_RUN: ${{ github.event.inputs.seconds || '600' }}
+        run: cargo fuzz run read_dxf -- -max_total_time="$SECONDS_TO_RUN" -rss_limit_mb=4096 -max_len=1048576
