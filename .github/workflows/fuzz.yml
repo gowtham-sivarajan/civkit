@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-28 00:16 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 15:40 IST · last edited 2026-11-28 00:22 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # Fuzzing the DXF reader (ADR 0015 gate X6, Q-E): cargo-fuzz on nightly Rust, Linux, seeded with the DXF fixtures,
 # 10 minutes per run (on every push to main, daily, and on demand). After fuzzing, the corpus it grew is cross-checked
 # against undxf in report-and-triage mode (gate X2, ADR 0015 amendment): disagreements are listed in the job summary
@@ -23,8 +23,10 @@ on:
 permissions:
   contents: read
 
+# Push and scheduled runs replace each other; a manual run (the long recorded runs) has a group of its own, so no push
+# cancels it.
 concurrency:
-  group: fuzz-${{ github.ref }}
+  group: fuzz-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || 'auto' }}
   cancel-in-progress: true
 
 jobs:
