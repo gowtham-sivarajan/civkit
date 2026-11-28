@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! The MCP handler. Every calculation goes through `Registry::call_json`; results map onto MCP as ADR 0013 point 4
 //! fixes: success → `structuredContent` = the response, contract error → `isError: true` with the envelope, both
@@ -256,11 +256,13 @@ impl ServerHandler for CivKit {
     fn get_info(&self) -> ServerConfig {
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new("civkit-mcp", civkit_core::VERSION))
-            .with_instructions(
+            .with_instructions(format!(
                 "CivKit runs civil-engineering calculations offline and returns the full result: outputs, the \
                  calculation trace, warnings, references and assumptions. Report CivKit's numbers and explain them \
-                 from the trace; do not recompute them. Every dimensional input needs a unit.",
-            )
+                 from the trace; do not recompute them. Every dimensional input needs a unit. When you present a \
+                 CivKit result, show this disclaimer with it: {}",
+                civkit_core::DISCLAIMER
+            ))
     }
 
     async fn list_tools(

@@ -5,6 +5,7 @@ import os
 from typing import Any, Literal, Mapping, Sequence
 
 __version__: str
+DISCLAIMER: str
 
 Input = Q | float | int | str | tuple[Any, str] | Sequence[Q] | Sequence[float] | Mapping[str, Any]
 
@@ -49,13 +50,23 @@ def version() -> str: ...
 
 Source = str | os.PathLike[str] | bytes | bytearray | memoryview
 
+class _Report(dict[str, Any]):
+    def _repr_html_(self) -> str: ...
+
 class _drawing:
+    Report = _Report
     @staticmethod
-    def analyze(source: Source, *, detail: Literal['layer', 'entity'] = 'layer') -> dict[str, Any]:
-        """The drawing report (drawing.analyze, D-28) of a DXF path or bytes."""
+    def analyze(source: Source, *, detail: Literal['layer', 'entity'] = 'layer') -> _Report:
+        """The drawing report (drawing.analyze, D-28) of a DXF path or bytes.
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
     @staticmethod
     def schedule_csv(source: Source) -> str:
-        """The quantity schedule (CSV text) of a DXF path or bytes."""
+        """The quantity schedule (CSV text) of a DXF path or bytes.
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
 
 drawing: _drawing
 
@@ -63,7 +74,10 @@ drawing: _drawing
 class _fluids_open_channel:
     @staticmethod
     def manning_trapezoidal(*, bottom_width: Input, side_slope: Input, depth: Input, manning_n: Input, bed_slope: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Manning's equation, trapezoidal channel with known depth (fluids.open_channel.manning_trapezoidal, version 1)."""
+        """Manning's equation, trapezoidal channel with known depth (fluids.open_channel.manning_trapezoidal, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
 
 class _fluids:
     open_channel: _fluids_open_channel
@@ -71,7 +85,10 @@ class _fluids:
 class _quantities_earthwork:
     @staticmethod
     def average_end_area(*, method: Literal['average_end_area', 'pyramid_at_zero_end'], chainages: Input, cut_areas: Input, fill_areas: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Earthwork volumes: average end area, with the zero-end pyramid on request (quantities.earthwork.average_end_area, version 1)."""
+        """Earthwork volumes: average end area, with the zero-end pyramid on request (quantities.earthwork.average_end_area, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
 
 class _quantities:
     earthwork: _quantities_earthwork
@@ -80,6 +97,9 @@ class _structural_beam:
     @staticmethod
     def simply_supported(*, span: Input, udl: Input | None = None, point_load: Input | None = None, point_load_position: Input | None = None, elastic_modulus: Input, second_moment: Input, position: Input, output_units: Mapping[str, str] | None = None) -> Result:
         """Simply supported beam: reactions, deflection and end slope (structural.beam.simply_supported, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        
 
         Conditional requirements:
         - point_load_position is required when point_load > 0
@@ -91,18 +111,30 @@ class _structural:
 class _surveying_levelling:
     @staticmethod
     def closure_adjustment(*, elevations: Input, section_lengths: Input, closing_elevation: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Levelling closure error and proportional adjustment (surveying.levelling.closure_adjustment, version 1)."""
+        """Levelling closure error and proportional adjustment (surveying.levelling.closure_adjustment, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
     @staticmethod
     def height_of_instrument(*, start_elevation: Input, backsights: Input, foresights: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Differential levelling: height-of-instrument method (surveying.levelling.height_of_instrument, version 1)."""
+        """Differential levelling: height-of-instrument method (surveying.levelling.height_of_instrument, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
     @staticmethod
     def rise_and_fall(*, start_elevation: Input, backsights: Input, foresights: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Differential levelling: rise-and-fall method (surveying.levelling.rise_and_fall, version 1)."""
+        """Differential levelling: rise-and-fall method (surveying.levelling.rise_and_fall, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
 
 class _surveying_traverse:
     @staticmethod
     def compass_rule(*, bearings: Input, distances: Input, output_units: Mapping[str, str] | None = None) -> Result:
-        """Closed traverse: misclosure and compass-rule (Bowditch) adjustment (surveying.traverse.compass_rule, version 1)."""
+        """Closed traverse: misclosure and compass-rule (Bowditch) adjustment (surveying.traverse.compass_rule, version 1).
+
+        CivKit results support, and do not replace, the judgement of a qualified engineer.
+        """
 
 class _surveying:
     levelling: _surveying_levelling

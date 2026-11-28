@@ -1,4 +1,4 @@
-// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-27 00:24 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 10:58 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! # civkit-core
 //!
@@ -46,3 +46,9 @@ pub use registry::{
 
 /// The CivKit version, reported in every response.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The disclaimer every interface shows (docs/ENGINEERING_STANDARDS.md §7). It is shown by the interfaces (Python
+/// documentation and display, MCP instructions and tool descriptions, generated pages), never added to the JSON
+/// contract, so responses stay identical across interfaces (D-13).
+pub const DISCLAIMER: &str =
+    "CivKit results support, and do not replace, the judgement of a qualified engineer.";

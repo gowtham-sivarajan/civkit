@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-28 14:10 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! ADR 0013 gates G1 and G3 over real stdio: the built `civkit-mcp` binary is spawned and spoken to as a
 //! 2025-11-25 client (`initialize` handshake) and as a 2026-07-28 client (per-request `_meta`, `server/discover`).
@@ -31,6 +31,8 @@ struct Client {
     lines: Receiver<String>,
     era: Era,
     next_id: u64,
+    /// The `initialize` result (handshake era only).
+    init: Value,
 }
 
 impl Client {
@@ -58,6 +60,7 @@ impl Client {
             lines,
             era,
             next_id: 0,
+            init: Value::Null,
         };
         if let Era::Handshake = era {
             let init = client.request(
@@ -70,6 +73,7 @@ impl Client {
             );
             assert_eq!(init["result"]["protocolVersion"], "2025-11-25", "{init}");
             assert_eq!(init["result"]["serverInfo"]["name"], "civkit-mcp", "{init}");
+            client.init = init["result"].clone();
             client.send(&json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }));
         }
         client
@@ -277,7 +281,10 @@ fn g1_both_eras_list_every_tool_with_annotations_and_schemas() {
             .describe("fluids.open_channel.manning_trapezoidal", None)
             .expect("known");
         assert_eq!(manning["title"], d.title.as_str());
-        assert_eq!(manning["description"], d.summary.as_str());
+        assert_eq!(
+            manning["description"],
+            format!("{} {}", d.summary, civkit_core::DISCLAIMER).as_str()
+        );
         let required: BTreeSet<&str> = manning["inputSchema"]["required"]
             .as_array()
             .expect("required")
@@ -345,6 +352,35 @@ fn g1_both_eras_list_every_tool_with_annotations_and_schemas() {
         let distances = &traverse["inputSchema"]["properties"]["distances"]["properties"]["value"];
         assert_eq!(distances["type"], "array");
         assert_eq!(distances["maxItems"], json!(civkit_core::MAX_LIST_LEN));
+        c.finish();
+    }
+}
+
+/// The disclaimer (ENGINEERING_STANDARDS §7) is in the server instructions and at the end of every tool's
+/// description: per-calculation, generic and drawing tools, in both eras. Tool results are not changed (G3).
+/// CivKit gives the text to the client; whether a client shows it is the client's choice.
+#[test]
+fn the_disclaimer_is_in_the_instructions_and_every_tool_description() {
+    let root = fixtures();
+    for era in ERAS {
+        let mut c = Client::start(era, &["--drawing-root", root.to_str().expect("path")]);
+        if let Era::Handshake = era {
+            let instructions = c.init["instructions"].as_str().unwrap_or_default();
+            assert!(
+                instructions.contains(civkit_core::DISCLAIMER),
+                "{era:?}: {instructions}"
+            );
+        }
+        let tools = c.tools();
+        assert!(tools.iter().any(|t| t["name"] == DRAWING), "{era:?}");
+        for t in &tools {
+            let description = t["description"].as_str().expect("description");
+            assert!(
+                description.ends_with(civkit_core::DISCLAIMER),
+                "{era:?} {}: {description}",
+                t["name"]
+            );
+        }
         c.finish();
     }
 }

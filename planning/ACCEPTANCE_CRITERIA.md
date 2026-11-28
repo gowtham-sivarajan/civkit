@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-28 00:34 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. The single source of truth for "done". [ROADMAP.md](../ROADMAP.md) and
 > [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) point here.
@@ -45,7 +45,7 @@
 - [ ] Quantity extraction, unit checks and schedule export pass on all DXF fixtures.
 - [x] Drawing analysis gates A1–A9 of [ADR 0016](decisions/0016-drawing-analysis.md) pass in CI: fixtures, unit check, transforms, budget accounting, limits, no silent loss, region area, interface parity and safety, fuzzing of read + analyse. *(Status 2026-11-27, gate by gate. In CI: **A1** fixtures and **A2** unit check (`tests/quantities.rs`, `tests/unit_check.rs`); **A3** transforms and placements (`civkit-geometry/tests/transforms.rs`, `tests/expansion.rs`); **A4** heap within the shared budget (`tests/analysis_memory.rs`, CI #35 on `c233f4c`); **A7** region area and the §8.7 sweep (`tests/regions.rs`, `tests/sweep.rs`); **A8** parity Rust = Python = MCP for every DXF fixture and MCP path safety (CI #34, Python #19 on `cb87572`); **A9** the fuzz target runs read + analyse + report + schedule (Fuzz #14 on `22596a8`, first run green). **A5** (the four hostile cases end to end) and **A6** (every unsupported case named and counted) in `tests/gates_a5_a6.rs`, with earlier coverage in `tests/expansion.rs` and `tests/quantities.rs` (CI #37 and Python #22 on `0d79d2c`). All nine pass in CI.)*
 - [ ] DXF reader gates X1–X6 of [ADR 0015](decisions/0015-dxf-reader.md) pass in CI: fixtures, `undxf` cross-check, heap-budget accounting (measured peak ≤ reserved peak + slack), budget exhaustion (never a panic or overrun), malformed input, fuzzing. *(Status 2026-11-27: X1–X5 pass locally and in CI on `241b44c`; X6's 10-minute run passed in Fuzz #1; the 8-hour record is outstanding, so this stays open.)*
-- [ ] DXF parser fuzzed for a defined minimum duration with no crashes: 10 minutes per CI run, and 8 hours in total recorded before 0.1, under the default heap budget (ADR 0015). *(Recorded total, counting only runs whose fuzzing step passed: 2 h 20 min of 8 h, through Fuzz #16 on `cc379ff`, 2026-11-28 (Fuzz #15 cancelled, not counted). From the A9 commit on, each run fuzzes read + analyse.)*
+- [ ] DXF parser fuzzed for a defined minimum duration with no crashes: 10 minutes per CI run, and 8 hours in total recorded before 0.1, under the default heap budget (ADR 0015). *(Recorded total, counting only runs whose fuzzing step passed: 2 h 30 min of 8 h, through Fuzz #17 on `0d97c34`, 2026-11-28 (Fuzz #15 cancelled, not counted). From the A9 commit on, each run fuzzes read + analyse.)*
 - [ ] Everything in §2 holds. Tag `v0.1.0`.
 
 ### Phase 5 — AutoCAD / Civil 3D → **Release 0.2**
@@ -59,10 +59,22 @@
 
 - [ ] Every calculation in [MVP_SCOPE.md](MVP_SCOPE.md) meets §3.
 - [ ] Python and MCP interfaces pass parity tests.
-- [ ] Offline CI job passes ([OFFLINE_POLICY.md](../docs/OFFLINE_POLICY.md)).
+- [ ] Offline CI job passes ([OFFLINE_POLICY.md](../docs/OFFLINE_POLICY.md)). *(2026-11-28: the `offline` job in
+  `ci.yml` builds, then runs `cargo test --offline` for the whole workspace in a network namespace with no
+  interfaces, and first proves that namespace cannot reach the network. Python's P1 and P5 already install and run the
+  wheel offline. Ticked when the job passes in CI.)*
 - [ ] `cargo-audit` / `cargo-deny` clean ([SECURITY.md](../docs/SECURITY.md)).
 - [ ] Every public calculation has a generated doc page.
-- [ ] Disclaimer visible in every interface.
+- [ ] Disclaimer shown in every interface ([ENGINEERING_STANDARDS §7](../docs/ENGINEERING_STANDARDS.md)), with no
+  change to the JSON contract (D-13):
+  - generated calculation pages and notebooks;
+  - Python: the package and public API documentation, and the display of a `Result` or drawing report, Jupyter's rich
+    display included;
+  - MCP: the server instructions and every calculation, generic and drawing tool description.
+
+  CivKit provides the MCP text to the client; whether a third-party client displays it is outside CivKit's control.
+  *(2026-11-28: implemented with tests (`tests/disclaimer.rs`, the MCP stdio test, `test_disclaimer.py`); ticked
+  when they pass in CI.)*
 - [ ] Release notes and checksums published.
 
 ## 3. Per-calculation checklist

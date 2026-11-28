@@ -1,10 +1,13 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """Result: a successful calculation response."""
 
 from __future__ import annotations
 
 import copy
+import html
 from typing import Any, Callable
+
+from . import _civkit
 
 from ._quantity import Q
 
@@ -13,7 +16,10 @@ class Result:
     """A successful calculation. ``to_dict()`` is the engine's JSON response exactly (gate P3).
 
     ``outputs`` maps each output name to a :class:`Q`, or to a list of ``Q`` for a list output. ``request`` is the
-    JSON request that produced it.
+    JSON request that produced it. Its display (``repr``, and Jupyter's rich display) ends with the disclaimer;
+    ``to_dict()`` does not carry it.
+
+    CivKit results support, and do not replace, the judgement of a qualified engineer.
     """
 
     def __init__(self, response: dict[str, Any], request: dict[str, Any], rerun: Callable[[dict], dict]) -> None:
@@ -40,7 +46,23 @@ class Result:
 
     def __repr__(self) -> str:
         outs = ", ".join(f"{k}={v!r}" for k, v in self.outputs.items())
-        return f"<Result {self.id} v{self.version}: {outs}>"
+        return f"<Result {self.id} v{self.version}: {outs}>\n{_civkit.DISCLAIMER}"
+
+    def _repr_html_(self) -> str:
+        """Jupyter's rich display: the outputs as a table, then the disclaimer."""
+        rows = []
+        for name, q in self.outputs.items():
+            values = q if isinstance(q, list) else [q]
+            unit = values[0].unit if values else None
+            shown = ", ".join(str(v.value) for v in values)
+            cells = (html.escape(name), html.escape(shown), html.escape(unit or ""))
+            rows.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+        return (
+            f"<div><strong>{html.escape(self.id)}</strong> v{self.version} (CivKit {html.escape(self.civkit_version)})"
+            "<table><thead><tr><th>output</th><th>value</th><th>unit</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>"
+            f"<p><em>{html.escape(_civkit.DISCLAIMER)}</em></p></div>"
+        )
 
 
 def _bound(value: Any, unit: str | None, request: dict, name: str, index: int | None, rerun: Callable) -> Q:

@@ -1,6 +1,6 @@
 # API Design
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-27 23:16 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:29 IST (§3 example from README.md, 2026-11-24 23:41 IST) · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Phase 0 deliverable — no open TBDs. The nine former TBDs were resolved in task 0.7 and accepted by the
 > maintainer on 2026-11-25 (D-19, [ADR 0007](../planning/decisions/0007-api-contract-details.md)); summary in §12.
@@ -415,7 +415,8 @@ Request processing:
 ## 8. Python API (`bindings/python`)
 
 - Generic: `civkit.call("fluids.open_channel.manning", n=0.013, area="2.4 m^2", ...)` returning a result object
-  with `.outputs`, `.trace`, `.warnings`, `.to_dict()`.
+  with `.outputs`, `.trace`, `.warnings`, `.to_dict()`. Its display (`repr`, and Jupyter's rich display) ends with the
+  disclaimer, `civkit.DISCLAIMER` ([ENGINEERING_STANDARDS §7](ENGINEERING_STANDARDS.md)); `to_dict()` does not carry it.
 - Generated typed functions per calculation, e.g. `civkit.fluids.open_channel.manning(...)`, with docstrings
   built from the descriptor.
 - Discovery: `civkit.list()`, `civkit.describe(id)`.
@@ -436,8 +437,8 @@ Request processing:
   x86-64; macOS x86-64 and ARM64; Linux x86-64 and ARM64, manylinux2014). Free-threaded CPython, PyPy and GraalPy are
   not supported in 0.1. Offline installation is promised for wheels, not for the source archive.
 - The Rust extension `civkit._civkit` exposes only `call_json`, `list_json`, `describe_json` and `version`, and, for
-  drawing analysis (D-28), `drawing_json` and `drawing_csv`; everything else is plain Python and does no validation of
-  its own.
+  drawing analysis (D-28), `drawing_json` and `drawing_csv`, and one constant, `DISCLAIMER`; everything else is plain
+  Python and does no validation of its own.
 - Contract errors raise `civkit.CivKitError` with `.code`, `.input`, `.index`, `.message` and `.errors`.
 - The package has no runtime dependencies, makes no network calls and no intentional file writes (Python's own
   bytecode caches excepted).
@@ -467,6 +468,8 @@ Request processing:
     At that point the default may switch to `generic`, with per-calculation tools left as an option.
 - Tool results return the full contract response (outputs, trace, warnings, references) so the AI client
   explains CivKit's numbers instead of computing its own.
+- The disclaimer ([ENGINEERING_STANDARDS §7](ENGINEERING_STANDARDS.md)) is in the server instructions and at the end
+  of every tool description, never in a tool result. Whether a client shows it is the client's choice.
 - Drawing tools accept file paths only within locations the user configures (see [SECURITY.md](SECURITY.md)): the
   `drawing.analyze` tool exists only when the server is started with `--drawing-root <dir>` (§13).
 
@@ -520,7 +523,8 @@ full specification is [DRAWING_ANALYSIS_PROPOSAL.md](../planning/DRAWING_ANALYSI
   (the drawing and its `Quantities`) with `to_json()` and `to_csv()`. Errors are `AnalysisError`, whose `code()` is
   `DRAWING_UNREADABLE` or `DRAWING_LIMIT`. `AnalysisOptions::entity_rows` is the report's `detail = "entity"`;
   `max_rows` (100 000) bounds each list.
-- **Python** (implemented): `civkit.drawing.analyze(source, *, detail="layer")` returns the report as a `dict`, and
+- **Python** (implemented): `civkit.drawing.analyze(source, *, detail="layer")` returns the report as a `dict` (a
+  `civkit.drawing.Report`, equal to the engine's JSON, whose display adds the disclaimer), and
   `civkit.drawing.schedule_csv(source)` returns the CSV text; `source` is a path (`str` or `os.PathLike`) or the
   file's bytes. Analysis errors raise `CivKitError` (`DRAWING_UNREADABLE`, `DRAWING_LIMIT`, or `INVALID_VALUE` on
   `detail`, which the engine validates); a file that cannot be opened raises Python's own `OSError`. Nothing is

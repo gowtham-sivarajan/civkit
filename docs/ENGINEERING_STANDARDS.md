@@ -1,6 +1,6 @@
 # Engineering Standards
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-26 20:58 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md) · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. Applies to every calculation in CivKit, whoever (or whatever) writes it.
 
@@ -75,3 +75,15 @@ Full checklist: [planning/ACCEPTANCE_CRITERIA.md](../planning/ACCEPTANCE_CRITERI
 ## 7. Disclaimer (shown in every interface)
 
 > CivKit results support, and do not replace, the judgement of a qualified engineer.
+
+This exact sentence is one constant in the engine (`civkit_core::DISCLAIMER`, checked against this section by a test).
+It is shown by the interfaces and is never part of the JSON contract, so responses stay identical across interfaces
+(D-13):
+
+- **Generated calculation pages and notebooks:** at the top of every page and in each notebook's first cell.
+- **Python:** `civkit.DISCLAIMER`; the documentation of the package, `call`, `list`, `describe`, every typed
+  calculation function, `civkit.drawing`, `analyze` and `schedule_csv`; and the display of a `Result` or a drawing
+  report (`repr`, and Jupyter's rich display). `Result.to_dict()` and the report dict are the engine's JSON, unchanged.
+- **MCP:** the server instructions (which ask the client to show it with any CivKit result) and the end of every tool
+  description: per-calculation, generic and drawing tools. Tool results are the contract JSON, unchanged. CivKit gives
+  the text to the client; it cannot make a third-party client display it.

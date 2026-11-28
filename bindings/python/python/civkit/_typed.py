@@ -1,8 +1,10 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 11:21 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """Typed functions, generated at import from the installed descriptors (ADR 0014 point 6):
 ``civkit.fluids.open_channel.manning_trapezoidal(bottom_width="1.5 m", ...)``."""
 
 from __future__ import annotations
+
+from . import _civkit  # the disclaimer: the engine's one string
 
 import inspect
 from typing import Any, Callable
@@ -89,6 +91,7 @@ def docstring(d: dict[str, Any]) -> str:
         lines += ["", "Validity rules:"] + [f"    - {v}" for v in d["validity"]]
     lines += ["", "References:"] + [f"    - {r}" for r in d["references"]]
     lines += ["", f"Calculation {d['id']}, version {d['version']}. Returns a civkit.Result; raises civkit.CivKitError."]
+    lines += ["", _civkit.DISCLAIMER]
     return "\n".join(lines)
 
 

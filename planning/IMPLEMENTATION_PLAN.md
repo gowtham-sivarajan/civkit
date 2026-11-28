@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-27 23:39 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-24 23:41 IST (as part of README.md and HANDOFF.md) · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Living document — tasks are ticked as they finish. Exit criteria: [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md).
 
@@ -127,6 +127,9 @@ acceptance item is ticked with its evidence.
    target runs read + analyse + report + schedule (A9). **Open:** the 8-hour fuzz total (ACCEPTANCE_CRITERIA).
 5. Bulk human review before 0.1: complete D6, the separate C1–C9 engineering review, Phase 4 DXF results and fixtures,
    and generated documentation review; record each outcome. Then the release checklist and `v0.1.0`. **Open.**
+6. Release checks that need no reviewer. **Done 2026-11-28, ticked after CI:** the disclaimer in every interface
+   (Python documentation and display, MCP instructions and tool descriptions; no contract change) and the offline CI
+   job (`cargo test --offline` with no network interface). **Open:** version `0.1.0`, release notes, checksums.
 
 Gate status (ADR 0015 X1–X6, ADR 0016 A1–A9) is kept in [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Phase 4.
 

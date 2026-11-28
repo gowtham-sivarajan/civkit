@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! `civkit._civkit`: the thin Rust layer of the Python package (D-26, ADR 0014 point 4).
 //!
@@ -95,6 +95,7 @@ fn civkit_ext(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(list_json, m)?)?;
     m.add_function(wrap_pyfunction!(describe_json, m)?)?;
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    m.add("DISCLAIMER", civkit_core::DISCLAIMER)?;
     m.add_function(wrap_pyfunction!(drawing_json, m)?)?;
     m.add_function(wrap_pyfunction!(drawing_csv, m)?)?;
     Ok(())

@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 00:02 IST
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """call, list and describe over the Rust layer. Inputs are only reshaped into the JSON request; the engine does
 every check (ADR 0014 point 4)."""
 
@@ -86,18 +86,26 @@ def call(
     Each input may be ``"2.4 m^2"``, ``(2.4, "m^2")``, ``Q(2.4, "m^2")``, a bare number for a dimensionless input,
     a list (``([0, 90], "deg")`` or a list of ``Q`` in one unit), a choice string, or the contract's
     ``{"value": ..., "unit": ...}``. ``version`` defaults to the latest; ``output_units`` maps output names to units.
+
+    CivKit results support, and do not replace, the judgement of a qualified engineer.
     """
     request = build_request(id, version, output_units, inputs)
     return Result(_run(request), request, _run)
 
 
 def list_calculations() -> list[dict[str, Any]]:
-    """Every registered calculation's descriptor."""
+    """Every registered calculation's descriptor.
+
+    CivKit results support, and do not replace, the judgement of a qualified engineer.
+    """
     return json.loads(_civkit.list_json())
 
 
 def describe(id: str, version: int | None = None) -> dict[str, Any]:
-    """One calculation's descriptor (the latest version unless ``version`` is given). Unknown: ``KeyError``."""
+    """One calculation's descriptor (the latest version unless ``version`` is given). Unknown: ``KeyError``.
+
+    CivKit results support, and do not replace, the judgement of a qualified engineer.
+    """
     text = _civkit.describe_json(id, version)
     if text is None:
         raise KeyError(id if version is None else f"{id} version {version}")

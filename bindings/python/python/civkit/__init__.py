@@ -1,4 +1,4 @@
-# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+# Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:02 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 """CivKit: offline, traceable civil-engineering calculations.
 
     >>> import civkit
@@ -9,6 +9,8 @@
 
 Every calculation runs in the Rust engine through its JSON contract; this package only reshapes inputs and results.
 It has no dependencies and makes no network calls.
+
+CivKit results support, and do not replace, the judgement of a qualified engineer.
 """
 
 from . import _civkit, drawing
@@ -21,13 +23,16 @@ from ._typed import build as _build
 
 __version__: str = _civkit.version()
 
+DISCLAIMER: str = _civkit.DISCLAIMER
+"""Shown with every result (docs/ENGINEERING_STANDARDS.md §7); never part of the JSON."""
+
 
 def version() -> str:
     """The CivKit engine version."""
     return _civkit.version()
 
 
-__all__ = ["CivKitError", "Q", "Result", "call", "describe", "drawing", "list", "version"]
+__all__ = ["DISCLAIMER", "CivKitError", "Q", "Result", "call", "describe", "drawing", "list", "version"]
 
 # The typed functions: civkit.<domain>.<topic>.<method>, one per installed calculation.
 _namespaces = _build(list(), reserved=set(globals()))

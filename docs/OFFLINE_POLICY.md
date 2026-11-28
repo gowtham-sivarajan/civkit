@@ -1,6 +1,6 @@
 # Offline Policy
 
-> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:28 IST · last edited 2026-11-25 00:28 IST
+> **Provenance:** Claude Opus 5.5 (`claude-opus-5-5`) · first drafted 2026-11-25 00:28 IST · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Status:** Draft. Turns the proposal's local-first principles into rules that can be checked.
 
@@ -29,7 +29,10 @@ npm and NuGet while developing is allowed.
 
 - **Dependency bans:** `cargo-deny` configuration bans HTTP/network client crates (e.g. `reqwest`, `hyper`,
   `ureq`) from everything under `crates/`, `bindings/` and `integrations/`.
-- **Offline CI job:** the test suite runs with networking disabled after dependencies are fetched.
+- **Offline CI job:** the test suite runs with networking disabled after dependencies are fetched. In `ci.yml`, the
+  `offline` job fetches and builds, checks that a network namespace with no interfaces cannot reach the network, and
+  then runs `cargo test --offline` for the whole workspace inside it. The Python workflow installs and runs the wheel
+  offline (gates P1 and P5).
 - **Review checklist:** every pull request answers "does this add any network access?"
 - **Desktop app:** Tauri capability configuration grants no network permissions; reviewed on every change.
 

@@ -1,10 +1,12 @@
 # CivKit notebooks
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 11:21 IST · last edited 2026-11-27 11:21 IST
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 11:21 IST · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 > **Disclaimer.** CivKit results support, and do not replace, the judgement of a qualified engineer.
 
-Example notebooks for the `civkit` Python package. They need only `civkit` and Jupyter, and run offline.
+Example notebooks for the `civkit` Python package. They need only `civkit` and Jupyter, and run offline. A `Result`
+or drawing report shown in a cell ends with the disclaimer (Jupyter's rich display); `to_dict()` and the report dict
+are the engine's JSON, unchanged.
 
 | Notebook | Shows |
 |---|---|

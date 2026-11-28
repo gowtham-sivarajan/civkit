@@ -1,4 +1,4 @@
-// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
+// Provenance: Claude Sonnet 5.5 (claude-sonnet-5-5) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-28 14:11 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 
 //! MCP tool definitions generated from the descriptors (ADR 0013; MCP_SDK_PROPOSAL §5).
 //!
@@ -37,8 +37,10 @@ fn annotations(title: &str) -> ToolAnnotations {
         .open_world(false)
 }
 
+/// Every tool's description ends with the disclaimer (ENGINEERING_STANDARDS §7); the result JSON does not carry it.
 fn tool(name: &str, title: &str, description: &str, input: Value, output: Value) -> Tool {
-    Tool::new(name.to_owned(), description.to_owned(), object(input))
+    let description = format!("{description} {}", civkit_core::DISCLAIMER);
+    Tool::new(name.to_owned(), description, object(input))
         .with_title(title)
         .with_raw_output_schema(object(output))
         .with_annotations(annotations(title))

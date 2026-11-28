@@ -1,6 +1,6 @@
 # civkit-mcp
 
-> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-27 22:53 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
+> **Provenance:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) · first drafted 2026-11-27 00:24 IST · last edited 2026-11-28 14:15 IST by Claude Sonnet 5.5 (`claude-sonnet-5-5`)
 
 CivKit's calculations as [MCP](https://modelcontextprotocol.io) tools, over **stdio only** (D-13,
 [ADR 0013](../../planning/decisions/0013-mcp-sdk-and-surface.md)). The server opens no socket, reads nothing from the
@@ -33,6 +33,9 @@ else: the path's real location (symbolic links resolved) must be inside a root, 
   `index`, `message`) as `structuredContent` and as text, so the model can correct its input.
 - **Unknown tool:** a JSON-RPC protocol error.
 - Every tool is annotated `readOnlyHint: true`, `openWorldHint: false`.
+- **Disclaimer:** the server instructions and the end of every tool description carry "CivKit results support, and do
+  not replace, the judgement of a qualified engineer." Tool results stay the contract JSON. CivKit gives the text to
+  the client; whether the client shows it is up to the client.
 
 ## Protocol versions
 

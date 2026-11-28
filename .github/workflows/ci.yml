@@ -1,7 +1,8 @@
-# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-25 11:00 IST
+# Provenance: Claude Opus 5.5 (claude-opus-5-5) · first drafted 2026-11-25 11:00 IST · last edited 2026-11-28 14:13 IST by Claude Sonnet 5.5 (claude-sonnet-5-5)
 # Continuous integration (Phase 1, planning/ACCEPTANCE_CRITERIA.md): build and test on Windows, macOS and Linux
 # with the minimum supported Rust (1.98, D-10) and latest stable; formatting; clippy; cargo-deny; the engine
-# dependency rule; DCO sign-off (D-11). Actions are pinned to commit SHAs (docs/SECURITY.md).
+# dependency rule; DCO sign-off (D-11); the whole test suite with networking disabled (docs/OFFLINE_POLICY.md).
+# Actions are pinned to commit SHAs (docs/SECURITY.md).
 name: CI
 
 on:
@@ -43,6 +44,31 @@ jobs:
       - run: cargo test --locked --workspace
       - if: matrix.rust == 'stable'
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
+  offline:
+    # OFFLINE_POLICY "Offline CI job": the test suite runs with networking disabled after dependencies are fetched.
+    # Fetching and building are the only steps with a network; the tests then run in a network namespace that has
+    # no interfaces at all, so any network call fails the run.
+    name: test suite with networking disabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Fetch and build (the only steps with a network)
+        run: |
+          cargo fetch --locked
+          cargo build --locked --offline --workspace --all-targets
+      - name: The namespace really has no network
+        run: |
+          if sudo unshare --net -- curl -sS --max-time 5 https://github.com > /dev/null 2>&1; then
+            echo "::error::the network namespace reached the network"
+            exit 1
+          fi
+      - name: cargo test --offline with no network interface
+        run: |
+          sudo unshare --net -- env "PATH=$PATH" "HOME=$HOME" \
+            "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" "RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}" \
+            cargo test --locked --offline --workspace
 
   dependencies:
     name: dependency rule and cargo-deny
